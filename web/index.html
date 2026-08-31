@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <meta content="#08090b" name="theme-color" />
+
+        <title>DomeBreak — Real-Time Missile Defense on the World Map</title>
+        <meta
+            name="description"
+            content="Build a missile dome over real geography, plan strikes on rival nations, and run the economy paying for it. Free real-time strategy for macOS and Windows."
+        />
+        <link rel="canonical" href="https://domebreak.com/" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        <!-- Open Graph / social -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="DomeBreak" />
+        <meta property="og:url" content="https://domebreak.com/" />
+        <meta property="og:title" content="DomeBreak — Real-Time Missile Defense on the World Map" />
+        <meta
+            property="og:description"
+            content="Build a missile dome over real geography, plan strikes on rival nations, and run the economy paying for it. Free real-time strategy for macOS and Windows."
+        />
+        <meta property="og:image" content="https://domebreak.com/og.jpg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta
+            property="og:image:alt"
+            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+        />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="DomeBreak — Real-Time Missile Defense on the World Map" />
+        <meta
+            name="twitter:description"
+            content="Build a missile dome over real geography, plan strikes on rival nations, and run the economy paying for it. Free real-time strategy for macOS and Windows."
+        />
+        <meta name="twitter:image" content="https://domebreak.com/og.jpg" />
+        <meta
+            name="twitter:image:alt"
+            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+        />
+
+        <!-- Perf: warm up the connections the page reaches for. -->
+        <link crossorigin href="https://pc9hvrpdxxi66b3t.public.blob.vercel-storage.com" rel="preconnect" />
+        <link rel="dns-prefetch" href="https://pc9hvrpdxxi66b3t.public.blob.vercel-storage.com" />
+
+        <!--
+            Both faces are served from this origin. Loaded from Google Fonts they cost
+            two cold connections and a stylesheet before the first character could be
+            measured; served from here they are two files the document asks for itself.
+            Each is the variable face, so one file covers 400 through 700.
+        -->
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/inter-latin.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/jetbrains-mono-latin.woff2" />
+        <style>
+            @font-face {
+                font-family: "Inter";
+                font-style: normal;
+                font-weight: 100 900;
+                font-display: swap;
+                src: url("/fonts/inter-latin.woff2") format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+                    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: "JetBrains Mono";
+                font-style: normal;
+                font-weight: 100 800;
+                font-display: swap;
+                src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+                unicode-range:
+                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+                    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+
+            /*
+                What the browser draws for the moment before the two faces above
+                arrive. The overrides are measured rather than guessed: at 100px,
+                the same sample string sets 2743.51px wide in Inter against
+                2562.7px in Arial (107.06%) and 3240px in JetBrains Mono against
+                3251.07px in Menlo (99.66%), and the ascent and descent are the
+                measured 97/24 and 102/30 divided by that same factor. Sized this
+                way the fallback occupies the line the real face will, so the swap
+                changes the shapes and moves nothing.
+            */
+            @font-face {
+                font-family: "Inter Fallback";
+                font-display: swap;
+                src: local("Arial");
+                size-adjust: 107.06%;
+                ascent-override: 90.6%;
+                descent-override: 22.42%;
+                line-gap-override: 0%;
+            }
+            @font-face {
+                font-family: "JetBrains Mono Fallback";
+                font-display: swap;
+                src: local("Menlo"), local("Consolas");
+                size-adjust: 99.66%;
+                ascent-override: 102.35%;
+                descent-override: 30.1%;
+                line-gap-override: 0%;
+            }
+        </style>
+
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@graph": [
+                    {
+                        "@type": "Organization",
+                        "@id": "https://domebreak.com/#publisher",
+                        "name": "TaylorURL",
+                        "url": "https://taylorurl.com/",
+                        "logo": "https://domebreak.com/favicon.png",
+                        "founder": {"@type": "Person", "name": "Trenton Taylor"},
+                        "sameAs": ["https://github.com/bradley-t-t/domebreak"]
+                    },
+                    {
+                        "@type": "WebSite",
+                        "@id": "https://domebreak.com/#website",
+                        "name": "DomeBreak",
+                        "url": "https://domebreak.com/",
+                        "inLanguage": "en",
+                        "publisher": {"@id": "https://domebreak.com/#publisher"}
+                    },
+                    {
+                        "@type": "VideoGame",
+                        "@id": "https://domebreak.com/#game",
+                        "name": "DomeBreak",
+                        "url": "https://domebreak.com/",
+                        "image": "https://domebreak.com/og.jpg",
+                        "description": "A real-time strategy game of missile defense and offense, fought on the real world map. Build your dome, plan your strikes, and outlast every rival nation.",
+                        "genre": ["Strategy", "Real-time strategy"],
+                        "gamePlatform": ["PC", "macOS", "Windows"],
+                        "operatingSystem": ["macOS", "Windows"],
+                        "applicationCategory": "Game",
+                        "playMode": ["SinglePlayer", "MultiPlayer"],
+                        "author": {"@type": "Person", "name": "Trenton Taylor"},
+                        "publisher": {"@id": "https://domebreak.com/#publisher"},
+                        "offers": {
+                            "@type": "Offer",
+                            "price": "0",
+                            "priceCurrency": "USD",
+                            "availability": "https://schema.org/InStock",
+                            "url": "https://domebreak.com/#/download"
+                        }
+                    }
+                ]
+            }
+        </script>
+
+        <style>
+            html {
+                background: #08090b;
+            }
+        </style>
+        <script>
+            (function () {
+                var endpoint = "https://sunday.tail1f78d7.ts.net/report";
+                var site = "DomeBreak";
+                var sent = 0;
+                function report(kind, message, stack) {
+                    if (sent >= 10) return;
+                    sent += 1;
+                    try {
+                        var body = JSON.stringify({
+                            site: site,
+                            kind: kind,
+                            message: String(message || "Unknown error").slice(0, 1500),
+                            stack: String(stack || "").slice(0, 4000),
+                            url: location.href,
+                            userAgent: navigator.userAgent,
+                        });
+                        if (navigator.sendBeacon) {
+                            navigator.sendBeacon(endpoint, body);
+                        } else {
+                            fetch(endpoint, {method: "POST", body: body, keepalive: true}).catch(function () {});
+                        }
+                    } catch (ignored) {}
+                }
+                // Capture phase, because element load failures fire error events that do not bubble.
+                window.addEventListener(
+                    "error",
+                    function (event) {
+                        if (event.target && event.target !== window && event.target.tagName) {
+                            report(
+                                "resource",
+                                "Failed to load " +
+                                    event.target.tagName.toLowerCase() +
+                                    ": " +
+                                    (event.target.src || event.target.href || ""),
+                            );
+                        } else {
+                            report("uncaught", event.message, event.error && event.error.stack);
+                        }
+                    },
+                    true,
+                );
+                window.addEventListener("unhandledrejection", function (event) {
+                    var reason = event.reason;
+                    report("rejection", reason && reason.message ? reason.message : reason, reason && reason.stack);
+                });
+                var consoleError = console.error;
+                console.error = function () {
+                    var parts = [];
+                    for (var i = 0; i < arguments.length; i += 1) {
+                        var piece = arguments[i];
+                        if (piece && piece.stack) {
+                            parts.push(piece.stack);
+                        } else if (typeof piece === "object") {
+                            try {
+                                parts.push(JSON.stringify(piece));
+                            } catch (ignored) {
+                                parts.push(String(piece));
+                            }
+                        } else {
+                            parts.push(String(piece));
+                        }
+                    }
+                    report("console", parts.join(" "));
+                    return consoleError.apply(console, arguments);
+                };
+                if (window.fetch) {
+                    var originalFetch = window.fetch;
+                    window.fetch = function (input) {
+                        var target = typeof input === "string" ? input : (input && input.url) || "";
+                        if (target.indexOf(endpoint) === 0) return originalFetch.apply(window, arguments);
+                        return originalFetch.apply(window, arguments).then(
+                            function (response) {
+                                if (response.status >= 500)
+                                    report("http", "HTTP " + response.status + " from " + target.split("?")[0]);
+                                return response;
+                            },
+                            function (error) {
+                                // A cancelled request is this page changing its mind, not a server
+                                // it could not reach. MapLibre drops tile reads the camera has
+                                // moved past, and the hero map's drift does that several times a
+                                // visit — enough to spend the ten-report budget before a real
+                                // error has anywhere to go.
+                                if (!error || error.name !== "AbortError") {
+                                    report(
+                                        "network",
+                                        (error && error.message ? error.message : String(error)) +
+                                            " fetching " +
+                                            target.split("?")[0],
+                                    );
+                                }
+                                throw error;
+                            },
+                        );
+                    };
+                }
+            })();
+        </script>
+    </head>
+    <body>
+        <div id="root">
+            <!-- No-JS / pre-render fallback so crawlers and no-script visitors get real content. -->
+            <noscript>
+                <main
+                    style="
+                        max-width: 760px;
+                        margin: 0 auto;
+                        padding: 64px 24px;
+                        color: #f2f4f6;
+                        font-family: Inter, system-ui, sans-serif;
+                    "
+                >
+                    <h1>DomeBreak — Global Missile Command</h1>
+                    <p>
+                        A real-time strategy game of missile defense and offense, fought on the real world map. Build
+                        your dome, plan your strikes, and outlast every rival nation. Free to play on macOS and Windows.
+                        Enable JavaScript to create an account and download.
+                    </p>
+                </main>
+            </noscript>
+        </div>
+        <script src="/src/main.jsx" type="module"></script>
+    </body>
+</html>

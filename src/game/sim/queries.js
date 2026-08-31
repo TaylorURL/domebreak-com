@@ -1,0 +1,565 @@
+// Read-only world accessors: economy (gdp/income/upkeep), territory, sensor
+// coverage, and defense-range queries. No mutation of world state.
+import {haversine, withinKm} from "../geo/geo.js";
+import {countryGidAt, countryLandCells} from "../geo/countryOwner.js";
+import {toGid3} from "../data/iso3.js";
+import {nationOf} from "./worldState.js";
+import {
+    AIRBORNE_ALT,
+    ECONOMY,
+    FALLOUT,
+    INDUSTRY,
+    MIN_SEP,
+    NEUTRAL,
+    RADAR_RANGE_MULT,
+    STABILITY,
+    TERRITORY_RADIUS,
+    UNITS,
+} from "../data/constants.js";
+import {clamp, clamp01} from "../../lib/math.js";
+
+// Fallout cloud intensity (0..1) for a given age in sim seconds: ramps up over
+// riseSec, holds at peak through fadeFrac of its life, then decays linearly to 0
+// at lifeSec. Pure — the tick uses it for damage, the map uses it for opacity, so
+// the danger footprint and the visible haze always agree.
+export function falloutIntensity(age) {
+    if (age <= 0 || age >= FALLOUT.lifeSec) return 0;
+    if (age < FALLOUT.riseSec) return age / FALLOUT.riseSec;
+    const fadeStart = FALLOUT.lifeSec * FALLOUT.fadeFrac;
+    if (age <= fadeStart) return 1;
+    return Math.max(0, 1 - (age - fadeStart) / (FALLOUT.lifeSec - fadeStart));
+}
+
+// Fallout dose falloff (0..1) at distance distKm from the cloud center: full dose
+// at the core, tapering to edgeFalloff at radiusKm, zero beyond.
+export function falloutProximity(distKm, radiusKm) {
+    if (distKm >= radiusKm) return 0;
+    return 1 - (1 - FALLOUT.edgeFalloff) * (distKm / radiusKm);
+}
+
+// The fallout situation at a point: the worst current dose (0..1, intensity ×
+// proximity) across every cloud covering it, and the longest time any of those
+// clouds still has to live. `dose × FALLOUT.dmgPerSec` is the hp/s being lost
+// there; `remain > 0` means the point sits under at least one active cloud. Used
+// by the UI to flag contaminated cities and time the hazard.
+export function falloutDoseAt(w, lng, lat) {
+    let dose = 0,
+        remain = 0;
+    for (const fx of w.effects || []) {
+        if (fx.type !== "fallout") continue;
+        const prox = falloutProximity(haversine(fx.lng, fx.lat, lng, lat), fx.radiusKm);
+        if (prox <= 0) continue;
+        const d = prox * falloutIntensity(fx.age);
+        if (d > dose) dose = d;
+        const r = FALLOUT.lifeSec - fx.age;
+        if (r > remain) remain = r;
+    }
+    return {dose, remain};
+}
+
+export function atWar(w, a, b) {
+    if (a === b) return false;
+    const n = nationOf(w, a);
+    return !!(n && n.relations[b] === "war");
+}
+
+// Whether a slot is an active (participating) nation. Nations flagged inactive are
+// passive NEUTRALS — pure scenery: they never build, never wage war, and cannot be
+// targeted or captured. A nation with no `active` flag (all-active matches) is active.
+export function isActive(w, slot) {
+    const n = nationOf(w, slot);
+    return !n ? false : n.active !== false;
+}
+
+// Display name for a slot, with a stable fallback for unnamed/AI nations. The
+// public spelling of the internal nationOf lookup — the UI reads this instead of
+// re-implementing `w.nations.find(...)?.name || …` at each call site.
+export function nationName(w, slot) {
+    return nationOf(w, slot)?.name || `Nation ${slot}`;
+}
+
+// True while a nation still carries an undecayed Defeat from a lost war — the
+// sim's record of a surrender (warResolution stamps defeatPenalties on every
+// loser, whether it capitulated below the surrender threshold, was decapitated,
+// or was beaten outright). Uses the same decay window as stability's "Recent
+// defeat" penalty, so the "shaken for a year" the Defeat popup describes is also
+// the period the nation counts as surrendered.
+export function hasSurrendered(w, n) {
+    const defeats = n?.defeatPenalties;
+    if (!defeats?.length) return false;
+    return defeats.some((p) => w.time - p.t0 < STABILITY.defeatSec);
+}
+
+// A city's vitality (0..1): the share of its people, economy, and output still
+// standing, driven by current health. A dead city contributes nothing; a city at
+// full hp contributes in full. Every downstream economic / demographic quantity a
+// city feeds into is scaled by this.
+export function vitalityOf(c) {
+    if (!c || !c.alive) return 0;
+    const max = c.maxHp || 1;
+    return clamp01((c.hp ?? max) / max);
+}
+
+// Flat points/s produced by a nation's standing industry structures.
+export function industryOutputOf(w, slot) {
+    let sum = 0;
+    for (const u of w.units) if (u.slot === slot && u.hp > 0) sum += UNITS[u.type].output || 0;
+    return sum;
+}
+
+// Effective GDP in $T — the real-world base scaled by the share of the economy
+// still standing, plus everything the nation's industry has built on top.
+export function gdpOf(w, slot) {
+    const n = nationOf(w, slot);
+    if (!n) return 0;
+    let econ = 0,
+        add = 0;
+    for (const c of w.cities) if (c.slot === slot && c.alive) econ += (c.econ || 0) * vitalityOf(c);
+    for (const u of w.units) if (u.slot === slot && u.hp > 0) add += UNITS[u.type].gdpAdd || 0;
+    return n.gdp * econ + add;
+}
+
+// Income formula over pre-summed city/unit figures: econVit is the nation's
+// surviving economy share (Σ econ × vitality), cityVit its surviving city count
+// weighted by vitality, indOut its flat industry output. Single source for the
+// formula — the per-slot readers below and the tick's batched aggregate both
+// route through here so they can never diverge.
+function incomeFrom(n, econVit, cityVit, indOut) {
+    if (n.gdp > 0)
+        return (
+            (ECONOMY.incomeBase + ECONOMY.incomeGdpCoef * Math.sqrt(n.gdp) * econVit + indOut) * (n.commandMult ?? 1)
+        );
+    return (ECONOMY.fallbackBase + cityVit * ECONOMY.fallbackPerCity + indOut) * (n.commandMult ?? 1);
+}
+
+function upkeepFrom(n, upkeepSum) {
+    return n?.isAi ? upkeepSum * ECONOMY.aiUpkeepMult : upkeepSum;
+}
+
+// Income is driven by the nation's real GDP weight and the share of its economy
+// still standing — each state contributes its economy % of the country. Losing
+// your richest states hits income the hardest. Built industry adds flat output
+// on top, so a small nation can manufacture its way up. Deliberately lean:
+// points are scarce and production is the bottleneck.
+export function incomeOf(w, slot) {
+    const n = nationOf(w, slot);
+    if (!n) return 0;
+    const ind = industryOutputOf(w, slot);
+    let econ = 0,
+        vit = 0;
+    for (const c of w.cities) {
+        if (c.slot !== slot || !c.alive) continue;
+        const v = vitalityOf(c);
+        econ += (c.econ || 0) * v;
+        vit += v;
+    }
+    return incomeFrom(n, econ, vit, ind);
+}
+
+export function upkeepOf(w, slot) {
+    let sum = 0;
+    for (const u of w.units) if (u.slot === slot && u.hp > 0) sum += UNITS[u.type].upkeep ?? 0;
+    return upkeepFrom(nationOf(w, slot), sum);
+}
+
+export function netIncomeOf(w, slot) {
+    return incomeOf(w, slot) - upkeepOf(w, slot);
+}
+
+// Every per-slot figure the per-tick economy/stability passes need, summed in ONE
+// walk over cities and one over units. The naive path — netIncomeOf / populationOf
+// per nation — re-scans the whole world per nation, which at full-world scale
+// (~222 nations x ~2565 cities) is a million-plus iterations per tick before a
+// single shot is fired. Slots absent from the map simply have no cities/units.
+export function slotEconomyAggregates(w) {
+    const agg = new Map();
+    const of = (slot) => {
+        let a = agg.get(slot);
+        if (!a) agg.set(slot, (a = {econVit: 0, cityVit: 0, pop: 0, basePop: 0, indOut: 0, upkeep: 0}));
+        return a;
+    };
+    for (const c of w.cities) {
+        const a = of(c.slot);
+        a.basePop += c.pop0 ?? c.pop ?? 0;
+        if (!c.alive) continue;
+        const v = vitalityOf(c);
+        a.econVit += (c.econ || 0) * v;
+        a.cityVit += v;
+        a.pop += (c.pop || 0) * v;
+    }
+    for (const u of w.units) {
+        if (u.hp <= 0) continue;
+        const def = UNITS[u.type],
+            a = of(u.slot);
+        a.indOut += def.output || 0;
+        a.upkeep += def.upkeep ?? 0;
+    }
+    return agg;
+}
+
+// netIncomeOf computed from a slotEconomyAggregates() entry — identical formula,
+// no world scan. `a` may be undefined for a slot with no cities or units.
+export function netIncomeFromAgg(n, a) {
+    if (!a) return incomeFrom(n, 0, 0, 0);
+    return incomeFrom(n, a.econVit, a.cityVit, a.indOut) - upkeepFrom(n, a.upkeep);
+}
+
+// Living population: each city's people scaled by its vitality, so damage bleeds
+// population continuously rather than only at death.
+export function populationOf(w, slot) {
+    let p = 0;
+    for (const c of w.cities) if (c.slot === slot && c.alive) p += (c.pop || 0) * vitalityOf(c);
+    return p;
+}
+
+// Living industry structures a nation currently fields (all kind:"industry" types).
+export function industryCountOf(w, slot) {
+    let n = 0;
+    for (const u of w.units) if (u.slot === slot && u.hp > 0 && UNITS[u.type].kind === "industry") n++;
+    return n;
+}
+
+// Industry structures currently on the production line — queued or under
+// construction — for slot. These consume industrial capacity the same as
+// standing structures (see queueUnit) so the UI can show a truthful count.
+export function industryPendingOf(w, slot) {
+    const n = nationOf(w, slot);
+    if (!n?.prod) return 0;
+    let q = 0;
+    for (const it of n.prod.queue) {
+        if (it.kind === "unit" && UNITS[it.type]?.kind === "industry") q++;
+    }
+    const cur = n.prod.current?.item;
+    if (cur?.kind === "unit" && UNITS[cur.type]?.kind === "industry") q++;
+    return q;
+}
+
+// Max industry structures a nation may sustain, scaled by its living population.
+// Losing cities lowers the ceiling; surplus structures above it are grandfathered.
+export function industryCapOf(w, slot) {
+    const pop = populationOf(w, slot);
+    return clamp(INDUSTRY.base + Math.floor(pop / INDUSTRY.popPer), INDUSTRY.base, INDUSTRY.max);
+}
+
+// A point belongs to `slot` only if the NEAREST living city of ANY nation is one
+// of slot's own AND lies within TERRITORY_RADIUS. This makes territories mutually
+// exclusive (a Voronoi partition clipped to the radius) so neighbouring nations'
+// 550 km disks never overlap — neither an AI nor the player can site a unit in a
+// spot that sits closer to a rival's city than to its own.
+export function inTerritory(w, slot, lng, lat) {
+    let nearestSlot = -1,
+        nearest = Infinity;
+    for (const c of w.cities) {
+        if (!c.alive) continue;
+        // Meridian-arc reject: a city further away in latitude alone than the
+        // best-so-far can't be the nearest — skips the trig for almost the whole
+        // roster once any nearby city is seen. This runs per placement-probe
+        // mousemove (and in AI siting loops), so the full-city scan must be cheap.
+        if (Math.abs(c.lat - lat) * 111.19 >= nearest) continue;
+        const d = haversine(c.lng, c.lat, lng, lat);
+        if (d < nearest) {
+            nearest = d;
+            nearestSlot = c.slot;
+        }
+    }
+    return nearestSlot === slot && nearest <= TERRITORY_RADIUS;
+}
+
+// True when a land point sits inside slot's own POLITICAL border — the same
+// national outline the human player is bound to when placing (LiveGame gates the
+// player on the GID_0 country polygon under the cursor). Reads the rasterized
+// country grid, so the AI can be held to its real borders instead of the Voronoi
+// `inTerritory` disk, which spills across frontiers into neighbours' land. Ocean
+// points return null → false here (naval placement uses inTerritory instead).
+export function inOwnCountry(w, slot, lng, lat) {
+    const gid = toGid3(nationOf(w, slot)?.iso);
+    return gid != null && countryGidAt(lng, lat) === gid;
+}
+
+// Land a nation may build on: its own political border (inOwnCountry) OR ground
+// it has CONQUERED — a point whose nearest living city is one of slot's own,
+// within TERRITORY_RADIUS, AND sitting in the same political country as that
+// city. The last clause is what stops the Voronoi disk from spilling across an
+// intact frontier: a point inside a neighbour's country is buildable only once
+// slot actually holds a city inside that same country (annexed or war-captured),
+// never merely because slot's border city happens to be the nearest one. So
+// taking neutral or enemy provinces genuinely grows where you can build, without
+// reopening the cross-border placement leak inOwnCountry closed.
+export function inControlledTerritory(w, slot, lng, lat) {
+    if (inOwnCountry(w, slot, lng, lat)) return true;
+    const gid = countryGidAt(lng, lat);
+    if (gid == null) return false; // ocean / unclaimed — naval placement uses inTerritory
+    let nearest = null,
+        best = Infinity;
+    for (const c of w.cities) {
+        if (!c.alive) continue;
+        if (Math.abs(c.lat - lat) * 111.19 >= best) continue; // meridian-arc reject (see inTerritory)
+        const d = haversine(c.lng, c.lat, lng, lat);
+        if (d < best) {
+            best = d;
+            nearest = c;
+        }
+    }
+    if (!nearest || nearest.slot !== slot || best > TERRITORY_RADIUS) return false;
+    return countryGidAt(nearest.lng, nearest.lat) === gid;
+}
+
+// Slots held by passive NEUTRAL nations (active === false), as a Set — the cities
+// an active nation may ANNEX (peaceful conquest, no war; active nations' cities
+// are only taken through war). Built once so the per-city capture/annex sweeps
+// test membership in O(1) instead of an O(nations) nationOf lookup each.
+export function neutralSlotSet(w) {
+    const s = new Set();
+    for (const n of w.nations) if (n.active === false) s.add(n.slot);
+    return s;
+}
+
+// A city held by a passive neutral nation.
+export function isNeutralCity(w, c) {
+    if (!c || !c.alive) return false;
+    const n = nationOf(w, c.slot);
+    return !!n && n.active === false;
+}
+
+// slot's living cities.
+function ownAliveCities(w, slot) {
+    const out = [];
+    for (const c of w.cities) if (c.alive && c.slot === slot) out.push(c);
+    return out;
+}
+
+// True when slot fields a living city within maxKm of (lng, lat) — the adjacency
+// gate on annexation, so a nation can only absorb neutral land bordering its own.
+export function bordersTerritory(w, slot, lng, lat, maxKm) {
+    for (const c of w.cities) {
+        if (c.alive && c.slot === slot && withinKm(c.lng, c.lat, lng, lat, maxKm)) return true;
+    }
+    return false;
+}
+
+// Can slot annex city c right now? It must be a bordering neutral city.
+export function annexableBySlot(w, slot, c, maxKm = NEUTRAL.annexBorderKm) {
+    return isNeutralCity(w, c) && bordersTerritory(w, slot, c.lng, c.lat, maxKm);
+}
+
+// The nearest neutral city slot could annex (bordering its own territory) to the
+// point (lng, lat), or null. Used by the AI to pick an expansion objective and by
+// the capture HUD. Gathers slot's cities and the neutral slots once, then walks
+// neutral cities with the cheap adjacency test.
+export function nearestAnnexTarget(w, slot, lng, lat, maxKm = NEUTRAL.annexBorderKm) {
+    const neutral = neutralSlotSet(w);
+    if (!neutral.size) return null;
+    const own = ownAliveCities(w, slot);
+    if (!own.length) return null;
+    let best = null,
+        bd = Infinity;
+    for (const c of w.cities) {
+        if (!c.alive || !neutral.has(c.slot)) continue;
+        const d = haversine(c.lng, c.lat, lng, lat);
+        if (d >= bd) continue;
+        if (own.some((o) => withinKm(o.lng, o.lat, c.lng, c.lat, maxKm))) {
+            bd = d;
+            best = c;
+        }
+    }
+    return best;
+}
+
+// Does slot border ANY annexable neutral land? Cheap existence check the AI reads
+// to decide whether to raise an expansion force at all.
+export function hasAnnexTargets(w, slot, maxKm = NEUTRAL.annexBorderKm) {
+    const neutral = neutralSlotSet(w);
+    if (!neutral.size) return false;
+    const own = ownAliveCities(w, slot);
+    if (!own.length) return false;
+    for (const c of w.cities) {
+        if (!c.alive || !neutral.has(c.slot)) continue;
+        if (own.some((o) => withinKm(o.lng, o.lat, c.lng, c.lat, maxKm))) return true;
+    }
+    return false;
+}
+
+// Radar emission radius of a unit type (km): dedicated sensors use their range;
+// aircraft carry their own set, each type with its own strength.
+export function radarRangeOf(type) {
+    const def = UNITS[type];
+    return def.radarKm || (def.detect ? def.range : 0);
+}
+
+// A based aircraft can only fight (or radiate) while airborne, climbed clear
+// of the base. Shared by radar linkage, sensor coverage, and the combat tick.
+export function airborne(u) {
+    return !u.baseId || (u.alt || 0) > AIRBORNE_ALT;
+}
+
+// True when any of the nation's fire-control-grade radars covers unit d —
+// warnOnly OTH arrays and parked aircraft don't count. Gates the
+// RADAR_RANGE_MULT engagement-range bonus in defenseRange().
+export function radarLinked(w, d) {
+    return w.units.some((r) => {
+        if (r.slot !== d.slot || r.hp <= 0) return false;
+        if (UNITS[r.type].warnOnly) return false; // OTH tracks are too coarse to cue interceptors
+        const km = radarRangeOf(r.type);
+        if (!km) return false;
+        if (r.baseId && !airborne(r)) return false; // a parked jet radiates nothing
+        return haversine(r.lng, r.lat, d.lng, d.lat) <= km;
+    });
+}
+
+// Everything a nation senses with: dedicated radars/ships/aircraft cover their
+// radar radius; defense units watch their own engagement bubble with organic
+// fire-control radar — they can still shoot what nothing warned them about,
+// they just get no lead time. Fog of war and missile detection both read from
+// this list.
+export function sensorsOf(w, slot) {
+    const list = [];
+    for (const r of w.units) {
+        if (r.slot !== slot || r.hp <= 0) continue;
+        if (r.baseId && !airborne(r)) continue;
+        const def = UNITS[r.type];
+        const km = radarRangeOf(r.type) || (def.kind === "defense" ? def.range : 0);
+        if (km)
+            list.push({
+                id: r.id, // stable identity so a moving emitter's fog bubble tracks it smoothly
+                lng: r.lng,
+                lat: r.lat,
+                km,
+                asw: !!def.asw,
+                sonarKm: def.asw ? def.sonarKm || 0 : 0,
+            });
+    }
+    return list;
+}
+
+// Anti-submarine sensors only: platforms flagged asw:true, radiating a sonar
+// bubble of sonarKm. Submerged hulls are detected only within one of these.
+export function subSensorsOf(w, slot) {
+    const list = [];
+    for (const r of w.units) {
+        if (r.slot !== slot || r.hp <= 0) continue;
+        if (r.baseId && !airborne(r)) continue;
+        const def = UNITS[r.type];
+        if (!def.asw) continue;
+        const km = def.sonarKm || 0;
+        if (km) list.push({lng: r.lng, lat: r.lat, km});
+    }
+    return list;
+}
+
+export function sensorsCover(sensors, lng, lat) {
+    return sensors.some((s) => haversine(s.lng, s.lat, lng, lat) <= s.km);
+}
+
+export function sensedBy(w, slot, lng, lat) {
+    return sensorsCover(sensorsOf(w, slot), lng, lat);
+}
+
+// Slots allied to `slot` — the symmetric "ally" relation, restricted to living,
+// active nations. A coalition pools its radar and air defense, so this is the
+// set a nation shares its sensor picture with (sharedSensorsOf) and helps shield
+// (stepCombat). Self, peace, and war relations are excluded.
+export function alliedSlots(w, slot) {
+    if (!w.nations) return [];
+    const n = nationOf(w, slot);
+    if (!n || !n.relations) return [];
+    const out = [];
+    for (const s in n.relations) {
+        if (n.relations[s] !== "ally") continue;
+        const a = nationOf(w, +s);
+        if (a && a.alive && a.active !== false) out.push(+s);
+    }
+    return out;
+}
+
+// A nation's shared radar picture: its own sensors plus every living ally's.
+// Allies share radar data, so fog of war and missile early-warning read the
+// coalition's combined coverage rather than one nation's emitters. sensorsOf
+// returns a fresh list, so the ally bubbles are appended in place.
+export function sharedSensorsOf(w, slot) {
+    const list = sensorsOf(w, slot);
+    for (const a of alliedSlots(w, slot)) list.push(...sensorsOf(w, a));
+    return list;
+}
+
+// The anti-submarine counterpart to sharedSensorsOf: own sonar bubbles plus
+// every ally's, so a coalition's ASW net reveals subs for all its members.
+export function sharedSubSensorsOf(w, slot) {
+    const list = subSensorsOf(w, slot);
+    for (const a of alliedSlots(w, slot)) list.push(...subSensorsOf(w, a));
+    return list;
+}
+
+// Shared-coverage form of sensedBy: is (lng, lat) covered by slot's own OR any
+// ally's sensors? Used at launch to cue a whole coalition off one member's array.
+export function sharedSensedBy(w, slot, lng, lat) {
+    return sensorsCover(sharedSensorsOf(w, slot), lng, lat);
+}
+
+// Fraction (0..1) of the nation's own land area sitting under its radar picture.
+// Uses exactly the emitters the radar overlay draws — every unit whose
+// radarRangeOf() is non-zero (dedicated radars, OTH arrays, ships, carriers, and
+// airborne AWACS) — so this figure always agrees with the coverage rings the
+// player can toggle on the map. Land area is the country grid's cos(lat)-weighted
+// cells for the nation's GID_0, making the result a true surface-area share. 0
+// when the nation has no mapped land or no live emitters. Not cheap on large
+// countries — callers memoize on a coarse cadence.
+export function radarLandCoverage(w, slot) {
+    const n = nationOf(w, slot);
+    const {cells, area} = countryLandCells(toGid3(n?.iso));
+    if (!area) return 0;
+    const emitters = [];
+    for (const r of w.units) {
+        if (r.slot !== slot || r.hp <= 0) continue;
+        if (r.baseId && !airborne(r)) continue; // a parked jet radiates nothing
+        const km = radarRangeOf(r.type);
+        if (km > 0) emitters.push({lng: r.lng, lat: r.lat, km});
+    }
+    if (!emitters.length) return 0;
+    let covered = 0;
+    for (const cell of cells) {
+        for (const e of emitters) {
+            if (haversine(e.lng, e.lat, cell.lng, cell.lat) <= e.km) {
+                covered += cell.w;
+                break;
+            }
+        }
+    }
+    return covered / area;
+}
+
+// Fog-of-war visibility of a single enemy (or friendly) unit to a viewer nation.
+// Own units are always visible. Submarines (submarine:true hulls) are stealthy —
+// ordinary radar and satellites don't reveal them; they show only when an ASW
+// sensor (subSensorsOf) covers them. Everything else uses the normal radar net.
+// The live UI reads this to build its visible-units set.
+export function unitVisibleTo(w, viewerSlot, u, sensors, subSensors) {
+    if (u.slot === viewerSlot) return true;
+    if (UNITS[u.type]?.submarine) {
+        return sensorsCover(subSensors ?? subSensorsOf(w, viewerSlot), u.lng, u.lat);
+    }
+    return sensorsCover(sensors ?? sensorsOf(w, viewerSlot), u.lng, u.lat);
+}
+
+export function defenseRange(w, d) {
+    const base = UNITS[d.type].range;
+    if (UNITS[d.type].kind !== "defense") return base;
+    return base * (radarLinked(w, d) ? RADAR_RANGE_MULT : 1);
+}
+
+// Inner keep-out radius (km): targets closer than this can't be engaged. It's a
+// flat kinematic floor of the battery — a radar link pushes the outer edge out,
+// but never shrinks this inner gap. 0 for units without one.
+export function defenseMinRange(_w, d) {
+    return UNITS[d.type].minRange || 0;
+}
+
+// Returns the human-readable reason a structure can't be sited here, or null
+// if the spot is clear (minimum separation from cities and living units).
+export function placementBlocked(w, lng, lat, ignoreUnitId) {
+    // withinKm's latitude reject keeps this cheap — it runs on every placement
+    // mousemove over the full city and unit lists.
+    if (w.cities.some((c) => withinKm(c.lng, c.lat, lng, lat, MIN_SEP))) return "Too close to a city.";
+    if (w.units.some((u) => u.id !== ignoreUnitId && u.hp > 0 && withinKm(u.lng, u.lat, lng, lat, MIN_SEP)))
+        return "Too close to another unit.";
+    return null;
+}

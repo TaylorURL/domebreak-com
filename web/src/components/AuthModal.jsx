@@ -1,0 +1,214 @@
+import {useEffect, useRef, useState} from "react";
+import {AnimatePresence, motion, useReducedMotion} from "motion/react";
+import {X, Loader2} from "lucide-react";
+import {cn} from "../lib/cn.js";
+import {button, input, label as labelCva} from "../lib/variants.js";
+import {AUTH_RULES} from "../lib/authRules.js";
+import {useAccount} from "../lib/accountStore.js";
+import GameIcon from "./GameIcon.jsx";
+
+// Sign in / sign up with a DomeBreak game account. Email + password (username on
+// sign-up), same as the in-game login. Uses the shared account context.
+export default function AuthModal({open, onClose, initialMode = "signin"}) {
+    const {signIn, signUp} = useAccount();
+    const reduce = useReducedMotion();
+    const [mode, setMode] = useState(initialMode);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
+    const [status, setStatus] = useState("idle"); // idle | loading | error
+    const [error, setError] = useState("");
+    const emailRef = useRef(null);
+
+    // Reset the form whenever the modal (re)opens or the requested mode changes —
+    // React's "adjust state from a prop" pattern, done during render, not an effect.
+    const [prevKey, setPrevKey] = useState(`${open}:${initialMode}`);
+    const openKey = `${open}:${initialMode}`;
+    if (openKey !== prevKey) {
+        setPrevKey(openKey);
+        if (open) {
+            setMode(initialMode);
+            setStatus("idle");
+            setError("");
+        }
+    }
+    // The focus waits out the open transition, so a modal closed inside that
+    // window has to cancel it or the focus lands on a field that is gone.
+    useEffect(() => {
+        if (!open) return;
+        const t = setTimeout(() => emailRef.current?.focus(), 60);
+        return () => clearTimeout(t);
+    }, [open, initialMode]);
+
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e) => e.key === "Escape" && onClose();
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [open, onClose]);
+
+    async function onSubmit(e) {
+        e.preventDefault();
+        if (status === "loading") return;
+        const em = email.trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return fail("Enter a valid email address.");
+        if (password.length < AUTH_RULES.password.min)
+            return fail(`Password must be at least ${AUTH_RULES.password.min} characters.`);
+        if (signup) {
+            const u = username.trim();
+            if (u.length < AUTH_RULES.username.min || u.length > AUTH_RULES.username.max)
+                return fail(`Username must be ${AUTH_RULES.username.min}–${AUTH_RULES.username.max} characters.`);
+        }
+        setStatus("loading");
+        setError("");
+        const res = signup ? await signUp(em, password, username.trim()) : await signIn(em, password);
+        if (res.error) return fail(res.error);
+        onClose();
+    }
+
+    function fail(msg) {
+        setStatus("error");
+        setError(msg);
+    }
+
+    const signup = mode === "signup";
+
+    return (
+        <AnimatePresence>
+            {open && (
+                <motion.div
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    exit={{opacity: 0}}
+                    transition={{duration: 0.18}}
+                >
+                    <div aria-hidden className="absolute inset-0 bg-scrim backdrop-blur-[4px]" onClick={onClose} />
+                    <motion.div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={signup ? "Create Account" : "Sign In"}
+                        initial={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(10px) scale(0.98)"}}
+                        animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
+                        exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(8px) scale(0.98)"}}
+                        transition={{duration: 0.22, ease: [0.23, 1, 0.32, 1]}}
+                        className="relative db-tick db-seam w-[min(420px,94vw)] overflow-hidden rounded-lg border border-line bg-panel-solid p-7 shadow"
+                    >
+                        <button
+                            onClick={onClose}
+                            aria-label="Close"
+                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-sm border border-line text-dim transition-[color,border-color,transform] duration-150 ease-out-db hover:border-blue hover:text-text active:scale-95"
+                        >
+                            <X size={15} />
+                        </button>
+
+                        <div className="flex items-center gap-2 text-gold">
+                            <GameIcon name="dome" size={22} />
+                            <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
+                                {signup ? "Create account" : "Sign in"}
+                            </span>
+                        </div>
+                        <h2 className="mt-4 font-display text-[22px] font-bold uppercase tracking-[0.04em] text-text">
+                            {signup ? "Create your account" : "Sign in"}
+                        </h2>
+                        <p className="mt-2 text-[13px] leading-relaxed text-dim">
+                            {signup
+                                ? "Your DomeBreak account keeps your profile and match history in sync across the game and this site."
+                                : "Use your DomeBreak game account — same login, everywhere."}
+                        </p>
+
+                        <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
+                            {signup && (
+                                <div>
+                                    <label className={labelCva()} htmlFor="auth-username">
+                                        Username
+                                    </label>
+                                    <input
+                                        id="auth-username"
+                                        type="text"
+                                        className={cn(input(), "mt-2")}
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="yourname"
+                                        autoComplete="username"
+                                        maxLength={24}
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <label className={labelCva()} htmlFor="auth-email">
+                                    Email
+                                </label>
+                                <input
+                                    id="auth-email"
+                                    ref={emailRef}
+                                    type="email"
+                                    inputMode="email"
+                                    className={cn(input(), "mt-2", status === "error" && "border-danger")}
+                                    value={email}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (status === "error") setStatus("idle");
+                                    }}
+                                    placeholder="you@email.com"
+                                    autoComplete="email"
+                                />
+                            </div>
+                            <div>
+                                <label className={labelCva()} htmlFor="auth-password">
+                                    Password
+                                </label>
+                                <input
+                                    id="auth-password"
+                                    type="password"
+                                    className={cn(input(), "mt-2")}
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (status === "error") setStatus("idle");
+                                    }}
+                                    placeholder="••••••••"
+                                    autoComplete={signup ? "new-password" : "current-password"}
+                                />
+                            </div>
+
+                            <div className="min-h-[16px]">
+                                {status === "error" && <p className="font-mono text-[11.5px] text-danger">{error}</p>}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={status === "loading"}
+                                className={cn(button({variant: "primary", size: "lg"}), "w-full")}
+                            >
+                                {status === "loading" ? (
+                                    <>
+                                        <Loader2 size={15} className="animate-spin" />
+                                        <span>Standby</span>
+                                    </>
+                                ) : signup ? (
+                                    "Create Account"
+                                ) : (
+                                    "Sign In"
+                                )}
+                            </button>
+                        </form>
+
+                        <div className="mt-5 border-t border-hair pt-4 text-center">
+                            <button
+                                onClick={() => {
+                                    setMode(signup ? "signin" : "signup");
+                                    setStatus("idle");
+                                    setError("");
+                                }}
+                                className="font-mono text-[12px] text-dim transition-colors hover:text-text"
+                            >
+                                {signup ? "Already have an account? Sign in" : "New here? Create an account"}
+                            </button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}

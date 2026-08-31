@@ -1,0 +1,43 @@
+# DomeBreak
+
+> A real-time strategy game of missile defense and offense fought on the real
+> world map. You run one nation: its economy, its radar and interceptor
+> coverage, its arsenal, and its diplomacy with up to eleven rival powers that
+> are doing the same. Free to play on macOS and Windows, single-player against
+> the AI or online against other commanders.
+
+DomeBreak is a desktop game with a companion website. The site is where an
+account is created and the installers are downloaded; the game itself runs as a
+native application, not in the browser.
+
+## Pages
+
+- [Home](https://domebreak.com/): what the game is — the world map, building
+  the dome, planning a strike, and running the nation that pays for both.
+- [Download](https://domebreak.com/#/download): installers for Apple Silicon
+  and Intel Mac, and for 64-bit, ARM and 32-bit Windows. A free account is
+  required; the download page explains the first-launch confirmation an
+  unsigned application asks for.
+- [Unit Wiki](https://domebreak.com/#/wiki): every unit and building in the
+  game with the figures the simulation uses — cost in build points, upkeep,
+  build time in game-seconds, hit points, range in kilometers, and payload.
+  Grouped into missile defense, strike and offense, sensors and warning, naval,
+  air wing, ground forces, command and bases, and industry.
+- [Privacy](https://domebreak.com/#/privacy): what an account, a match and a
+  beta application store, who else sees it, and how to have it deleted.
+- [Terms](https://domebreak.com/#/terms): the licence to play, conduct in
+  multiplayer, account suspension, and the limits of the warranty.
+- [Contact](https://domebreak.com/#/contact): where to send a crash report, an
+  account or data request, or a press enquiry, and what to put in it.
+
+## Facts
+
+- Platforms: macOS 10.13 or newer, Windows 10 or newer.
+- Price: free. There is no purchase and no paywall.
+- Nations: 222, placed on real geography.
+- Powers per match: up to twelve, of which up to eleven are rivals.
+- Clock: real time, pausable, running from 0.5x to 10x.
+- Multiplayer: server-authoritative online matches with a lobby, parties and
+  friends. Cross-play between macOS and Windows.
+- Installers are served from https://download.domebreak.com.
+- Made by Trenton Taylor, published under TaylorURL.

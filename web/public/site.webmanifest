@@ -1,0 +1,15 @@
+{
+  "name": "DomeBreak",
+  "short_name": "DomeBreak",
+  "description": "A real-time strategy game of missile defense and offense, fought on the real world map.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#08090b",
+  "theme_color": "#08090b",
+  "icons": [
+    {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

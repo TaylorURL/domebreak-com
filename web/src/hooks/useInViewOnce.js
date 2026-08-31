@@ -1,0 +1,43 @@
+import {useEffect, useRef, useState} from "react";
+
+// Reveal-on-scroll built on the native IntersectionObserver. Fails open: if IO
+// is unavailable, content shows immediately. The observer emits an initial
+// callback for elements already on screen, so above-the-fold content reveals
+// right away.
+export function useInViewOnce({rootMargin = "-10% 0px -10% 0px"} = {}) {
+    const ref = useRef(null);
+    // Start visible when IntersectionObserver is unavailable, so content is never
+    // hidden and the effect needs no synchronous fallback setState.
+    const [inView, setInView] = useState(() => typeof IntersectionObserver === "undefined");
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        if (typeof IntersectionObserver === "undefined") return;
+        const io = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    setInView(true);
+                    io.disconnect();
+                }
+            },
+            {rootMargin, threshold: 0.01},
+        );
+        io.observe(el);
+        // Safety net: if nothing fires shortly (odd layouts, detached roots),
+        // reveal anyway so content is never permanently hidden.
+        const t = setTimeout(() => setInView((v) => v || isRoughlyInView(el)), 600);
+        return () => {
+            io.disconnect();
+            clearTimeout(t);
+        };
+    }, [rootMargin]);
+
+    return [ref, inView];
+}
+
+function isRoughlyInView(el) {
+    const r = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    return r.top < vh && r.bottom > 0;
+}

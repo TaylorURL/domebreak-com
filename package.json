@@ -1,0 +1,104 @@
+{
+  "name": "domebreak",
+  "productName": "DomeBreak",
+  "private": true,
+  "version": "2026.35.7",
+  "type": "module",
+  "description": "DomeBreak - online multiplayer missile defense/offense game.",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "electron": "electron .",
+    "electron:build:mac": "vite build && electron-builder --mac",
+    "electron:build:win": "vite build && electron-builder --win",
+    "electron:build:all": "vite build && electron-builder -mw",
+    "brand:dev-electron": "node scripts/dev-brand-electron.cjs",
+    "postinstall": "node scripts/dev-brand-electron.cjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "flag-icons": "^7.5.0",
+    "maplibre-gl": "^5.19.0",
+    "motion": "^12.42.2",
+    "pmtiles": "^4.4.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-map-gl": "^8.1.0",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.2",
+    "@vitejs/plugin-react": "^5.1.4",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.3.2",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "build": {
+    "appId": "com.trentontaylor.domebreak",
+    "productName": "DomeBreak",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "electron/**"
+    ],
+    "afterPack": "build/afterPack.cjs",
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "DomeBreak-mac-${arch}.${ext}",
+      "category": "public.app-category.games",
+      "icon": "build/icon.png",
+      "identity": null
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "DomeBreak-win-${arch}.${ext}",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game",
+      "icon": "build/icon.png"
+    }
+  },
+  "author": "Trenton Taylor",
+  "homepage": "https://github.com/bradley-t-t/domebreak",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bradley-t-t/domebreak.git"
+  }
+}

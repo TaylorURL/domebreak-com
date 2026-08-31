@@ -1,0 +1,385 @@
+// One live match: builds the world from a lobby roster, ticks it, routes
+// validated commands, broadcasts snapshots, and records results when the war
+// ends. Humans who drop get a reconnect grace window, then their nation goes
+// to the AI; a permanent drop is recorded as a quit.
+import {randomUUID} from "crypto";
+import {createWorld, step} from "../../src/game/engine.js";
+import {buildSetup, GREAT_POWERS} from "../../src/game/sim/newGame.js";
+import {normalizeRules} from "../../src/game/sim/gameRules.js";
+import {gameData} from "../data.js";
+import {COMMANDS} from "./commands.js";
+import {openingFreeze} from "./openingFreeze.js";
+import {
+    ABANDON_GRACE_S,
+    HARD_MAX_PLAYERS,
+    MATCH_START_PAUSE_S,
+    RECONNECT_GRACE_S,
+    SNAPSHOT_MS,
+    TICK_MS,
+} from "../config.js";
+import {indexBy} from "../../src/lib/iter.js";
+
+// Player chat is relayed, never simulated: the sender is the authenticated
+// socket's slot, text is trimmed and capped, and a small per-slot burst limit
+// keeps one client from flooding the match. No history is kept server-side —
+// clients hold their own rolling log. (The client input caps at the same
+// length; this is the authoritative bound.)
+const CHAT_MAX_LEN = 240;
+const CHAT_BURST = 5; // messages allowed per rolling window, per slot
+const CHAT_WINDOW_MS = 5000;
+
+// Snapshot backpressure cap, per socket. A full-world snapshot is large
+// (hundreds of KB of JSON) and ships at SNAPSHOT_MS cadence; a socket that
+// can't drain that fast — a slow link, or permessage-deflate outrunning a
+// small CPU — would otherwise queue every payload in memory and OOM the
+// process within a couple of minutes of match start. Snapshots are superseded
+// by the next one anyway, so once a socket has this many bytes still queued
+// (ws bufferedAmount counts messages awaiting compression too) we skip it for
+// this sweep and let it catch up: the effective snapshot rate degrades per
+// client to whatever its pipe sustains instead of the heap growing without
+// bound. Chat, init, and the final "over" always send — small, rare, and not
+// superseded by anything.
+const SNAP_MAX_BUFFERED = 4 * 1024 * 1024;
+
+// Server-side memo caches that live on the world but mean nothing to a client:
+// the AI's per-tick nation statistics, its capital-position index, and the
+// war-resolution baseline. Every one is DERIVED — rebuilt on the server whenever
+// its stamp goes stale — and no client reads any of them, so shipping them only
+// spent bandwidth: together they were ~7% of a snapshot, resent 20 times a second
+// to every player.
+//
+// broadcastSnapshot blanks them around the serialise rather than filtering them
+// out through a JSON.stringify replacer: a replacer is invoked for every key of a
+// ~900 KB structure and cost more frame time than the bytes it saved. Assigning
+// undefined leaves the property in place (so the world's shape never changes) and
+// stringify omits it.
+const SNAP_OMITTED = ["_aiStats", "_aiStatsAt", "_capPos", "_capPosAt", "_startOwner"];
+
+// Roster isos must be valid (city data exists) and unique — substitutions come
+// from the great-powers pool so a bad pick never shifts slot assignments.
+function resolveIsos(picks) {
+    const data = gameData();
+    const used = new Set();
+    const out = [];
+    for (const want of picks) {
+        let iso = typeof want === "string" ? want.toUpperCase() : "";
+        if (!data.cities[iso]?.length || used.has(iso)) {
+            iso = GREAT_POWERS.find((g) => data.cities[g]?.length && !used.has(g));
+        }
+        used.add(iso);
+        out.push(iso);
+    }
+    return out;
+}
+
+export class Match {
+    // roster: [{userId, username, iso, isBot, ready}] — REAL PLAYERS ONLY. The
+    // match is a bounded neutral-world war exactly like singleplayer: matchRules
+    // .activeCount nations are the belligerents (the human players plus AI great
+    // powers filling any unclaimed belligerent slots), and every other country is
+    // a passive, capturable neutral. A player's slot is that nation's slot in the
+    // full world (by GDP order), NOT the roster index — so two players can be
+    // arbitrarily far apart on the map.
+    constructor({lobbyId, roster, rules, onFinished}) {
+        this.id = randomUUID();
+        this.lobbyId = lobbyId;
+        this.onFinished = onFinished;
+        this.startedAt = new Date().toISOString();
+        this.sockets = new Map(); // slot -> ws
+        this.acks = {}; // slot -> last command seq applied (for client prediction reconciliation)
+        this.chatStamps = new Map(); // slot -> recent chat send times (flood limit)
+        this.graceTimers = new Map();
+        this.quit = new Set(); // userIds recorded as quit
+        this.reported = false;
+        this.reapTimer = null; // reaps the match when it goes undermanned
+
+        // Every human claims an active belligerent slot, so a roster past the
+        // sim's active-nation cap would break the bounded-match model. No normal
+        // path produces one (matchmaker and parties respect MAX_PLAYERS), so
+        // truncation only fires on a hand-crafted lobby row.
+        if (roster.length > HARD_MAX_PLAYERS) roster = roster.slice(0, HARD_MAX_PLAYERS);
+        // Unique, valid nation per player (bad/duplicate picks resolve to a free
+        // great power), then build the full world seeded on the first player.
+        const isos = resolveIsos(roster.map((r) => r.iso));
+        // Rules the lobby authored (SP-only knobs like startSpeed are ignored
+        // downstream — online is locked at 1x regardless).
+        const matchRules = normalizeRules(rules ?? {});
+        // Same bounded neutral-world model as singleplayer: exactly
+        // matchRules.activeCount nations are the belligerents and every other
+        // country stays on the map as a passive, capturable neutral. Passing the
+        // human isos as participants guarantees each player is active; any active
+        // slots the humans don't fill are seeded with scattered great powers that
+        // run as AI — so a half-full lobby still fights a full-sized war.
+        const setup = buildSetup(gameData(), isos[0], null, (Math.random() * 1e9) | 0 || 1, {
+            activeCount: matchRules.activeCount,
+            participantIsos: isos,
+            rules: matchRules,
+        });
+        const slotOfIso = indexBy(
+            setup.nations,
+            (n) => n.iso,
+            (n) => n.slot,
+        );
+        this.players = roster.map((r, i) => ({...r, iso: isos[i], slot: slotOfIso.get(isos[i])}));
+        // Real humans in this match (matchmaking is human-only, but guard anyway).
+        // A match that began with >= 2 is PvP: it ends by walkover the moment it
+        // falls to its last connected human — nobody left to fight.
+        this.humanCount = this.players.filter((p) => p.userId != null && !p.isBot).length;
+
+        // Hand each player their nation; a human who never readied (force-launched)
+        // stays AI until they connect (attach flips isAi=false). Every other nation
+        // in the world stays AI.
+        const bySlot = indexBy(this.players, (p) => p.slot);
+        setup.nations.forEach((n) => {
+            const p = bySlot.get(n.slot);
+            n.isAi = p ? p.ready === false : true;
+        });
+        this.world = createWorld(setup);
+        // Online speed is permanently locked to 1x: no speed/pause command exists
+        // in the whitelist (COMMANDS) and clients can't send one, so nothing ever
+        // mutates it. The match opens on a fixed pause so everyone loads in first.
+        this.world.speed = 1;
+        this.startPauseUntil = Date.now() + MATCH_START_PAUSE_S * 1000;
+        const freeze = openingFreeze(Date.now(), this.startPauseUntil);
+        this.world.paused = freeze.paused;
+        this.world.startsIn = freeze.startsIn; // whole-second countdown shown to players; 0 = live
+        this.world.meta = {matchId: this.id, mode: "online"};
+
+        let last = Date.now();
+        this.tickTimer = setInterval(() => {
+            const now = Date.now();
+            const dt = Math.min(0.25, (now - last) / 1000);
+            last = now;
+            if (this.world.paused) {
+                // Opening freeze: hold the sim and count down, then release to live
+                // play. Once released, this branch never runs again (nothing can
+                // re-pause an online match).
+                const state = openingFreeze(now, this.startPauseUntil);
+                this.world.paused = state.paused;
+                this.world.startsIn = state.startsIn;
+                if (state.paused) return;
+            }
+            if (!this.world.over) step(this.world, dt * this.world.speed);
+            if (this.world.over) this.finish();
+        }, TICK_MS);
+        this.snapTimer = setInterval(() => this.broadcastSnapshot(), SNAPSHOT_MS);
+        // A fresh match has no sockets yet: evaluate the reaper so a client that
+        // never dials in can't strand this slot. attach()/detach() re-evaluate it
+        // as humans come and go.
+        this.reapCheck();
+    }
+
+    // A match is only worth ticking while enough humans are present. It is reaped
+    // — its MAX_MATCHES capacity slot freed — once it goes undermanned past the
+    // grace window: with NO human connected it ends abandoned (every human recorded
+    // a quit, no winner); a PvP match (>= 2 humans) down to its last connected
+    // human ends by walkover (that human wins, everyone who left is a quit). Either
+    // way a headless game that never reaches a win condition can't hold a slot
+    // forever. Re-evaluated on every attach/detach; the timer only fires if the
+    // match is still undermanned when the grace elapses.
+    reapCheck() {
+        if (this.reported) return;
+        const connected = this.sockets.size;
+        const undermanned = connected === 0 || (this.humanCount >= 2 && connected <= 1);
+        if (undermanned) this.armReap();
+        else this.disarmReap();
+    }
+
+    armReap() {
+        if (this.reported || this.reapTimer) return;
+        this.reapTimer = setTimeout(() => {
+            this.reapTimer = null;
+            if (this.reported) return;
+            const connected = this.sockets.size;
+            if (connected === 0) {
+                // Abandoned — nobody to crown; every human is recorded as a quit.
+                for (const p of this.players) if (p.userId && !p.isBot) this.quit.add(p.userId);
+                this.finish();
+            } else if (this.humanCount >= 2 && connected <= 1) {
+                // Walkover — the lone remaining human wins; everyone who left quits.
+                const winner = [...this.sockets.keys()][0];
+                for (const p of this.players) if (p.userId && !p.isBot && p.slot !== winner) this.quit.add(p.userId);
+                if (!this.world.over) {
+                    this.world.over = true;
+                    this.world.winnerSlot = winner;
+                }
+                this.finish();
+            }
+            // Otherwise enough players returned within the grace — nothing to reap.
+        }, ABANDON_GRACE_S * 1000);
+    }
+
+    disarmReap() {
+        if (this.reapTimer) {
+            clearTimeout(this.reapTimer);
+            this.reapTimer = null;
+        }
+    }
+
+    // Bots have userId === null and never call attach(); only human rows are
+    // ever looked up here (WebSocket auth always resolves to a real user_id).
+    playerByUser(userId) {
+        return this.players.find((p) => p.userId === userId);
+    }
+
+    attach(userId, ws) {
+        const p = this.playerByUser(userId);
+        if (!p) return null;
+        const old = this.sockets.get(p.slot);
+        if (old && old !== ws) {
+            try {
+                old.close(4000, "superseded");
+            } catch {
+                /* already gone */
+            }
+        }
+        clearTimeout(this.graceTimers.get(p.slot));
+        this.graceTimers.delete(p.slot);
+        const nation = this.world.nations.find((n) => n.slot === p.slot);
+        if (nation) nation.isAi = false; // back from AI stewardship on reconnect
+        this.quit.delete(userId);
+        this.sockets.set(p.slot, ws);
+        this.reapCheck(); // a human joined — re-evaluate the reaper
+        return p;
+    }
+
+    detach(slot) {
+        this.sockets.delete(slot);
+        this.reapCheck(); // a human left — reap if abandoned or down to the last one
+        if (this.world.over) return;
+        // grace window, then the AI takes the chair and the drop counts as a quit
+        this.graceTimers.set(
+            slot,
+            setTimeout(() => {
+                const nation = this.world.nations.find((n) => n.slot === slot);
+                if (nation) nation.isAi = true;
+                const p = this.players.find((x) => x.slot === slot);
+                if (p) this.quit.add(p.userId);
+            }, RECONNECT_GRACE_S * 1000),
+        );
+    }
+
+    command(slot, name, args) {
+        const fn = COMMANDS[name];
+        if (!fn) return {error: "unknown command"};
+        if (this.world.over) return {error: "the war is over"};
+        try {
+            return fn(this.world, slot, Array.isArray(args) ? args : []) ?? {ok: true};
+        } catch (e) {
+            return {error: String(e?.message || e)};
+        }
+    }
+
+    // Record a command as applied to the world so the next snapshot tells this slot's
+    // client the effect is now authoritative and it can stop replaying its prediction.
+    // Bumped for accepted AND rejected commands (a nack still resolves the prediction),
+    // and only ever advances — the transport is ordered, so seqs arrive monotonically.
+    recordAck(slot, seq) {
+        if (seq == null) return;
+        if (this.acks[slot] == null || seq > this.acks[slot]) this.acks[slot] = seq;
+    }
+
+    // Relay a chat line to every connected player. Deliberately not gated on
+    // world.over — sockets linger after the war ends so the outcome screen can
+    // still talk. Floods and junk are dropped silently (nothing to nack).
+    chat(slot, text) {
+        const p = this.players.find((x) => x.slot === slot);
+        const clean = typeof text === "string" ? text.trim().slice(0, CHAT_MAX_LEN) : "";
+        if (!p || !clean) return;
+        const now = Date.now();
+        const recent = (this.chatStamps.get(slot) || []).filter((t) => now - t < CHAT_WINDOW_MS);
+        if (recent.length >= CHAT_BURST) return;
+        recent.push(now);
+        this.chatStamps.set(slot, recent);
+        this.broadcast({t: "chat", slot, username: p.username, text: clean, ts: now});
+    }
+
+    // Fan a JSON message out to every connected player — the shared spine of
+    // every server->client push (snapshots, chat, the final result).
+    broadcast(msg) {
+        const payload = JSON.stringify(msg);
+        for (const ws of this.sockets.values()) {
+            if (ws.readyState === ws.OPEN) ws.send(payload);
+        }
+    }
+
+    broadcastSnapshot() {
+        const w = this.world;
+        const held = SNAP_OMITTED.map((k) => w[k]);
+        for (const k of SNAP_OMITTED) w[k] = undefined;
+        const payload = JSON.stringify({t: "snap", world: w, acks: this.acks});
+        SNAP_OMITTED.forEach((k, i) => {
+            w[k] = held[i];
+        });
+        for (const ws of this.sockets.values()) {
+            if (ws.readyState === ws.OPEN && ws.bufferedAmount <= SNAP_MAX_BUFFERED) ws.send(payload);
+        }
+    }
+
+    initPayload(slot) {
+        return JSON.stringify({
+            t: "init",
+            matchId: this.id,
+            slot,
+            world: this.world,
+            acks: this.acks,
+            players: this.players.map((p) => ({slot: p.slot, username: p.username, iso: p.iso, isBot: !!p.isBot})),
+        });
+    }
+
+    finish() {
+        if (this.reported) return;
+        this.reported = true;
+        this.disarmReap();
+        clearInterval(this.tickTimer);
+        clearInterval(this.snapTimer);
+        for (const t of this.graceTimers.values()) clearTimeout(t);
+        this.broadcast({t: "over", winnerSlot: this.world.winnerSlot, world: this.world, acks: this.acks});
+        this.onFinished?.(this);
+    }
+
+    // Rows for the matches table — the server is the authority on results.
+    // Bots (userId === null) never get a matches row; only humans do. A player
+    // whose nation was wiped out is a loss even if they then disconnected: being
+    // eliminated is a defeat, not a rage-quit, and outranks the quit flag.
+    resultRows() {
+        return this.players
+            .filter((p) => p.userId != null)
+            .map((p) => {
+                const nation = this.world.nations.find((n) => n.slot === p.slot);
+                const eliminated = nation != null && nation.alive === false;
+                return {
+                    user_id: p.userId,
+                    started_at: this.startedAt,
+                    result:
+                        this.world.winnerSlot === p.slot
+                            ? "win"
+                            : eliminated
+                              ? "loss"
+                              : this.quit.has(p.userId)
+                                ? "quit"
+                                : "loss",
+                    nation_iso: p.iso,
+                    opponents: this.players.length - 1, // real-player opponents (other belligerents are AI)
+                    duration_s: Math.round(this.world.time),
+                    mode: "online",
+                    match_id: this.id,
+                    stats: {},
+                };
+            });
+    }
+
+    dispose() {
+        this.disarmReap();
+        clearInterval(this.tickTimer);
+        clearInterval(this.snapTimer);
+        for (const t of this.graceTimers.values()) clearTimeout(t);
+        for (const ws of this.sockets.values()) {
+            try {
+                ws.close(1001, "match disposed");
+            } catch {
+                /* already gone */
+            }
+        }
+    }
+}

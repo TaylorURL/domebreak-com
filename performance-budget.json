@@ -1,0 +1,10 @@
+{
+  "recorded": "2026-08-29 07:12:00Z",
+  "url": "https://domebreak.com",
+  "measured_from": "web/dist",
+  "javascript_kb": 2005.4,
+  "css_kb": 137.1,
+  "images_kb": 1689.9,
+  "chunks": 9,
+  "note": "Measured over web/dist, which is what domebreak.com serves. perf-pass.py budget --write resolves the build directory from the git root and finds the Electron game's dist/ instead, so it recorded zeroes for a site it never read; these are the real weights of the same build the after capture was taken on."
+}

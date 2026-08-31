@@ -1,0 +1,673 @@
+// Aircraft flight state-machine phase helpers: orbit/turn kinematics primitives,
+// hangar-capacity lookup, and the per-phase flight controllers (leadership ferry
+// legs, escort formation, rotary-wing patrol, and the fixed-wing climb/cruise/
+// hold/approach/landing pattern) driven by aircraft.js's flyAircraft/flyFerry
+// dispatchers.
+import {
+    APPROACH_KM,
+    CLIMB_KM,
+    FLIGHT,
+    HANGAR_SPEC,
+    HELO_CLIMB_T,
+    HELO_PATROL_RATE,
+    HELO_STATION_KM,
+    HOLD_PAD,
+    KM_PER_DEG,
+    LEADERSHIP,
+    ROLL_KM,
+    ROLLOUT_KM,
+    STRIKE,
+    TRAIL_DT,
+    TRAIL_LEN,
+    UNITS,
+} from "../data/constants.js";
+import {haversine} from "../geo/geo.js";
+import {cosLatSafe, offsetKmPolar, unwrapLng, wrapAnglePi} from "../../lib/geo.js";
+import {clamp, clamp01, clampSym} from "../../lib/math.js";
+import {nationOf} from "./worldState.js";
+import {findTarget, idMapOf, nearestEnemyTarget} from "./combat.js";
+import {atWar} from "./queries.js";
+
+// Point at radiusKm/ang from origin o, in the local flight frame: math angle
+// (east = 0, counterclockwise), equirectangular offset with cos(lat) clamped
+// near the poles. bearingTo() returns headings in this same basis.
+export const polarFrom = offsetKmPolar;
+
+// Initial great-circle heading from `from` to `to`, in polarFrom's local
+// math-angle basis (east = 0, counterclockwise) so advance() can steer straight
+// down it. This has to be the great-circle bearing, NOT a flat equirectangular
+// one: a flat bearing points along the shortest change in *longitude*, which at
+// high latitude is the long way — a bomber recovering to a base most of a
+// hemisphere away in longitude would fly clean around its parallel (visibly
+// "around the whole globe" on the sphere) instead of cutting over the pole. The
+// spherical formula routes over the top of the world when that's shorter, and
+// Δλ passes straight through sin/cos so the antimeridian needs no unwrap.
+export function bearingTo(from, to) {
+    const rad = Math.PI / 180;
+    const la1 = from.lat * rad,
+        la2 = to.lat * rad,
+        dLng = (to.lng - from.lng) * rad;
+    const y = Math.sin(dLng) * Math.cos(la2);
+    const x = Math.cos(la1) * Math.sin(la2) - Math.sin(la1) * Math.cos(la2) * Math.cos(dLng);
+    return Math.PI / 2 - Math.atan2(y, x); // compass (0 = N, clockwise) -> math angle (0 = E, ccw)
+}
+
+// Rotate `cur` toward `target` by at most `maxDelta`, shortest way around.
+function turnToward(cur, target, maxDelta) {
+    const d = wrapAnglePi(target - cur);
+    return Math.abs(d) <= maxDelta ? target : cur + Math.sign(d) * maxDelta;
+}
+
+// Turn-rate-limited forward flight: bank the heading toward `desired` (never faster
+// than turnRate), then advance one step along the *actual* heading. No teleporting —
+// the jet always flies where it's pointed and curves onto its target.
+export function advance(u, desired, speedKm, turnRate, dt) {
+    u.hdg = turnToward(u.hdg == null ? desired : u.hdg, desired, turnRate * dt);
+    const p = polarFrom(u, speedKm * dt, u.hdg);
+    let lat = p.lat,
+        lng = p.lng;
+    // A great-circle leg can run over a pole; in the local tangent frame that
+    // shows up as |lat| overshooting 90. Fold it back across the pole — reflect
+    // the latitude, step 180° round in longitude, and mirror the heading's
+    // north/south component — so the jet flies over the top of the world instead
+    // of jamming against the coordinate singularity (an invalid lat also throws
+    // map.project() downstream).
+    if (lat > 90) {
+        lat = 180 - lat;
+        lng += 180;
+        u.hdg = -u.hdg;
+    } else if (lat < -90) {
+        lat = -180 - lat;
+        lng += 180;
+        u.hdg = -u.hdg;
+    }
+    u.lng = unwrapLng(lng, 0); // keep coordinates sane across the antimeridian
+    u.lat = lat;
+    u.face = polarFrom(u, Math.max(18, speedKm), u.hdg);
+}
+
+export function hangarCapOf(baseType, acType) {
+    return HANGAR_SPEC[baseType]?.[acType] || 0;
+}
+
+// Rate-limited approach toward a target — kills every altitude pop (go-arounds,
+// capture handoffs) by slewing instead of snapping.
+export function slew(cur, tgt, maxDelta) {
+    const base = cur ?? tgt;
+    return base + clampSym(tgt - base, maxDelta);
+}
+
+export function recordTrail(u, dt) {
+    u._trailT = (u._trailT || 0) + dt;
+    if (u._trailT < TRAIL_DT) return;
+    u._trailT = 0;
+    (u.trail ||= []).push([u.lng, u.lat, u.alt || 0]);
+    if (u.trail.length > TRAIL_LEN) u.trail.shift();
+}
+
+// Formation escort: hold a stand-off point off the leadership ferry until the run
+// ends (ferry lands/stows or is lost), then return to the home airstrip and stow
+// back into fighter stock. Pure flight — the combat loops skip escort-mission
+// units, so an escort never breaks formation to shoot.
+export function flyEscort(w, u, def, dt) {
+    const m = u.mission;
+    const sp = def.airSpeed,
+        tr = def.turnRate;
+    const dist = (a, b) => haversine(a.lng, a.lat, b.lng, b.lat);
+    u.vis = Math.min(1, (u.vis || 0) + dt / 0.8);
+    if ((u.alt || 0) > 0.02) recordTrail(u, dt);
+    // Id lookups via the amortized id map — these run once per flight sub-step
+    // (up to ~12 per aircraft per tick), where a linear scan multiplied badly.
+    const units = idMapOf(w.units);
+    const leadRef = units.get(m.leadId);
+    const lead = leadRef && leadRef.hp > 0 && leadRef.mission?.role === "leadershipFerry" ? leadRef : null;
+    const homeRef = units.get(m.homeId);
+    const home = homeRef && homeRef.hp > 0 ? homeRef : null;
+    if (lead) {
+        // Fan the escorts around the ferry by index so a flight spreads out, and
+        // match the ferry's altitude so they climb/descend with it on the pads.
+        const escorts = Math.max(1, LEADERSHIP.escortsPerFerry);
+        const ang = ((m.idx || 0) / escorts) * 2 * Math.PI + Math.PI / 2;
+        const fp = polarFrom(lead, LEADERSHIP.escortOffsetKm, ang);
+        u.alt = Math.max(0.35, lead.alt || 0);
+        const rng = dist(u, fp);
+        const speed = clamp(rng * 1.4, sp * 0.35, sp);
+        advance(u, bearingTo(u, fp), speed, tr * 2, dt);
+        return;
+    }
+    // Run over (ferry stowed or shot down): recover to the home strip and stow.
+    if (!home) {
+        u.hp = 0;
+        u.face = null;
+        return;
+    }
+    u.alt = 1;
+    if (dist(u, home) <= LEADERSHIP.arriveKm) {
+        const cap = hangarCapOf(home.type, u.type);
+        if ((home.hangar?.[u.type] || 0) < cap) home.hangar[u.type] = (home.hangar[u.type] || 0) + 1;
+        u.hp = 0; // stow into fighter stock
+        return;
+    }
+    advance(u, bearingTo(u, home), sp, tr, dt);
+}
+
+// Recovery tail shared by the strike and escort missions: clear the target, fly
+// back to the home base, and on arrival stow into hangar stock; a base lost mid-
+// flight takes the aircraft down with it (the wing can't recover to nothing).
+function recoverToBase(u, def, home, dt) {
+    u.targetId = null;
+    if (!home || home.hp <= 0) {
+        u.hp = 0;
+        u.face = null;
+        return;
+    }
+    if (haversine(u.lng, u.lat, home.lng, home.lat) <= STRIKE.recoverKm) {
+        const cap = hangarCapOf(home.type, u.type);
+        if ((home.hangar?.[u.type] || 0) < cap) home.hangar[u.type] = (home.hangar[u.type] || 0) + 1;
+        u.hp = 0;
+        return;
+    }
+    advance(u, bearingTo(u, home), def.airSpeed, def.turnRate, dt);
+}
+
+// Offensive strike mission: a tasked aircraft (a bomber on an airstrip sortie, or
+// any aircraft handed a target by Command Attack, a Battle Plan, or Hostile
+// auto-engage) climbs out, runs to its target, and holds inside weapons range so
+// the fire phase can release — a tight overhead loiter for a ground/city target,
+// a closing pass for an air target. After STRIKE.maxPasses shots, or once the
+// target dies or leaves the war, it breaks off and recovers to base.
+// `u.targetId` mirrors the mission target so the fire phase in stepMovement
+// looses the ordnance.
+export function flyStrike(w, u, def, dt) {
+    const m = u.mission;
+    const sp = def.airSpeed,
+        tr = def.turnRate;
+    u.vis = Math.min(1, (u.vis || 0) + dt / 0.8);
+    u.alt = slew(u.alt, 1, dt / 1.5);
+    if ((u.alt || 0) > 0.02) recordTrail(u, dt);
+    const units = idMapOf(w.units);
+    if (m.phase !== "rtb") {
+        const cities = idMapOf(w.cities);
+        let t = findTarget(w, m.targetId, {cities, units});
+        if (t && t.alive) {
+            m.tx = t.lng;
+            m.ty = t.lat;
+            m.tslot = t.slot;
+        } // remember the run-in for re-tasking
+        // A committed bomber whose target died mid-run (typically a wing-mate got
+        // it first) doesn't wheel around on the spot: while it still has passes
+        // left, and only as long as its nation is still at war with that enemy, it
+        // re-acquires the nearest surviving target of the SAME enemy near the
+        // run-in and presses the attack. Peace or surrender clears the war
+        // relation, so the plane finds no target and recovers home.
+        if (
+            (!t || !t.alive || !atWar(w, u.slot, t.slot)) &&
+            (m.passes || 0) < STRIKE.maxPasses &&
+            m.tx != null &&
+            m.tslot != null &&
+            atWar(w, u.slot, m.tslot)
+        ) {
+            const foe = nearestEnemyTarget(w, {slot: u.slot, lng: m.tx, lat: m.ty}, STRIKE.reacquireKm, {
+                includeAircraft: false,
+                onlySlot: m.tslot,
+            });
+            if (foe) {
+                m.targetId = foe.id;
+                t = findTarget(w, m.targetId, {cities, units});
+            }
+        }
+        if (!t || !t.alive || !atWar(w, u.slot, t.slot) || (m.passes || 0) >= STRIKE.maxPasses) {
+            m.phase = "rtb";
+        } else {
+            u.targetId = m.targetId;
+            const isAir = t.kind === "unit" && !!UNITS[t.ref.type]?.airSpeed;
+            const engageKm = isAir ? STRIKE.a2aRangeKm : Math.max(def.range, STRIKE.loiterKm);
+            const rng = haversine(u.lng, u.lat, t.lng, t.lat);
+            if (isAir || rng > engageKm * 0.8)
+                advance(u, bearingTo(u, t), sp, tr, dt); // run in / close on the jet
+            else advance(u, bearingTo(u, t) + Math.PI / 2, sp * 0.7, tr, dt); // tight overhead loiter
+            return;
+        }
+    }
+    recoverToBase(u, def, units.get(m.homeId), dt);
+}
+
+// Sortie escort: a fighter launched to shield an airstrip bomber package. It forms
+// on the nearest surviving bomber of its sortie and opportunistically locks any
+// enemy aircraft inside air-to-air range (the fire phase looses the missile), so the
+// bombers press the target while the escorts keep the sky clear. When every bomber
+// of the sortie is down or home, the escort breaks off, recovers, and stows.
+export function flySortieEscort(w, u, def, dt) {
+    const m = u.mission;
+    const sp = def.airSpeed,
+        tr = def.turnRate;
+    u.vis = Math.min(1, (u.vis || 0) + dt / 0.8);
+    u.alt = slew(u.alt, 1, dt / 1.5);
+    if ((u.alt || 0) > 0.02) recordTrail(u, dt);
+    let lead = null,
+        leadD = Infinity;
+    for (const b of w.units) {
+        if (b.hp > 0 && b.type === "bomber" && b.mission?.sortieId === m.sortieId) {
+            const d = haversine(u.lng, u.lat, b.lng, b.lat);
+            if (d < leadD) {
+                leadD = d;
+                lead = b;
+            }
+        }
+    }
+    // Opportunistic air-to-air: lock the closest enemy jet in range (fire phase fires).
+    const foe = nearestEnemyTarget(w, u, STRIKE.a2aRangeKm, {includeCities: false, includeGround: false});
+    u.targetId = foe ? foe.id : null;
+    if (lead) {
+        const escorts = Math.max(1, STRIKE.escortsPerSortie);
+        const ang = ((m.idx || 0) / escorts) * 2 * Math.PI + Math.PI / 2;
+        const fp = polarFrom(lead, 26, ang);
+        u.alt = Math.max(0.5, lead.alt || 0);
+        advance(u, bearingTo(u, fp), clamp(haversine(u.lng, u.lat, fp.lng, fp.lat) * 1.4, sp * 0.4, sp), tr * 1.6, dt);
+        return;
+    }
+    recoverToBase(u, def, idMapOf(w.units).get(m.homeId), dt);
+}
+
+// toPickup: nothing to lift here → skip ahead; otherwise fly to the pickup
+// point and, on arrival, start the timed load.
+function ferryToPickup(u, m, pickup, sourceEmpty, flyTo) {
+    if (sourceEmpty || !pickup) {
+        m.phase = m.cargo > 0 ? "toDrop" : "toHome";
+        return;
+    }
+    if (flyTo(pickup)) {
+        m.phase = "loading";
+        m.timer = LEADERSHIP.loadSec;
+        u.alt = 0;
+    }
+}
+
+// loading: sit on the pad for the timed load, then take on as much cargo as
+// there's room for and source has, before moving on.
+function ferryLoading(u, m, dt, release, n, city) {
+    u.alt = 0;
+    m.timer -= dt;
+    if (m.timer <= 0) {
+        const room = LEADERSHIP.perPlane - m.cargo;
+        if (release) {
+            const take = n?.lead ? Math.min(room, n.lead.sheltered || 0) : 0;
+            if (take > 0) {
+                n.lead.sheltered -= take;
+                m.cargo += take;
+            }
+        } else {
+            const take = city && city.alive ? Math.min(room, city.leaders || 0) : 0;
+            if (take > 0) {
+                city.leaders -= take;
+                m.cargo += take;
+            }
+        }
+        m.phase = m.cargo > 0 ? "toDrop" : "toHome";
+    }
+}
+
+// toDrop: destination lost → carry home and redeposit safely; otherwise fly to
+// the drop point and, on arrival, start the timed unload.
+function ferryToDrop(u, m, drop, dropGone, flyTo) {
+    if (dropGone || !drop) {
+        m.phase = "toHome";
+        return;
+    }
+    if (flyTo(drop)) {
+        m.phase = "unloading";
+        m.timer = LEADERSHIP.unloadSec;
+        u.alt = 0;
+    }
+}
+
+// unloading: sit on the pad for the timed unload, deliver any cargo (or
+// redeposit it safely if the destination went bad mid-run), then head home.
+function ferryUnloading(u, m, dt, release, city, n, redeposit) {
+    u.alt = 0;
+    m.timer -= dt;
+    if (m.timer <= 0) {
+        if (m.cargo > 0) {
+            if (release) {
+                if (city && city.alive) city.leaders = (city.leaders || 0) + m.cargo;
+                else redeposit();
+            } else if (n?.lead) n.lead.sheltered += m.cargo;
+            m.cargo = 0;
+        }
+        m.phase = "toHome";
+    }
+}
+
+// toHome (and the default fallback): home strip lost mid-flight → the ferry
+// goes down (cargo lost via reconcile); otherwise fly home and, on arrival,
+// redeposit any diverted cargo and stow back into transport stock.
+function ferryToHome(u, home, redeposit, flyTo) {
+    if (!home) {
+        redeposit();
+        u.hp = 0;
+        u.face = null;
+        return;
+    }
+    if (flyTo(home)) {
+        redeposit(); // only carries cargo here if it was diverted; a normal run lands empty
+        const cap = hangarCapOf(home.type, "transport");
+        if ((home.hangar?.transport || 0) < cap) home.hangar.transport = (home.hangar.transport || 0) + 1;
+        u.hp = 0; // stow into stock; evacTick relaunches if there is more to move
+    }
+}
+
+// Point-to-point leadership ferry, direction set by mission.mode. Flies a straight
+// line toward the current waypoint (climbing to cruise), sets down for a timed
+// load/unload, then flies the next leg, then home to stow. In "shelter" mode it
+// picks up from a city and drops at the bunker (sheltered); in "release" mode it
+// picks up from the bunker (sheltered) and drops at a city. Cargo that can't be
+// delivered is redeposited safely (or lost only when nothing valid remains).
+export function flyFerry(w, u, def, dt) {
+    const m = u.mission;
+    const release = m.mode === "release";
+    const sp = def.airSpeed,
+        tr = def.turnRate;
+    const dist = (a, b) => haversine(a.lng, a.lat, b.lng, b.lat);
+    const n = nationOf(w, u.slot);
+    // Id lookups via the amortized id map — one per waypoint per sub-step.
+    const units = idMapOf(w.units);
+    const city = idMapOf(w.cities).get(m.capId);
+    const bunkerRef = units.get(m.bunkerId);
+    const bunker = bunkerRef && bunkerRef.hp > 0 ? bunkerRef : null;
+    const homeRef = units.get(m.homeId);
+    const home = homeRef && homeRef.hp > 0 ? homeRef : null;
+    const pickup = release ? bunker : city; // where we load
+    const drop = release ? city : bunker; // where we deliver
+    u.vis = Math.min(1, (u.vis || 0) + dt / FLIGHT.FERRY_VIS_RAMP_T);
+    if ((u.alt || 0) > FLIGHT.TRAIL_ALT_THRESHOLD) recordTrail(u, dt);
+    // Put stuck cargo somewhere sane. Shelter runs return it to the origin city (or
+    // lose it with a dead city); release runs keep it safe in the bunker, else a
+    // living city, else lost.
+    const redeposit = () => {
+        if (!(m.cargo > 0)) return;
+        if (release) {
+            if (bunker && n?.lead) n.lead.sheltered += m.cargo;
+            else {
+                const alt = w.cities.find((c) => c.slot === u.slot && c.alive);
+                if (alt) alt.leaders = (alt.leaders || 0) + m.cargo;
+                else if (n?.lead) n.lead.lost += m.cargo;
+            }
+        } else if (city && city.alive) city.leaders = (city.leaders || 0) + m.cargo;
+        else if (n?.lead) n.lead.lost += m.cargo;
+        m.cargo = 0;
+    };
+    const flyTo = (pt) => {
+        const rng = dist(u, pt);
+        if (rng <= LEADERSHIP.arriveKm) {
+            u.lng = pt.lng; // snap onto the pad so the ground-hold reads as a clean landing
+            u.lat = pt.lat;
+            return true;
+        }
+        u.alt = 1;
+        // Ease speed down and tighten the turn on approach: an airlifter's normal
+        // cruise turn radius (v/ω) is far larger than the gaps between a city, the
+        // bunker, and the airstrip, so it must slow to capture a near waypoint.
+        const speed = clamp(rng / FLIGHT.FERRY_APPROACH_RANGE_DIV, sp * FLIGHT.FERRY_APPROACH_SPEED_MULT, sp);
+        advance(u, bearingTo(u, pt), speed, tr * FLIGHT.FERRY_APPROACH_TURN_MULT, dt);
+        return false;
+    };
+    // Is there anything left to load at the source?
+    const sourceEmpty = release
+        ? !bunker || (n?.lead?.sheltered || 0) <= 0
+        : !city || !city.alive || (city.leaders || 0) <= 0;
+    // Is the delivery destination still valid?
+    const dropGone = release ? !city || !city.alive : !bunker;
+    switch (m.phase) {
+        case "toPickup":
+            ferryToPickup(u, m, pickup, sourceEmpty, flyTo);
+            break;
+        case "loading":
+            ferryLoading(u, m, dt, release, n, city);
+            break;
+        case "toDrop":
+            ferryToDrop(u, m, drop, dropGone, flyTo);
+            break;
+        case "unloading":
+            ferryUnloading(u, m, dt, release, city, n, redeposit);
+            break;
+        case "toHome":
+        default:
+            ferryToHome(u, home, redeposit, flyTo);
+            break;
+    }
+}
+
+// Rotary-wing controller: vertical lift-off, then patrol a slow picket circle around
+// the base (each helo starts on a distinct bearing so a flight fans out around the
+// ring), then a vertical descent onto the pad. No ground roll, no localizer approach.
+export function flyRotary(w, u, def, base, dt) {
+    const sp = def.airSpeed,
+        tr = def.turnRate;
+    const d = (a, b) => haversine(a.lng, a.lat, b.lng, b.lat);
+    // Fly toward a point at up to `speed`, easing to a dead stop on arrival — the
+    // per-step distance is capped at the remaining range so it never overshoots.
+    const goHover = (pt, speed) => {
+        const rng = d(u, pt);
+        if (rng < 0.6) return true;
+        advance(u, bearingTo(u, pt), Math.min(speed, rng / Math.max(dt, 1e-3)), tr, dt);
+        return false;
+    };
+    const bearing = u.orbitA ?? 0;
+
+    if (u.phase === "takeoff") {
+        // straight up off the pad
+        u.alt = slew(u.alt, 1, dt / HELO_CLIMB_T);
+        u.vis = Math.min(1, (u.vis || 0) + dt / 0.6);
+        u.face = polarFrom(base, 60, bearing); // nose out toward its sector
+        if (u.alt > 0.25 && base.op === u.id) base.op = null; // clear of the pad
+        if (u.alt >= 0.98) u.phase = "station";
+        return;
+    }
+    if (u.phase !== "recover" && u.phase !== "landing") {
+        // patrol the picket ring (default while airborne)
+        u.phase = "station";
+        u.alt = slew(u.alt, 1, dt);
+        u.vis = 1;
+        // Walk the picket point slowly around the base so the helo flies a circuit
+        // rather than parking on one spot — a visible patrol, not a static hover.
+        u.orbitA = (u.orbitA ?? 0) + HELO_PATROL_RATE * dt;
+        const pt = polarFrom(base, HELO_STATION_KM, u.orbitA);
+        goHover(pt, sp);
+        u.face = polarFrom(u, 30, u.orbitA + Math.PI / 2); // nose along the patrol track
+        u.fuel = (u.fuel ?? 0) - dt;
+        if (u.fuel <= 0 || u.recall) u.phase = "recover";
+        return;
+    }
+    // recover / land: fly home, then settle vertically onto the pad and stow.
+    const rng = d(u, base);
+    if (rng > 2.5) {
+        goHover(base, sp);
+        u.alt = slew(u.alt, 1, dt);
+        u.vis = 1;
+        if (rng < 25 && base.op == null) base.op = u.id; // reserve the pad on short approach
+    } else {
+        if (base.op == null) base.op = u.id;
+        u.alt = slew(u.alt, 0, dt / HELO_CLIMB_T); // settle straight down
+        u.face = polarFrom(base, 40, base.runwayA ?? 0);
+        if (u.alt <= 0.03) {
+            if (base.op === u.id) base.op = null;
+            u.phase = "ground";
+        }
+    }
+}
+
+// Orbit-hold guidance: fly the ring tangent, banking gently in or out in
+// proportion to radial error. Produces true circles and smooth joins from
+// any entry angle — no carrot-chasing wobble. Shared by the cruise and hold phases.
+// Airspeed to fly relative to a base that is itself under way. A carrier steams
+// at a good fraction of its own air wing's speed (50 vs 52 km/s for the AEW
+// picket), so a jet flying its plain airspeed cannot hold station on, or overtake,
+// a ship that is running: it falls behind the orbit and can never close the
+// recovery. flyClimb already adds the ship's speed through the deck roll for
+// exactly this reason; the orbit and recovery phases need the same frame, or a
+// carrier under way simply loses everything it launched.
+function baseFrameSpeed(base, sp) {
+    return sp + ((base?.dest && UNITS[base.type]?.navalSpeed) || 0);
+}
+
+function flyOrbitHold(base, u, sp, tr, R, dt) {
+    const rd = Math.max(1, haversine(base.lng, base.lat, u.lng, u.lat));
+    const desired =
+        bearingTo(base, u) + Math.PI / 2 + clampSym((rd - R) / FLIGHT.ORBIT_RADIAL_DIV, FLIGHT.ORBIT_BANK_RAD);
+    advance(u, desired, baseFrameSpeed(base, sp), tr, dt);
+}
+
+// Climb: roll straight down the runway, rotate, climb out. Progress is the
+// jet's own integrated run, NOT distance from the base — a moving carrier
+// would otherwise outrun the rolling jet and stall it. A steaming carrier's
+// speed is added during the deck roll so the jet stays with the ship.
+export function flyClimb(u, base, ra, sp, tr, dt) {
+    const baseSpd = (base.dest && UNITS[base.type]?.navalSpeed) || 0;
+    const rolling = (u._to || 0) < ROLL_KM;
+    const spd = rolling ? baseSpd + sp * FLIGHT.ROLL_SPEED_MULT : sp;
+    u._to = (u._to || 0) + spd * dt;
+    u.alt = u._to < ROLL_KM ? 0 : Math.min(1, (u._to - ROLL_KM) / CLIMB_KM);
+    u.vis = Math.min(1, u._to / FLIGHT.TAKEOFF_VIS_KM);
+    advance(u, ra, spd, tr, dt);
+    if ((u._to || 0) > ROLL_KM + FLIGHT.ROLL_CLEAR_PAD_KM && base.op === u.id) base.op = null; // wheels up — runway clear for the next mover
+    if (u.alt >= 1) {
+        u.phase = "cruise";
+        if (base.op === u.id) base.op = null;
+        u._to = 0;
+    }
+}
+
+// Cruise: hold the patrol ring.
+export function flyCruise(u, base, sp, tr, dt) {
+    u.alt = slew(u.alt, 1, dt / FLIGHT.CRUISE_ALT_SLEW_T);
+    u.vis = 1;
+    flyOrbitHold(base, u, sp, tr, u.orbitR, dt);
+    u.fuel = (u.fuel ?? 0) - dt;
+    if (u.fuel <= 0 || u.recall) u.phase = "hold"; // bingo fuel / recalled → recover
+}
+
+// Hold: stack on a wider ring, waiting for the runway. Recovery doesn't
+// reserve the runway — the strip is only owned on short final/rollout, so
+// departures keep flowing between arrivals.
+export function flyHold(w, u, base, sp, tr, dt) {
+    u.alt = slew(u.alt, 1, dt / FLIGHT.CRUISE_ALT_SLEW_T);
+    u.vis = 1;
+    flyOrbitHold(base, u, sp, tr, u.orbitR + HOLD_PAD, dt);
+    const inPattern = w.units.filter((x) => x.baseId === base.id && x.hp > 0 && x.phase === "landing").length;
+    if (inPattern < FLIGHT.HOLD_PATTERN_MAX) {
+        u.phase = "landing";
+        u._land = "toFinal";
+    }
+}
+
+// Approach ("toFinal"): localizer-intercept CONTROLLER (no waypoints, so nothing
+// to orbit): fly the runway heading plus a cross-track correction angle — up to
+// ~63° cut toward the centerline, easing to zero as the jet lines up. Too close
+// in (or on the departure side), fly an outbound leg to a pattern-entry region
+// on its own side, then the controller takes over.
+function flyApproachIntercept(u, base, ra, sp, tr, dt) {
+    u.alt = 1;
+    u.vis = 1;
+    const cosLat = cosLatSafe(base.lat);
+    const dLng = unwrapLng(u.lng - base.lng, 0);
+    const px = dLng * cosLat * KM_PER_DEG,
+        py = (u.lat - base.lat) * KM_PER_DEG;
+    const axx = Math.cos(ra),
+        axy = Math.sin(ra);
+    const along = -(px * axx + py * axy); // km out on the APPROACH side of the threshold
+    const cross = -px * axy + py * axx; // signed cross-track distance from the centerline
+    const LEAD = clamp((sp / tr) * FLIGHT.LEAD_SPEED_TURN_MULT, FLIGHT.LEAD_MIN_KM, FLIGHT.LEAD_MAX_KM);
+    const fsp = baseFrameSpeed(base, sp);
+    if (along > FLIGHT.INTERCEPT_ALONG_KM) {
+        const desired = ra + clampSym(-cross / FLIGHT.INTERCEPT_CROSS_DIV, FLIGHT.INTERCEPT_TURN_RAD);
+        advance(u, desired, fsp, tr, dt);
+        const dh = wrapAnglePi(ra - (u.hdg ?? ra));
+        const capture = crossGate(sp, tr, FLIGHT.INTERCEPT_CAPTURE_CROSS_KM, FLIGHT.INTERCEPT_CAPTURE_RADIUS_FRAC);
+        if (Math.abs(cross) < capture && Math.abs(dh) < FLIGHT.INTERCEPT_CAPTURE_HDG_RAD) u._land = "final";
+    } else {
+        // Outbound to pattern entry: offset to the jet's own side so the
+        // turn back in is a single smooth procedure turn.
+        const side = cross >= 0 ? 1 : -1;
+        const back = polarFrom(base, LEAD * FLIGHT.PATTERN_ENTRY_BACK_MULT, ra + Math.PI);
+        const entry = polarFrom(back, FLIGHT.PATTERN_ENTRY_OFFSET_KM * side, ra + Math.PI / 2);
+        advance(u, bearingTo(u, entry), fsp, tr, dt);
+    }
+}
+
+// Centerline tolerance this airframe can actually hold, from its turn radius
+// (sp/tr). The fixed FLIGHT tolerances are a floor, so a fighter keeps the tight
+// pattern and only the sluggish airframes — AWACS, transports, bombers — get the
+// wider gate they need to complete an approach instead of going around forever.
+function crossGate(sp, tr, floorKm, frac) {
+    return Math.max(floorKm, (sp / Math.max(tr, 1e-3)) * frac);
+}
+
+// Approach ("final"): the same heading-based control as the intercept, just
+// tighter: runway heading plus a small cross-track cut, throttled back,
+// altitude slewing down the glide slope. No sideways position bleeding — the
+// jet only ever moves where its nose points.
+function flyApproachFinal(u, base, ra, sp, tr, dt) {
+    const cosLat = cosLatSafe(base.lat);
+    const dLng = unwrapLng(u.lng - base.lng, 0);
+    const px = dLng * cosLat * KM_PER_DEG,
+        py = (u.lat - base.lat) * KM_PER_DEG;
+    const axx = Math.cos(ra),
+        axy = Math.sin(ra);
+    const along = -(px * axx + py * axy);
+    const cross = -px * axy + py * axx;
+    u._alongD = along;
+    const gate = crossGate(sp, tr, FLIGHT.CROSS_CAPTURE_KM, FLIGHT.CAPTURE_TURN_RADIUS_FRAC);
+    // Blown approach (short and still off the centerline) → go around.
+    if (along < FLIGHT.GO_AROUND_ALONG_KM && Math.abs(cross) > gate) {
+        u._land = null;
+        u._alongD = null;
+        u.phase = "hold";
+        return;
+    }
+    // Short final: claim the strip. Occupied by someone else → go around.
+    if (along < FLIGHT.SHORT_FINAL_ALONG_KM) {
+        if (base.op == null) base.op = u.id;
+        else if (base.op !== u.id) {
+            u._land = null;
+            u._alongD = null;
+            u.phase = "hold";
+            return;
+        }
+    }
+    const desired = ra + clampSym(-cross / FLIGHT.FINAL_CROSS_DIV, FLIGHT.FINAL_TURN_RAD);
+    advance(u, desired, baseFrameSpeed(base, sp * FLIGHT.FINAL_SPEED_MULT), tr, dt);
+    u.alt = slew(u.alt, clamp01(along / (APPROACH_KM * FLIGHT.GLIDE_SLOPE_FRAC)), dt / FLIGHT.FINAL_ALT_SLEW_T);
+    u.vis = 1;
+    if (
+        along <= baseFrameSpeed(base, sp * FLIGHT.FINAL_SPEED_MULT) * dt + FLIGHT.TOUCHDOWN_ARRIVE_PAD_KM &&
+        Math.abs(cross) < gate
+    ) {
+        u._land = "rollout";
+        u._roll = 0;
+        u.alt = Math.min(u.alt, FLIGHT.TOUCHDOWN_ALT_CAP);
+    }
+}
+
+// Land: touchdown — roll out and decelerate.
+function flyLandRollout(u, base, ra, sp, tr, dt) {
+    const decel = Math.max(FLIGHT.ROLLOUT_MIN_DECEL, 1 - (u._roll || 0) / ROLLOUT_KM);
+    advance(u, ra, sp * FLIGHT.ROLLOUT_SPEED_MULT * decel, tr, dt);
+    u._roll = (u._roll || 0) + sp * FLIGHT.ROLLOUT_SPEED_MULT * decel * dt;
+    u.alt = 0;
+    u.vis = Math.max(0, 1 - (u._roll || 0) / (ROLLOUT_KM * FLIGHT.ROLLOUT_VIS_FRAC));
+    if ((u._roll || 0) >= ROLLOUT_KM) {
+        // Taxi in — the airframe returns to hangar stock (stock rotation
+        // relaunches a fresh one if the patrol still wants it up).
+        const cap = hangarCapOf(base.type, u.type);
+        if ((base.hangar?.[u.type] || 0) < cap) base.hangar[u.type] = (base.hangar[u.type] || 0) + 1;
+        if (base.op === u.id) base.op = null;
+        u.hp = 0;
+    }
+}
+
+// Landing dispatcher: intercept the localizer, final approach, touchdown, rollout.
+export function flyLandingPhase(u, base, ra, sp, tr, dt) {
+    if (u._land === "toFinal") flyApproachIntercept(u, base, ra, sp, tr, dt);
+    else if (u._land === "final") flyApproachFinal(u, base, ra, sp, tr, dt);
+    else flyLandRollout(u, base, ra, sp, tr, dt);
+}

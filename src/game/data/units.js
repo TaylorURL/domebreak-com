@@ -1,0 +1,839 @@
+// Unit registry: UNITS, UNIT_ICON, and the label/armament helpers.
+
+export const UNITS = {
+    battery: {
+        label: "SAM Battery",
+        desc: "Mobile SAM battalion. Affordable point defense that thins out whatever leaks through the outer layers.",
+        kind: "defense",
+        cost: 150,
+        buildTime: 8,
+        range: 320,
+        intercept: 0.5,
+        reload: 3,
+        fireCost: 12,
+        hp: 50,
+        upkeep: 1,
+    },
+    radar: {
+        label: "Early Warning Radar",
+        desc: "Phased-array early warning. Builds the air picture and cues nearby interceptors far beyond their organic reach.",
+        kind: "support",
+        cost: 150,
+        buildTime: 8,
+        range: 1500,
+        detect: true,
+        hp: 40,
+        upkeep: 1.5,
+    },
+    // Skywave sensor: sees launches far past the horizon, but its tracks are too
+    // coarse to cue interceptors — warnOnly keeps it out of radarLinked.
+    oth: {
+        label: "Over-the-Horizon Radar",
+        desc: "Ionospheric backscatter array. Spots launch plumes far over the horizon — strategic warning only, no fire control.",
+        kind: "support",
+        cost: 500,
+        buildTime: 24,
+        range: 3000,
+        detect: true,
+        warnOnly: true,
+        hp: 35,
+        upkeep: 2.5,
+        hint: "Skywave array — detects launches far over the horizon. Warning only; can't guide interceptors.",
+    },
+    // Launch platforms — the missile they fire is armament (see armamentOf), not the
+    // unit's own name.
+    launcher: {
+        label: "TEL",
+        warheads: true, // fires the selectable strategic arsenal
+        ammo: ["sicbm"], // single-round mobile platform — no warhead picker
+        signature: "sicbm",
+        desc: "Road-mobile transporter-erector-launcher. Shoot-and-scoot SICBM strikes — reposition to dodge counter-battery; halts to fire. Shorter reach than a silo.",
+        ballistic: true,
+        kind: "offense",
+        cost: 200,
+        buildTime: 10,
+        range: 8000,
+        damage: 40,
+        reload: 19.2,
+        fireCost: 22,
+        speed: 140, // in-flight missile speed (ballistic), not ground movement
+        landSpeed: 20, // road-mobile: marches over land like a ground unit (shoot-and-scoot)
+        hp: 45,
+        upkeep: 2,
+    },
+    silo: {
+        label: "Missile Silo",
+        warheads: true,
+        ammo: ["standard", "cluster", "thermo", "thermomirv"], // full strategic warhead range
+        signature: "thermo",
+        desc: "Hardened launch silo. Global-reach ICBMs carrying the heaviest strategic payloads.",
+        ballistic: true,
+        kind: "offense",
+        cost: 320,
+        buildTime: 16,
+        range: 20000,
+        damage: 55,
+        reload: 39,
+        fireCost: 45,
+        speed: 140,
+        hp: 60,
+        upkeep: 4,
+    },
+    // Naval — deploy in coastal ocean inside your territory, never on land.
+    // Carriers ship with their air wing (strike + multirole fighters).
+    // navalSpeed = km per game-second while steaming to a waypoint (see setSail).
+    // Every vessel carries its own radar (radarKm), each hull a different
+    // strength — the fleet senses for itself, no shore radar needed.
+    //
+    // surfaceKm / surfaceDamage / surfaceReload are the hull's ANTI-SHIP battery:
+    // the weapon it fights other vessels with, tracked on its own cooldown and
+    // wholly separate from the strategic missile a hull may also carry (range /
+    // damage / reload). A battleship can therefore shell a city half a world away
+    // and trade fire with a destroyer alongside in the same tick. A hull without
+    // these three never engages surface contacts: the carrier fights through its
+    // air wing, the amphib is a transport, and the boomer's tubes hold only
+    // strategic SLBMs.
+    cruiser: {
+        label: "Missile Cruiser",
+        desc: "Fleet air-defense flagship — the longest interceptor reach afloat.",
+        kind: "defense",
+        domain: "sea",
+        cost: 300,
+        buildTime: 15,
+        range: 700,
+        intercept: 0.75,
+        reload: 3.2,
+        fireCost: 18,
+        radarKm: 480,
+        hp: 70,
+        upkeep: 3,
+        navalSpeed: 78,
+        surfaceKm: 220,
+        surfaceDamage: 18,
+        surfaceReload: 5,
+    },
+    destroyer: {
+        label: "Destroyer",
+        desc: "Fast escort screen. Area air defense and the fleet's sub-hunter — its sonar finds boats that hide from radar.",
+        kind: "defense",
+        domain: "sea",
+        cost: 220,
+        buildTime: 12,
+        range: 500,
+        intercept: 0.65,
+        reload: 3,
+        fireCost: 14,
+        radarKm: 400,
+        // The surface ASW picket: its sonar reveals submerged hulls within sonarKm,
+        // the counter to enemy subs.
+        asw: true,
+        sonarKm: 300,
+        hp: 60,
+        upkeep: 2,
+        navalSpeed: 96,
+        surfaceKm: 180,
+        surfaceDamage: 14,
+        surfaceReload: 4,
+    },
+    battleship: {
+        label: "Battleship",
+        desc: "Standoff bombardment hull — conventional strike weight from open water.",
+        kind: "offense",
+        domain: "sea",
+        cost: 360,
+        buildTime: 18,
+        range: 8000,
+        damage: 42,
+        reload: 24,
+        fireCost: 26,
+        speed: 80,
+        radarKm: 240,
+        hp: 95,
+        upkeep: 4,
+        navalSpeed: 58,
+        surfaceKm: 340,
+        surfaceDamage: 30,
+        surfaceReload: 6,
+    },
+    carrier: {
+        label: "Aircraft Carrier",
+        desc: "A sovereign airfield at sea: strike fighters, surveillance, and reach anywhere the fleet sails.",
+        kind: "support",
+        domain: "sea",
+        cost: 800,
+        buildTime: 30,
+        range: 2500,
+        detect: true,
+        radarKm: 2500,
+        hp: 130,
+        upkeep: 5,
+        navalSpeed: 50,
+        wing: ["carrierfighter", "strikefighter", "awacs"],
+    },
+    // Airstrips ship with their air wing (air-superiority + close air support).
+    airstrip: {
+        label: "Airstrip",
+        desc: "Forward operating strip. Houses, launches, and recovers the land-based air wing.",
+        kind: "support",
+        cost: 550,
+        buildTime: 22,
+        range: 60,
+        hp: 45,
+        upkeep: 1,
+        wing: ["interceptor", "multirole", "attack", "bomber", "transport", "awacs"],
+        // A support structure that can still be tasked offensively: given an attack
+        // order (Command Attack, a Battle Plan, or a Hostile stance) it launches a
+        // bomber sortie rather than firing itself, so `canAttack` opts it into the
+        // attacker gate the plan solver and commandAttack share.
+        canAttack: true,
+        // Offensive reach: how far out a target may be for the strip to launch a
+        // bomber sortie against it. Distinct from `range` (the runway footprint).
+        // Drawn as the amber strike ring when the strip is selected.
+        sortieKm: 4200,
+    },
+    // Ground forces. The Army Base is the land Airstrip: fields the helicopter wing,
+    // prerequisite for all mobile ground units. Mobile ground units (landSpeed) march
+    // over land as ships steam over sea, and engage land targets only (targets: "land").
+    armybase: {
+        label: "Army Base",
+        desc: "Garrison and helipad. Fields the helicopter wing and stages the ground forces.",
+        kind: "support",
+        domain: "land",
+        cost: 480,
+        buildTime: 20,
+        range: 60,
+        hp: 85,
+        upkeep: 1,
+        wing: ["helo", "transporthelo"],
+    },
+    // Unique national command structure (maxCount caps builds per nation). Shelters
+    // leadership. Immune to all fire except a direct Thermonuclear-class hit; can
+    // still be seized by enemy infantry.
+    bunker: {
+        label: "Leadership Bunker",
+        desc: "Hardened national command. Shrugs off everything but a direct Thermonuclear strike — but enemy infantry that capture it decapitate you. Only one may ever be built.",
+        kind: "support",
+        maxCount: 1,
+        cost: 650,
+        buildTime: 32,
+        hp: 220,
+        upkeep: 0.5,
+    },
+    infantry: {
+        label: "Infantry",
+        desc: "Rifle divisions — cheap, tough, and slow. Close-range assault on land targets only. Holds a cleared city to capture its state.",
+        kind: "offense",
+        domain: "land",
+        targets: "land",
+        capture: true, // may occupy and flip an enemy city's state
+        requires: "armybase",
+        landSpeed: 18,
+        cost: 110,
+        buildTime: 7,
+        range: 250,
+        damage: 14,
+        reload: 13.2,
+        fireCost: 6,
+        speed: 30,
+        hp: 75,
+        upkeep: 0.8,
+    },
+    artillery: {
+        label: "Artillery",
+        desc: "Towed gun batteries — the longest ground reach, fragile up close.",
+        kind: "offense",
+        domain: "land",
+        targets: "land",
+        requires: "armybase",
+        landSpeed: 13,
+        cost: 210,
+        buildTime: 11,
+        range: 550,
+        damage: 34,
+        reload: 25.2,
+        fireCost: 12,
+        speed: 35,
+        hp: 45,
+        upkeep: 1.2,
+    },
+    tank: {
+        label: "Tank Battalion",
+        desc: "Armored maneuver force — the fastest thing on the ground. Can seize and hold enemy cities.",
+        kind: "offense",
+        domain: "land",
+        targets: "land",
+        capture: true, // may occupy and flip an enemy city's state
+        requires: "armybase",
+        landSpeed: 26,
+        cost: 190,
+        buildTime: 9,
+        range: 380,
+        damage: 26,
+        reload: 18,
+        fireCost: 9,
+        speed: 45,
+        hp: 70,
+        upkeep: 1.5,
+    },
+    // The army's organic air defense: a kind:"defense" ground vehicle. domain:"land"
+    // + landSpeed march it with the ground forces (Army build tab), while kind:"defense"
+    // keeps it in the interceptor pool — it engages incoming raids on the move, wherever
+    // it currently sits. Tech-gated (def4) like the modern batteries below, but grouped
+    // here with its ground-force siblings since it builds, stages, and marches as one.
+    mshorad: {
+        label: "Mobile SHORAD",
+        desc: "Tracked short-range air defense. Marches with the ground forces and fires on the move — shorter reach than a fixed battery, but it never gets left behind.",
+        kind: "defense",
+        domain: "land",
+        requires: "armybase",
+        requiresTech: "def4",
+        landSpeed: 22,
+        cost: 170,
+        buildTime: 9,
+        range: 260,
+        intercept: 0.55,
+        reload: 2.6,
+        fireCost: 10,
+        hp: 46,
+        upkeep: 1.5,
+    },
+    cram: {
+        label: "C-RAM",
+        desc: "Radar-cued 20mm Gatling gun — the last-ditch terminal layer. Almost no reach, but it hoses down whatever rockets, artillery, or mortars slip past everything else.",
+        kind: "defense",
+        requiresTech: "def4",
+        cost: 130,
+        buildTime: 7,
+        // Close-in gun: the shortest reach of any defense, but the fastest to
+        // re-engage and the cheapest per burst — cheap shells, thrown fast. gun:true
+        // makes it a continuous-fire mount — it stays on one track, firing every
+        // reload until the round dies or leaves its short envelope, rather than
+        // taking a single one-and-done shot like a missile battery.
+        gun: true,
+        range: 150,
+        intercept: 0.55,
+        reload: 1.2,
+        fireCost: 6,
+        hp: 42,
+        upkeep: 1,
+    },
+    // Tech-gated modern & space-age units. Each carries requiresTech: "<techId>" —
+    // buildable only once that tech is done (enforced in sim/production.js
+    // queueUnit, which quotes TECHS[techId].name in the rejection). The id must
+    // exist in TECHS or the rejection degrades to the raw id; several units may
+    // share one. Space assets also need the Space Command HQ standing, a separate
+    // requiresUnit prereq.
+    hypersonicbty: {
+        label: "Hypersonic Missile Battery",
+        warheads: true,
+        ammo: ["hgv"], // single fixed round, no picker
+        signature: "hgv",
+        desc: "Boost-glide launcher fielding maneuvering hypersonic weapons — fast, low, and hard to intercept at regional reach.",
+        kind: "offense",
+        requiresTech: "off8",
+        cost: 340,
+        buildTime: 15,
+        range: 9800,
+        damage: 40,
+        reload: 18,
+        fireCost: 26,
+        speed: 150, // in-flight projectile base speed; the HGV round's speedMult scales it up further
+        hp: 50,
+        upkeep: 3,
+    },
+    patriot: {
+        label: "Patriot Battery",
+        desc: "Modern terminal SAM — hit-to-kill interceptors that tighten the last-ditch layer against aircraft and short-range missiles.",
+        kind: "defense",
+        requiresTech: "def5",
+        cost: 260,
+        buildTime: 11,
+        range: 400,
+        intercept: 0.7,
+        reload: 3,
+        fireCost: 16,
+        hp: 55,
+        upkeep: 2,
+    },
+    aegis: {
+        label: "Aegis Ashore",
+        desc: "Land-based Standard Missile site — a midcourse interceptor node that reaches out well beyond terminal SAMs.",
+        kind: "defense",
+        requiresTech: "def6",
+        cost: 380,
+        buildTime: 16,
+        range: 900,
+        intercept: 0.78,
+        reload: 3.4,
+        fireCost: 20,
+        hp: 70,
+        upkeep: 3,
+    },
+    thaad: {
+        label: "THAAD Battery",
+        desc: "High-altitude terminal anti-ballistic defense — kills reentry vehicles above the atmosphere before they can bloom.",
+        kind: "defense",
+        antiBallistic: true,
+        requiresTech: "def7",
+        cost: 460,
+        buildTime: 18,
+        range: 700,
+        // High-altitude area ABM: it kills reentry vehicles far out and high up.
+        // Inside this keep-out radius the engagement geometry collapses, so the
+        // battery can't fire — that inner gap is the lower tier's (Patriot) job.
+        minRange: 250,
+        intercept: 0.85,
+        reload: 4,
+        fireCost: 24,
+        hp: 65,
+        upkeep: 3.5,
+    },
+    laser: {
+        label: "Laser Defense Grid",
+        desc: "Directed-energy interceptor grid — speed-of-light kills with a bottomless magazine. Enormous to stand up, but almost free to keep firing.",
+        kind: "defense",
+        antiBallistic: true,
+        // Fires a directed-energy beam instead of a flying round: it holds on the
+        // target and burns it down in place (see stepInterceptors / SkyLayer).
+        beam: true,
+        requiresTech: "def10",
+        // Expensive upfront, cheap forever after: the highest build cost of any
+        // defense, but the lowest running cost — the magazine is just electricity,
+        // so upkeep and per-shot cost are near nothing.
+        cost: 900,
+        buildTime: 26,
+        range: 450,
+        intercept: 0.82,
+        reload: 1,
+        fireCost: 1,
+        hp: 60,
+        upkeep: 1,
+        hint: "Huge upfront cost, minimal running cost — nearly free to keep firing once it is standing.",
+    },
+    // Space assets. The two orbital platforms have global reach on a fixed
+    // inclination: stepMovement advances their longitude by orbitSpeedDegPerSec
+    // every tick while latitude stays where the player placed them, so each sweeps
+    // a parallel of latitude around the globe. Instantaneous coverage is a single
+    // OTH-sized footprint under the sat; global reach comes from the orbit passing
+    // over everywhere on that parallel over time. Both need a standing Space
+    // Command HQ, which is itself a ground structure and orbits nothing.
+    spacehq: {
+        label: "Space Command HQ",
+        desc: "National space operations center. Only one may be built — the prerequisite for every orbital asset in the arsenal.",
+        kind: "support",
+        maxCount: 1,
+        requiresTech: "cmd11",
+        cost: 700,
+        buildTime: 30,
+        hp: 240,
+        upkeep: 1,
+    },
+    reconsat: {
+        label: "Reconnaissance Satellite",
+        desc: "Fire-control-grade orbital sensor with an integrated infrared launch-warning tier — sweeps a parallel of latitude, spotting plumes and cueing interceptors under its ground track.",
+        kind: "support",
+        orbital: true,
+        orbitLift: 2.5,
+        orbitSpeedDegPerSec: 1.2,
+        requiresTech: "det4",
+        requiresUnit: "spacehq",
+        cost: 600,
+        buildTime: 26,
+        range: 3000,
+        detect: true,
+        radarKm: 3000,
+        hp: 40,
+        upkeep: 4,
+    },
+    orbitalstrike: {
+        label: "Orbital Strike Platform",
+        warheads: true,
+        ammo: ["cluster", "thermo", "thermomirv"], // strategic-only orbital bus — no conventional round
+        signature: "thermo",
+        desc: "Kinetic-bombardment platform on a fixed-inclination orbit — a rod-from-god that only engages targets currently under its ground track, slow to recycle.",
+        kind: "offense",
+        ballistic: true,
+        orbital: true,
+        orbitLift: 2.8,
+        orbitSpeedDegPerSec: 0.8,
+        requiresTech: "off11",
+        requiresUnit: "spacehq",
+        cost: 1100,
+        buildTime: 34,
+        range: 3000,
+        damage: 55,
+        reload: 54,
+        fireCost: 50,
+        speed: 160,
+        hp: 60,
+        upkeep: 6,
+    },
+    // Tech-gated naval units — subs + logistics
+    // Submarines are stealthy: submarine:true hulls are not revealed by ordinary
+    // radar or satellites, only by asw sensors within sonarKm (see queries.js).
+    "sub-ssn": {
+        label: "Attack Submarine (SSN)",
+        desc: "Nuclear hunter-killer — a stealthy hull that stalks fleets and lofts land-attack cruise missiles from hiding.",
+        kind: "offense",
+        domain: "sea",
+        submarine: true,
+        asw: true,
+        sonarKm: 300,
+        requiresTech: "eco4",
+        cost: 420,
+        buildTime: 20,
+        range: 2500,
+        damage: 30,
+        reload: 21.6,
+        fireCost: 20,
+        speed: 70,
+        radarKm: 120,
+        hp: 65,
+        upkeep: 4,
+        navalSpeed: 64,
+        surfaceKm: 120,
+        surfaceDamage: 26,
+        surfaceReload: 9,
+    },
+    "sub-ssbn": {
+        label: "Ballistic Missile Sub (SSBN)",
+        warheads: true,
+        ammo: ["standard", "cluster", "thermo", "thermomirv"], // full strategic warhead range
+        signature: "thermo",
+        desc: "The survivable sea leg of the triad — a deep-stealth boomer whose tubes carry only strategic SLBMs: MIRV buses and city-killers for a guaranteed second strike.",
+        kind: "offense",
+        domain: "sea",
+        ballistic: true,
+        submarine: true,
+        requiresTech: "cmd2",
+        cost: 700,
+        buildTime: 28,
+        range: 20000,
+        damage: 55,
+        reload: 42,
+        fireCost: 45,
+        speed: 140,
+        radarKm: 90,
+        hp: 80,
+        upkeep: 5,
+        navalSpeed: 52,
+    },
+    amphib: {
+        label: "Amphibious Transport",
+        desc: "Ships embarked ground units across the ocean and lands them on a hostile coast — the sea bridge for the land game.",
+        kind: "support",
+        domain: "sea",
+        capacity: 4,
+        requiresTech: "eco5",
+        cost: 340,
+        buildTime: 16,
+        range: 60,
+        radarKm: 160,
+        hp: 75,
+        upkeep: 2,
+        navalSpeed: 60,
+    },
+    // Industry — economic structures. Each adds flat income (output pts/s) and grows
+    // the nation's effective GDP (gdpAdd, $T). They never fight but can be struck;
+    // losing them costs the economy they carried. Industry is the one thing you may
+    // still build while in deficit — the way back out.
+    factory: {
+        label: "Factory",
+        kind: "industry",
+        cost: 250,
+        buildTime: 14,
+        output: 3,
+        gdpAdd: 0.2,
+        hp: 60,
+        upkeep: 0.5,
+        hint: "Heavy manufacturing — steady income and GDP growth.",
+    },
+    port: {
+        label: "Seaport",
+        kind: "industry",
+        coastal: true,
+        cost: 340,
+        buildTime: 18,
+        output: 4.5,
+        gdpAdd: 0.35,
+        hp: 70,
+        upkeep: 0.5,
+        hint: "Coastal trade hub — build on land beside the sea.",
+    },
+    refinery: {
+        label: "Oil Refinery",
+        kind: "industry",
+        requires: "factory",
+        cost: 460,
+        buildTime: 22,
+        output: 6.5,
+        gdpAdd: 0.5,
+        hp: 65,
+        upkeep: 1,
+        hint: "Petrochemical exports — strong income. Needs a Factory.",
+    },
+    techpark: {
+        label: "Tech Park",
+        kind: "industry",
+        requires: "factory",
+        cost: 600,
+        buildTime: 26,
+        output: 9,
+        gdpAdd: 0.7,
+        hp: 55,
+        upkeep: 1,
+        hint: "High-tech sector — top-tier income. Needs a Factory.",
+    },
+    // Aircraft only arrive as part of a base's `wing` — carrier, airstrip, or army
+    // base — never bought alone, which is what `hidden` keeps them out of the build
+    // menu for. airSpeed = km/game-second in flight; turnRate = max heading change
+    // (rad/s) — its agility. Turn radius = airSpeed/turnRate, kept below the patrol
+    // ring so jets can hold their orbit. `speed` is the munition it fires (unrelated
+    // to flight).
+    multirole: {
+        label: "Multirole Fighter",
+        desc: "Workhorse multirole fighter — flexible strike at a friendly price.",
+        kind: "offense",
+        hidden: true,
+        cost: 180,
+        buildTime: 9,
+        range: 3000,
+        damage: 26,
+        reload: 15.6,
+        fireCost: 16,
+        speed: 90,
+        airSpeed: 78,
+        radarKm: 220,
+        turnRate: 1.3,
+        hp: 40,
+        upkeep: 2,
+    },
+    strikefighter: {
+        label: "Strike Fighter",
+        desc: "Low-observable strike fighter for deep attack against defended targets.",
+        kind: "offense",
+        hidden: true,
+        cost: 300,
+        buildTime: 13,
+        range: 4500,
+        damage: 38,
+        reload: 18,
+        fireCost: 20,
+        speed: 100,
+        airSpeed: 82,
+        radarKm: 320,
+        turnRate: 1.1,
+        hp: 48,
+        upkeep: 3,
+    },
+    interceptor: {
+        label: "Air Superiority Fighter",
+        desc: "Air-superiority interceptor — the fastest way to kill what flies. Can't engage ballistic reentry vehicles.",
+        kind: "defense",
+        hidden: true,
+        cost: 340,
+        buildTime: 14,
+        range: 520,
+        intercept: 0.8,
+        reload: 3.5,
+        fireCost: 20,
+        airSpeed: 90,
+        radarKm: 340,
+        turnRate: 1.5,
+        hp: 46,
+        upkeep: 3,
+    },
+    attack: {
+        label: "Close Air Support",
+        desc: "Low-and-slow attack aircraft delivering withering close air support.",
+        kind: "offense",
+        hidden: true,
+        cost: 160,
+        buildTime: 8,
+        range: 1200,
+        damage: 46,
+        reload: 20.4,
+        fireCost: 14,
+        speed: 70,
+        airSpeed: 58,
+        radarKm: 90,
+        turnRate: 0.9,
+        hp: 55,
+        upkeep: 2,
+    },
+    transport: {
+        label: "Transport Aircraft",
+        desc: "Airlift for the wing — logistics muscle, not a combatant.",
+        kind: "support",
+        hidden: true,
+        cost: 140,
+        buildTime: 7,
+        range: 60,
+        airSpeed: 52,
+        turnRate: 0.4,
+        hp: 50,
+        upkeep: 1,
+    },
+    awacs: {
+        label: "AEW&C (AWACS)",
+        desc: "Airborne early warning & control — a flying radar picket for fleet or front.",
+        kind: "support",
+        hidden: true,
+        cost: 260,
+        buildTime: 12,
+        range: 900,
+        detect: true,
+        radarKm: 900,
+        airSpeed: 52,
+        turnRate: 0.45,
+        // An AEW picket's whole purpose is persistent coverage, so it loiters far
+        // longer than a fighter's CAP cycle (PATROL_FUEL). On a fighter's fuel the
+        // transit out and back eats the sortie: the picket reaches its orbit only
+        // to turn round, so the radar picture is down more often than up and the
+        // deck spends its time recovering the jet instead of flying it.
+        patrolFuel: 220,
+        hp: 35,
+        upkeep: 3,
+    },
+    helo: {
+        label: "Attack Helicopter",
+        rotary: true, // vertical lift-off, hover on station, vertical landing — not fixed-wing
+        desc: "Gunship close air support — slow, agile, deadly against surface targets.",
+        kind: "offense",
+        hidden: true,
+        cost: 170,
+        buildTime: 9,
+        range: 900,
+        damage: 24,
+        reload: 18,
+        fireCost: 10,
+        speed: 55,
+        airSpeed: 38,
+        radarKm: 80,
+        turnRate: 2.0,
+        hp: 34,
+        upkeep: 1.5,
+    },
+    transporthelo: {
+        label: "Transport Helicopter",
+        rotary: true,
+        desc: "Heavy-lift rotor logistics for the ground wing — not a combatant.",
+        kind: "support",
+        hidden: true,
+        cost: 120,
+        buildTime: 7,
+        range: 60,
+        airSpeed: 34,
+        turnRate: 1.6,
+        hp: 40,
+        upkeep: 0.8,
+    },
+    carrierfighter: {
+        label: "Carrier Fighter",
+        desc: "Carrier-borne multirole strike fighter — the deck's main punch.",
+        kind: "offense",
+        domain: "sea",
+        hidden: true,
+        cost: 240,
+        buildTime: 11,
+        range: 3500,
+        damage: 30,
+        reload: 16.8,
+        fireCost: 18,
+        speed: 95,
+        airSpeed: 80,
+        radarKm: 260,
+        turnRate: 1.1,
+        hp: 44,
+        upkeep: 2.5,
+    },
+    // Strategic bomber — the airstrip's offensive punch. Launched only on a strike
+    // sortie (never on defensive CAP), it flies to a tasked target under fighter
+    // escort and saturates it with a heavy conventional payload before returning.
+    // `range` is its bomb-release standoff (kept short so it flies onto the target);
+    // the airstrip's `sortieKm` is how far out a target may be to task the sortie.
+    bomber: {
+        label: "Strategic Bomber",
+        desc: "Long-range heavy bomber. Flies escorted to a tasked target and saturates it with a heavy payload.",
+        kind: "offense",
+        hidden: true,
+        cost: 360,
+        buildTime: 16,
+        range: 90,
+        damage: 62,
+        reload: 20,
+        fireCost: 26,
+        speed: 82,
+        airSpeed: 62,
+        radarKm: 150,
+        turnRate: 0.65,
+        hp: 60,
+        upkeep: 3,
+    },
+};
+// Map unit type -> public/icons SVG basename (rendered by ui/common/UnitIcon).
+export const UNIT_ICON = {
+    silo: "silo",
+    launcher: "hypersonic",
+    battery: "battery",
+    radar: "radar",
+    oth: "oth",
+    cruiser: "cruiser",
+    destroyer: "destroyer",
+    battleship: "battleship",
+    carrier: "carrier",
+    airstrip: "airstrip",
+    factory: "factory",
+    port: "port",
+    refinery: "refinery",
+    techpark: "techpark",
+    multirole: "jet",
+    transport: "transport",
+    bomber: "bomber",
+    strikefighter: "strike-fighter",
+    interceptor: "interceptor",
+    attack: "attack",
+    awacs: "awacs",
+    carrierfighter: "carrier-fighter",
+    armybase: "armybase",
+    bunker: "bunker",
+    infantry: "infantry",
+    artillery: "artillery",
+    tank: "tank",
+    mshorad: "mshorad",
+    helo: "helo",
+    transporthelo: "transport-helo",
+    // Tech-gated modern / space / naval units. Basenames are the exact filenames the
+    // art pipeline emits under public/icons/.
+    hypersonicbty: "hypersonicbty",
+    cram: "cram",
+    patriot: "patriot",
+    aegis: "aegis",
+    thaad: "thaad",
+    laser: "laser",
+    spacehq: "spacehq",
+    reconsat: "reconsat",
+    orbitalstrike: "orbitalstrike",
+    "sub-ssn": "sub-ssn",
+    "sub-ssbn": "sub-ssbn",
+    amphib: "amphib",
+};
+
+// Generic, nation-agnostic display name per unit type.
+export function unitLabel(type) {
+    return UNITS[type].label;
+}
+
+export function armamentOf(type) {
+    return type === "silo" ? "ICBM" : type === "launcher" ? "SICBM" : null;
+}
+
+// Whether a unit type may be tasked with an offensive strike order — the single
+// gate the Battle Planning solver, the commandAttack order, and the fire phase all
+// share. Every `kind:"offense"` platform qualifies; a non-offense platform can opt
+// in with `canAttack` (the Airstrip — a support structure that answers an attack
+// order by launching a bomber sortie rather than firing itself). Takes a unit def
+// (UNITS[type]); tolerates an unknown type.
+export function isAttacker(def) {
+    return !!def && (def.kind === "offense" || def.canAttack === true);
+}

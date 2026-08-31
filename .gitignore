@@ -1,0 +1,38 @@
+node_modules
+dist
+dist-electron
+release
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+# Editor and local tooling config stays out of the repo.
+.idea/
+.vscode/
+*.iml
+*.sql
+# Database dumps stay out, but the migrations are the schema's history and belong
+# in the repo. Without this the blanket rule above silently drops every new one.
+!supabase/migrations/*.sql
+.intelligence/
+INTELLIGENCE.md
+.fleet/
+.junie/
+
+# Vercel CLI link state (project/org ids) is per-machine.
+.vercel
+
+# Machine-specific deploy targets (VPS/build-box hosts and keys) stay local.
+scripts/deploy.local.env
+
+# Secrets and key material — never commit
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+supabase/.temp/

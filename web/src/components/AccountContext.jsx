@@ -1,0 +1,93 @@
+import {useEffect, useRef, useState} from "react";
+import {AccountCtx} from "../lib/accountStore.js";
+
+// Shared DomeBreak game-account state. The account module (which pulls in
+// supabase-js, ~110 KB) is loaded LAZILY — dynamically imported after the page
+// is idle — so it stays out of the initial bundle and off the critical path.
+// The nav shows "Sign in" until the session check resolves.
+export function AccountProvider({children}) {
+    const [session, setSession] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Cache the dynamic import so every caller shares one module instance.
+    const modRef = useRef(null);
+    const getMod = () => (modRef.current ||= import("../lib/account.js"));
+
+    useEffect(() => {
+        let alive = true;
+        const hydrate = async (a, s) => {
+            if (!s) {
+                setProfile(null);
+                setStats(null);
+                return;
+            }
+            const [p, st] = await Promise.all([a.fetchProfile(), a.fetchStats()]);
+            if (!alive) return;
+            setProfile(p);
+            setStats(st);
+        };
+        let off = null;
+        const start = async () => {
+            try {
+                const a = await getMod();
+                if (!alive) return;
+                // The first read of the session is the one every gated view waits
+                // on, so it is taken from the auth server rather than from local
+                // storage: a stale or edited token in storage would otherwise
+                // render the signed-in shell before any request refused it.
+                const s = await a.getUser();
+                if (!alive) return;
+                setSession(s);
+                await hydrate(a, s);
+                if (s) a.touch();
+                // onAuthStateChange hands back the stored session; only its user
+                // is kept, so this state holds the same shape whichever path set
+                // it. A sign-out arrives here as null and clears it.
+                off = a.onAuth(async (ns) => {
+                    if (!alive) return;
+                    const user = ns?.user ?? null;
+                    setSession(user);
+                    await hydrate(a, user);
+                });
+            } catch {
+                // A misconfigured or unreachable account backend must not leave the
+                // app stuck "loading" forever — fail closed to a signed-out state so
+                // gated views (e.g. Download) render their signed-out path.
+                if (alive) setSession(null);
+            } finally {
+                if (alive) setLoading(false);
+            }
+        };
+        const id =
+            "requestIdleCallback" in window
+                ? window.requestIdleCallback(start, {timeout: 2500})
+                : setTimeout(start, 400);
+        return () => {
+            alive = false;
+            off?.();
+            if ("cancelIdleCallback" in window) window.cancelIdleCallback(id);
+            else clearTimeout(id);
+        };
+    }, []);
+
+    const value = {
+        session,
+        profile,
+        stats,
+        loading,
+        signedIn: !!session,
+        isAdmin: !!profile?.is_admin,
+        listBeta: async () => (await getMod()).listBeta(),
+        signIn: async (...a) => (await getMod()).signIn(...a),
+        signUp: async (...a) => (await getMod()).signUp(...a),
+        signOut: async () => {
+            await (await getMod()).signOut();
+            setSession(null);
+            setProfile(null);
+            setStats(null);
+        },
+    };
+    return <AccountCtx.Provider value={value}>{children}</AccountCtx.Provider>;
+}

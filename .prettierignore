@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-electron
+release
+build/icon.png
+package-lock.json
+web/package-lock.json
+server/package-lock.json
+# Generated and vendored data: reformatting these produces a six-figure diff
+# and no readable improvement.
+public/assets
+public/data
+public/icons
+public/brand
+web/public
+supabase/.temp
