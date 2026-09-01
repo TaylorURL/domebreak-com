@@ -33,13 +33,47 @@ export const fmtPct = (frac, opts = {}) => {
 // Integer percent share of part / total, safe when total is 0.
 export const shareOfPct = (part, total) => (total > 0 ? Math.round((part / total) * 100) : 0);
 
+// The zone every real-world stamp in the game is written in. A save file, an
+// account date and a chat line are records the studio keeps, and two players
+// in one match reading different times off the same message is the thing this
+// settles. The in-game calendar in LiveHud is a synthetic epoch read through
+// getUTC* accessors and is not this.
+export const STUDIO_ZONE = "America/Chicago";
+
 // Render an ISO timestamp as "Month Year" for account-since strips; null on
 // missing or invalid input.
 export const fmtMonthYear = (iso) => {
     if (!iso) return null;
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleDateString(undefined, {month: "long", year: "numeric"});
+    return d.toLocaleDateString("en-US", {month: "long", timeZone: STUDIO_ZONE, year: "numeric"});
+};
+
+// A real-world instant with the day and the hour it happened at.
+export const fmtStamp = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleString("en-US", {
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        month: "short",
+        timeZone: STUDIO_ZONE,
+        year: "numeric",
+    });
+};
+
+// The 24-hour clock a chat line carries.
+export const fmtClock = (value) => {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "--:--";
+    return d.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        minute: "2-digit",
+        timeZone: STUDIO_ZONE,
+    });
 };
 
 // Integer win-rate percent from a raw stats row, safe against nulls and

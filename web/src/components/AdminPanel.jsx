@@ -11,6 +11,10 @@ import {BETA_PLATFORMS} from "../lib/beta.js";
 
 const PLATFORM_LABEL = Object.fromEntries(BETA_PLATFORMS.map((p) => [p.id, p.label]));
 
+// The studio's zone, so a date on this page reads the same wherever it is
+// opened. The site is a separate bundle from the game and carries its own.
+const STUDIO_ZONE = "America/Chicago";
+
 function fmtDate(iso) {
     if (!iso) return "—";
     return new Date(iso).toLocaleString("en-US", {
@@ -19,6 +23,7 @@ function fmtDate(iso) {
         year: "numeric",
         hour: "numeric",
         minute: "2-digit",
+        timeZone: STUDIO_ZONE,
     });
 }
 
