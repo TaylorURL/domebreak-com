@@ -5,10 +5,14 @@ import {cn} from "../lib/cn.js";
 import {useAccount} from "../lib/accountStore.js";
 import GameIcon from "./GameIcon.jsx";
 
+// The studio's zone, so a date on this page reads the same wherever it is
+// opened. The site is a separate bundle from the game and carries its own.
+const STUDIO_ZONE = "America/Chicago";
+
 function monthYear(iso) {
     if (!iso) return "";
     const d = new Date(iso);
-    return d.toLocaleString("en-US", {month: "short", year: "numeric"});
+    return d.toLocaleString("en-US", {month: "short", timeZone: STUDIO_ZONE, year: "numeric"});
 }
 
 function Avatar({avatar, name, size = 26}) {

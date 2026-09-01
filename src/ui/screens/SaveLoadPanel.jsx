@@ -3,6 +3,7 @@ import {AUTOSAVE, deleteSave, listSaves} from "../../game/platform/saves.js";
 import {useModal} from "../hooks/useModal.js";
 import {button, card, miniButton, overlay, menuTitle} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+import {fmtStamp} from "../lib/format";
 
 const CONFIRM_MS = 4000;
 
@@ -13,7 +14,7 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
     const ref = useModal(onClose);
     const saves = listSaves();
     const slots = ["1", "2", "3"];
-    const fmt = (m) => (m?.at ? new Date(m.at).toLocaleString() : "Empty");
+    const fmt = (m) => (m?.at ? fmtStamp(m.at) : "Empty");
     const auto = saves.find((x) => x.slot === AUTOSAVE);
     const titleId = "db-saveload-title";
 
