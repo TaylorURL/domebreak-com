@@ -4,15 +4,13 @@ import {cn} from "../lib/cn.js";
 import {colorForSlot} from "../../game/data/constants.js";
 import {isTyping} from "../../game/platform/keybindings.js";
 import {useWindowEvent} from "../../lib/hooks/useWindowEvent.js";
+import {fmtClock} from "../lib/format";
 
 // Matches the server's authoritative cap (Match.chat) so the input can never
 // compose more than the relay will accept.
 const MAX_LEN = 240;
 
-const hhmm = (ts) => {
-    const d = new Date(ts);
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-};
+const hhmm = (ts) => fmtClock(ts);
 
 // Multiplayer-only player chat, docked bottom-left above the HUD layout button.
 // Enter opens the input and focuses it; Enter again sends and hands control
