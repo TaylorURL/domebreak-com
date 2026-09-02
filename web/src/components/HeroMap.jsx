@@ -1,5 +1,6 @@
 import {lazy, Suspense, useEffect, useState} from "react";
 import {useReducedMotion} from "motion/react";
+import {drawsInSoftware} from "../lib/softwareRenderer.js";
 
 // Animated hero background: a pre-made, looping "defense of the United States"
 // scene on the game's real flat command map (see HeroDefenseScene). Incoming
@@ -17,6 +18,10 @@ import {useReducedMotion} from "motion/react";
 //    whenever it scrolls off screen or the tab is hidden.
 //  - Reduced motion renders the same scene held still (no missiles, no drift) —
 //    a static tactical map of the homeland and its defenses.
+//  - A browser drawing WebGL in software (no GPU: PageSpeed's host, a locked
+//    down VM, acceleration switched off) never mounts the scene at all. Every
+//    tile it drew would be rasterised on the thread the page needs for
+//    everything else, and a held-still map costs that once per tile too.
 const TILES_BASE = "https://pc9hvrpdxxi66b3t.public.blob.vercel-storage.com";
 const MIN_HOLD_MS = 1400;
 const FALLBACK_MS = 9000;
@@ -70,7 +75,10 @@ export default function HeroMap() {
     // build). Set before the scene mounts. Defer the mount until the page is idle.
     useEffect(() => {
         if (typeof window !== "undefined") window.__DB_TILES_BASE__ = TILES_BASE;
-        const cancel = whenPageIdle(() => setMount(true));
+        const cancel = whenPageIdle(() => {
+            if (drawsInSoftware()) return;
+            setMount(true);
+        });
         return cancel;
     }, []);
 
