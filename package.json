@@ -2,6 +2,7 @@
   "name": "domebreak",
   "productName": "DomeBreak",
   "private": true,
+  "license": "UNLICENSED",
   "version": "2026.36.2",
   "type": "module",
   "description": "DomeBreak - online multiplayer missile defense/offense game.",
@@ -95,7 +96,7 @@
       "icon": "build/icon.png"
     }
   },
-  "author": "Trenton Taylor",
+  "author": "TaylorURL LLC",
   "homepage": "https://github.com/bradley-t-t/domebreak",
   "repository": {
     "type": "git",
