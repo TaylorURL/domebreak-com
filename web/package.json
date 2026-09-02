@@ -1,6 +1,7 @@
 {
   "name": "domebreak-web",
   "private": true,
+  "license": "UNLICENSED",
   "version": "0.1.2",
   "type": "module",
   "description": "DomeBreak marketing landing page \u2014 email waitlist capture.",

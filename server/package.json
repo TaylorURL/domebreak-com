@@ -1,6 +1,7 @@
 {
   "name": "domebreak-server",
   "private": true,
+  "license": "UNLICENSED",
   "version": "0.1.0",
   "type": "module",
   "description": "Authoritative DomeBreak match server — runs the same engine the client ships.",
