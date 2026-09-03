@@ -450,10 +450,6 @@ export function sensorsCover(sensors, lng, lat) {
     return sensors.some((s) => haversine(s.lng, s.lat, lng, lat) <= s.km);
 }
 
-export function sensedBy(w, slot, lng, lat) {
-    return sensorsCover(sensorsOf(w, slot), lng, lat);
-}
-
 // Slots allied to `slot` — the symmetric "ally" relation, restricted to living,
 // active nations. A coalition pools its radar and air defense, so this is the
 // set a nation shares its sensor picture with (sharedSensorsOf) and helps shield
@@ -489,8 +485,8 @@ export function sharedSubSensorsOf(w, slot) {
     return list;
 }
 
-// Shared-coverage form of sensedBy: is (lng, lat) covered by slot's own OR any
-// ally's sensors? Used at launch to cue a whole coalition off one member's array.
+// Is (lng, lat) covered by slot's own OR any ally's sensors? Used at launch to
+// cue a whole coalition off one member's array.
 export function sharedSensedBy(w, slot, lng, lat) {
     return sensorsCover(sharedSensorsOf(w, slot), lng, lat);
 }
