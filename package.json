@@ -28,7 +28,6 @@
     "clsx": "^2.1.1",
     "flag-icons": "^7.5.0",
     "maplibre-gl": "^5.19.0",
-    "motion": "^12.42.2",
     "pmtiles": "^4.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

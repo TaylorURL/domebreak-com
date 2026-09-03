@@ -35,8 +35,8 @@ export default function SettingsPanel({settings, onChange, onClose}) {
             next[capturing] = code;
             set("keys", next);
             setCapturing(null);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [capturing],
     );
     useWindowEvent("keydown", captureKey, {capture: true, enabled: !!capturing});

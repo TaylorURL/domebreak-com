@@ -421,7 +421,6 @@ export const PATROL_SIZES = [0, 2, 4];
 // spends most of its life in transit and the recovery pattern instead of
 // holding the radar orbit it was launched for.
 export const PATROL_FUEL = 45,
-    REFUEL_TIME = 14,
     LAUNCH_GAP = 3.5;
 // Patrol orbit geometry (km): AWACS holds a wide ring; fighters stack in four
 // staggered rings stepping outward so a multi-ship CAP doesn't stack up.
