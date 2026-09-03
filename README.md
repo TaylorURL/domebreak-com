@@ -11,13 +11,16 @@
   Pick a nation, build an arsenal of silos, interceptors, warships and jets,<br />
   and out-launch, out-build, and out-defend your rivals — one DomeBreak at a time.
 </p>
+<p align="center">
+  <sub>Published for reading. Proprietary — see <a href="LICENSE.md">LICENSE.md</a>. Outside contributions are not accepted.</sub>
+</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2026.36.2-e0574f?style=for-the-badge" alt="Version 2026.36.2" />
+  <img src="https://img.shields.io/badge/version-2026.36.3-e0574f?style=for-the-badge" alt="Version 2026.36.3" />
   <img src="https://img.shields.io/badge/React-19-e0574f?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/Vite-7-e0574f?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 7" />
   <img src="https://img.shields.io/badge/MapLibre_GL-08090b?style=for-the-badge&logo=maplibre&logoColor=white" alt="MapLibre GL" />
-  <img src="https://img.shields.io/badge/Electron-39-08090b?style=for-the-badge&logo=electron&logoColor=white" alt="Electron 39" />
+  <img src="https://img.shields.io/badge/Electron-44-08090b?style=for-the-badge&logo=electron&logoColor=white" alt="Electron 44" />
   <img src="https://img.shields.io/badge/Supabase-e0574f?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
 </p>
 
@@ -50,14 +53,13 @@ Most nuke-'em games flatten the planet to an abstract grid. DomeBreak keeps the 
 
 | Layer        | Technology                                                                        |
 | :----------- | :-------------------------------------------------------------------------------- |
-| UI           | React 19 + Radix UI primitives, Tailwind CSS 4                                    |
+| UI           | React 19, Tailwind CSS 4                                                          |
 | Build & dev  | Vite 7                                                                            |
 | Map          | MapLibre GL + `react-map-gl`, PMTiles read client-side; flags via `flag-icons`    |
 | Simulation   | Pure deterministic engine in `src/game`, driven by an animation-frame loop        |
-| Desktop      | Electron 39 shell, packaged with `electron-builder` for macOS, Windows, and Linux |
-| Backend      | Supabase — Auth, Postgres, and seven Deno edge functions                          |
+| Desktop      | Electron 44 shell, packaged with `electron-builder` for macOS, Windows, and Linux |
+| Backend      | Supabase — Auth, Postgres, and six Deno edge functions                            |
 | Match server | Authoritative Node server in `server/`, importing the same engine over WebSockets |
-| Charts       | Recharts                                                                          |
 | Testing      | Vitest                                                                            |
 
 ## Getting started
@@ -163,7 +165,7 @@ domebreak/
 │   └── migrations/            Schema DDL
 ├── tests/unit/                Vitest suites — ai, combat, economy, naval, net, objectives,
 │                              matchmaking, leadership, stability, electron, ui, …
-├── web/                       Separate marketing landing page with waitlist capture
+├── web/                       Separate marketing site — landing page, wiki, downloads
 └── src/
     ├── game/                  engine.js + data, geo, platform, sim
     ├── map/                   MapLibre + PMTiles layers
@@ -179,7 +181,7 @@ The interactive world map is a MapLibre + PMTiles renderer with region, country,
 
 ## License
 
-Authored by **Trenton Taylor**. Reused game-icons.net icons retain their upstream license noted above; the repository does not yet ship its own license file.
+Copyright (c) 2026 TaylorURL LLC. All rights reserved. See [LICENSE.md](LICENSE.md). The reused game-icons.net icons retain their upstream license, noted above.
 
 <br />
 
