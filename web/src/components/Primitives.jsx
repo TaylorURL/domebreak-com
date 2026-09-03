@@ -39,19 +39,3 @@ export function Eyebrow({children, dot = true, className}) {
         </div>
     );
 }
-
-// A hairline-framed value cell with mono number over an uppercase micro-label —
-// the game's telemetry readout pattern.
-export function Stat({value, label, sub, className}) {
-    return (
-        <div className={cn("relative", className)}>
-            <div className="font-mono text-[clamp(1.9rem,4vw,3rem)] font-semibold leading-none text-text tabular-nums">
-                {value}
-            </div>
-            <div className="mt-2 font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-faint">
-                {label}
-            </div>
-            {sub && <div className="mt-1 font-mono text-[11px] text-dim">{sub}</div>}
-        </div>
-    );
-}

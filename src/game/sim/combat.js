@@ -287,7 +287,7 @@ export function launch(w, unit, target, warhead, opts = {}) {
     const seenBy = [unit.slot];
     // Sensor coverage is entirely unit-derived, so only nations that field a unit
     // can possibly see the boost phase. One O(units) pass to find those slots
-    // keeps a salvo from paying sensedBy's full-world sensor build for each of
+    // keeps a salvo from paying sharedSensedBy's full-world sensor build for each of
     // the ~200 unit-less neutrals per shot.
     const slotsWithUnits = new Set();
     for (const u of w.units) if (u.hp > 0) slotsWithUnits.add(u.slot);

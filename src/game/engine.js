@@ -160,7 +160,6 @@ export {
     sharedSubSensorsOf,
     unitVisibleTo,
     sensorsCover,
-    sensedBy,
     sharedSensedBy,
     radarLandCoverage,
     defenseRange,
