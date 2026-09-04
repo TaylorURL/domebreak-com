@@ -3,7 +3,7 @@
   "productName": "DomeBreak",
   "private": true,
   "license": "UNLICENSED",
-  "version": "2026.36.5",
+  "version": "2026.36.6",
   "type": "module",
   "description": "DomeBreak - online multiplayer missile defense/offense game.",
   "main": "electron/main.cjs",
