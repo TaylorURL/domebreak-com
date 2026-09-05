@@ -1,6 +1,6 @@
 import {lazy, Suspense, useEffect, useState} from "react";
 import {useReducedMotion} from "motion/react";
-import {drawsInSoftware} from "../lib/softwareRenderer.js";
+import {canAffordScene} from "../lib/sceneBudget.js";
 
 // Animated hero background: a pre-made, looping "defense of the United States"
 // scene on the game's real flat command map (see HeroDefenseScene). Incoming
@@ -10,7 +10,7 @@ import {drawsInSoftware} from "../lib/softwareRenderer.js";
 // Reveal + performance:
 //  - Nothing shows at first; the hero layout animates in while the map chunk
 //    (MapLibre + the game's render layers) loads in the background, deferred
-//    until the page is idle.
+//    until the page has painted and gone idle.
 //  - The scene eases in only once MapLibre has painted its first tiles (or a
 //    fallback timer fires), so the layout animation plays first and the hero is
 //    never a blank flash.
@@ -18,38 +18,68 @@ import {drawsInSoftware} from "../lib/softwareRenderer.js";
 //    whenever it scrolls off screen or the tab is hidden.
 //  - Reduced motion renders the same scene held still (no missiles, no drift) —
 //    a static tactical map of the homeland and its defenses.
-//  - A browser drawing WebGL in software (no GPU: PageSpeed's host, a locked
-//    down VM, acceleration switched off) never mounts the scene at all. Every
-//    tile it drew would be rasterised on the thread the page needs for
-//    everything else, and a held-still map costs that once per tile too.
+//  - A machine that cannot afford the scene never mounts it at all: no GPU, too
+//    little memory, too few cores, a metered or slow connection, or a window too
+//    narrow to see the thing in (sceneBudget.js). Every tile such a machine drew
+//    would come out of the thread the page needs for everything else, and a
+//    held-still map costs that once per tile too.
 const TILES_BASE = "https://pc9hvrpdxxi66b3t.public.blob.vercel-storage.com";
 const MIN_HOLD_MS = 1400;
 const FALLBACK_MS = 9000;
 
 const HeroDefenseScene = lazy(() => import("./HeroDefenseScene.jsx"));
 
-function whenPageIdle(cb) {
+const LARGEST_PAINT = "largest-contentful-paint";
+
+// The scene waits on two things rather than one. The load event says the page's
+// own resources are in; the largest contentful paint says the browser has
+// settled what the visitor came to look at. On load alone this put a megabyte of
+// tiles and a live WebGL context in front of that paint, on the machines that
+// can least spare the thread. A browser with no such paint to report (Safari has
+// none) waits on load the way this always did, and a tab still in the background
+// reports no paint at all — which is exactly when nothing should be starting.
+function whenSceneCanStart(cb) {
     if (typeof window === "undefined") return () => {};
     let done = false;
     // Whichever of the two the browser gave us, so cancelling reaches it. A
-    // cleanup that only drops the load listener leaves an already-scheduled
-    // callback to fire into a component that is gone.
+    // cleanup that only drops the listeners leaves an already-scheduled callback
+    // to fire into a component that is gone.
     let idle = null;
     let timer = null;
+    let observer = null;
+    let loaded = document.readyState === "complete";
+    let painted = !window.PerformanceObserver?.supportedEntryTypes?.includes(LARGEST_PAINT);
     const run = () => {
         if (done) return;
         done = true;
         cb();
     };
     const schedule = () => {
+        if (done || !loaded || !painted || idle !== null || timer !== null) return;
         if ("requestIdleCallback" in window) idle = window.requestIdleCallback(run, {timeout: 1800});
         else timer = setTimeout(run, 400);
     };
-    if (document.readyState === "complete") schedule();
-    else window.addEventListener("load", schedule, {once: true});
+    const onLoad = () => {
+        loaded = true;
+        schedule();
+    };
+    if (!loaded) window.addEventListener("load", onLoad, {once: true});
+    if (!painted) {
+        observer = new PerformanceObserver(() => {
+            painted = true;
+            observer.disconnect();
+            observer = null;
+            schedule();
+        });
+        // Buffered: the largest paint of a document that ships its own markup is
+        // reported before this component exists to ask about it.
+        observer.observe({type: LARGEST_PAINT, buffered: true});
+    }
+    schedule();
     return () => {
         done = true;
-        window.removeEventListener("load", schedule);
+        window.removeEventListener("load", onLoad);
+        observer?.disconnect();
         if (idle !== null && "cancelIdleCallback" in window) window.cancelIdleCallback(idle);
         if (timer !== null) clearTimeout(timer);
     };
@@ -72,11 +102,12 @@ export default function HeroMap() {
     }, []);
 
     // Off-origin CDN for the heavy vector tiles (WorldMap reads this at style
-    // build). Set before the scene mounts. Defer the mount until the page is idle.
+    // build). Set before the scene mounts. Defer the mount until the page has
+    // painted and gone idle, and then only where the machine can carry it.
     useEffect(() => {
         if (typeof window !== "undefined") window.__DB_TILES_BASE__ = TILES_BASE;
-        const cancel = whenPageIdle(() => {
-            if (drawsInSoftware()) return;
+        const cancel = whenSceneCanStart(() => {
+            if (!canAffordScene()) return;
             setMount(true);
         });
         return cancel;
