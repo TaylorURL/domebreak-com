@@ -7,7 +7,7 @@
   "description": "DomeBreak marketing landing page \u2014 email waitlist capture.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -374,7 +374,22 @@
                     </p>
                 </main>
             </noscript>
+            <!--prerender-->
         </div>
+        <script>
+            // The hash never reaches a server, so one document answers for every
+            // route and what the build writes into the slot above
+            // (scripts/prerender.mjs) is the home page and nothing else. A visit
+            // addressed elsewhere drops it here, while the parser is still inside
+            // the body and nothing has been painted, rather than showing the
+            // landing page for the moment before the bundle renders the route that
+            // was actually asked for.
+            (function () {
+                if (location.hash.slice(0, 2) !== "#/") return;
+                var painted = document.querySelector("[data-prerendered]");
+                if (painted) painted.remove();
+            })();
+        </script>
         <script src="/src/main.jsx" type="module"></script>
     </body>
 </html>

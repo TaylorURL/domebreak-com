@@ -23,7 +23,12 @@ export default function NavDropdown({label, items}) {
     // would raise the panel and the click would toggle it straight back shut —
     // the menu never opens. Wire the hover handlers only where hover is real
     // and leave touch on the click toggle.
-    const [canHover, setCanHover] = useState(() => window.matchMedia(HOVER_QUERY).matches);
+    // The prerender has no window to ask, and a pointer is not a property of a
+    // document anyway. It renders the touch answer, which wires no handlers, and
+    // the effect below settles it the moment the browser has the component.
+    const [canHover, setCanHover] = useState(
+        () => typeof window !== "undefined" && window.matchMedia(HOVER_QUERY).matches,
+    );
 
     const clearClose = () => {
         if (closeTimer.current) {
