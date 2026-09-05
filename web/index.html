@@ -355,26 +355,25 @@
     </head>
     <body>
         <div id="root">
-            <!-- No-JS / pre-render fallback so crawlers and no-script visitors get real content. -->
-            <noscript>
-                <main
-                    style="
-                        max-width: 760px;
-                        margin: 0 auto;
-                        padding: 64px 24px;
-                        color: #f2f4f6;
-                        font-family: Inter, system-ui, sans-serif;
-                    "
-                >
-                    <h1>DomeBreak — Global Missile Command</h1>
-                    <p>
-                        A real-time strategy game of missile defense and offense, fought on the real world map. Build
-                        your dome, plan your strikes, and outlast every rival nation. Free to play on macOS and Windows.
-                        Enable JavaScript to create an account and download.
-                    </p>
-                </main>
-            </noscript>
+            <!-- The build renders the landing page into the slot below
+                 (scripts/prerender.mjs), so the document arrives with something to
+                 paint. React mounts over it. -->
+            <!--prerender-->
         </div>
+        <script>
+            // The hash never reaches a server, so one document answers for every
+            // route and what the build writes into the slot above
+            // (scripts/prerender.mjs) is the home page and nothing else. A visit
+            // addressed elsewhere drops it here, while the parser is still inside
+            // the body and nothing has been painted, rather than showing the
+            // landing page for the moment before the bundle renders the route that
+            // was actually asked for.
+            (function () {
+                if (location.hash.slice(0, 2) !== "#/") return;
+                var painted = document.querySelector("[data-prerendered]");
+                if (painted) painted.remove();
+            })();
+        </script>
         <script src="/src/main.jsx" type="module"></script>
     </body>
 </html>

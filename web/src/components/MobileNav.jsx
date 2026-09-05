@@ -193,7 +193,10 @@ export default function MobileNav({onSignIn}) {
                 <Menu size={17} />
             </button>
 
-            {createPortal(drawer, document.body)}
+            {/* The drawer hangs off the body so no ancestor's stacking or overflow
+                can clip it. The prerender has no body to hang it on, and a closed
+                drawer puts nothing there in any case. */}
+            {typeof document !== "undefined" && createPortal(drawer, document.body)}
         </div>
     );
 }
