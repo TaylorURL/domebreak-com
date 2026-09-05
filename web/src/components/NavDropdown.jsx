@@ -24,8 +24,10 @@ export default function NavDropdown({label, items}) {
     // the menu never opens. Wire the hover handlers only where hover is real
     // and leave touch on the click toggle.
     // The prerender has no window to ask, and a pointer is not a property of a
-    // document anyway. It renders the touch answer, which wires no handlers, and
-    // the effect below settles it the moment the browser has the component.
+    // document anyway. It renders the touch answer, which wires no handlers; the
+    // browser then runs this initialiser for itself, because main.jsx mounts a
+    // fresh render over the prerendered markup rather than hydrating it. The
+    // effect below only follows the query once that answer is in.
     const [canHover, setCanHover] = useState(
         () => typeof window !== "undefined" && window.matchMedia(HOVER_QUERY).matches,
     );

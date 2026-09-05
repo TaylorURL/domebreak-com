@@ -30,10 +30,10 @@ const bundle = resolve(root, ".prerender/entry-server.js");
 const SLOT = "<!--prerender-->";
 
 // Two strings from opposite ends of the landing page: the doctrine anchor sits
-// deep inside it and the attribution rail is the last thing App renders. A
-// render that threw part-way through still returns markup — React swaps the
-// failed subtree for its fallback rather than raising — so the build is held to
-// evidence that the whole tree came back, not to the call having returned.
+// deep inside it and the attribution rail is the last thing App renders.
+// Getting a string back is not evidence the page is in it — anything that
+// suspends comes back as App's Suspense fallback, an empty full-height div — so
+// the build is held to the markup rather than to the call having returned.
 const PROOF = ['id="doctrine"', "data-taylorurl-bar"];
 
 const {render} = await import(pathToFileURL(bundle).href);
@@ -63,8 +63,9 @@ let out = html.replace(SLOT, `<div data-prerendered style="display:contents">${m
 //
 // The cost is that the rules stop being a separately cached file. On a site
 // whose router is the hash there is one document per visit to pay it on, and
-// the file is Tailwind output over this markup, so it was already re-fetched on
-// most deploys rather than living long in anyone's cache.
+// what it costs there is the compressed sheet: a returning visitor downloads it
+// again rather than reading assets/index-<hash>.css out of the immutable cache
+// vercel.json gives it.
 const link = /<link rel="stylesheet"[^>]*href="\/(assets\/[^"]+\.css)"[^>]*>/.exec(out);
 if (!link) throw new Error("index.html has no built stylesheet to inline.");
 const css = await readFile(resolve(dist, link[1]), "utf8");
