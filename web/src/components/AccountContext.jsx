@@ -19,6 +19,11 @@ const SESSION_KEY = "domebreak.auth";
 // the account resolves the way it always did — the fast path is an
 // optimisation for a visit known to have nothing to fetch, never a guess.
 function hasStoredSession() {
+    // The build-time prerender has no storage and nobody behind it, so it
+    // renders the signed-out nav rather than the pending one — the state a first
+    // visit settles in anyway, and the only one a document shared by every
+    // visitor could honestly claim.
+    if (typeof window === "undefined") return false;
     try {
         return window.localStorage.getItem(SESSION_KEY) !== null;
     } catch {
