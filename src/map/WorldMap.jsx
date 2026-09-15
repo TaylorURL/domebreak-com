@@ -18,9 +18,47 @@ import {WORLD_ZOOM} from "../game/data/constants.js";
 
 let pmtilesRegistered = false;
 
+// Resolves once the page is being drawn again, or immediately if it already is.
+// The abort signal releases the wait too, so a read the renderer has given up on
+// never outlives the tile it was for.
+function whenDrawn(signal) {
+    if (typeof document === "undefined" || document.visibilityState !== "hidden") return Promise.resolve();
+    return new Promise((resolve) => {
+        const done = () => {
+            document.removeEventListener("visibilitychange", onVisibility);
+            signal?.removeEventListener?.("abort", done);
+            resolve();
+        };
+        const onVisibility = () => {
+            if (document.visibilityState !== "hidden") done();
+        };
+        document.addEventListener("visibilitychange", onVisibility);
+        signal?.addEventListener?.("abort", done, {once: true});
+    });
+}
+
+// A tile that failed to read is asked for once more before it counts as failed.
+// The archives are ranged reads of a gzipped file, and WebKit drops a response
+// already in flight when the page is hidden or navigated away from: the short
+// body lands on the decompressor rather than on the network layer, so it
+// surfaces as corrupt data rather than as a request that was cut off. The same
+// bytes read again once the page is being drawn are whole, and a second failure
+// is a real one and travels on untouched.
+function readTile(tile, params, controller) {
+    const signal = controller?.signal;
+    return Promise.resolve(tile(params, controller)).catch(async (err) => {
+        if (signal?.aborted) throw err;
+        await whenDrawn(signal);
+        if (signal?.aborted) throw err;
+        return tile(params, controller);
+    });
+}
+
 function ensurePmtiles() {
     if (pmtilesRegistered) return;
-    maplibregl.addProtocol("pmtiles", new Protocol().tile);
+    const protocol = new Protocol();
+    const tile = protocol.tile.bind(protocol);
+    maplibregl.addProtocol("pmtiles", (params, controller) => readTile(tile, params, controller));
     pmtilesRegistered = true;
 }
 

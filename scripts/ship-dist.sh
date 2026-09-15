@@ -14,7 +14,7 @@
 #   VERSION     release version WITHOUT the leading v (e.g. 1.11.2)
 #   OUTPUT_DIR  where the built installers are collected (default ~/DomeBreak-dist)
 #
-# Exit 0 only when all five artifacts built, uploaded, and verified in the
+# Exit 0 only when all four artifacts built, uploaded, and verified in the
 # versioned dir AND the stable symlinks were repointed. Any miss leaves the
 # stable symlinks untouched (players unaffected) and exits non-zero to stop the
 # ship. Re-running for the same VERSION is safe and idempotent.
@@ -36,10 +36,10 @@ DL_BASE="https://download.domebreak.com"
 WIN_HOST="${GD_WIN_HOST:?set GD_WIN_HOST (e.g. user@build-box) in the environment or scripts/deploy.local.env}"
 WIN_KEY="${GD_WIN_KEY:-$HOME/.ssh/id_ed25519}"
 WIN_REPO="${GD_WIN_REPO:?set GD_WIN_REPO (the repo path on the Windows build box)}"
-WIN_ARCHES=(x64 arm64 ia32)
+WIN_ARCHES=(x64 arm64)
 
 MAC_ARTIFACTS=(DomeBreak-mac-arm64.dmg DomeBreak-mac-x64.dmg)
-WIN_ARTIFACTS=(DomeBreak-win-x64.exe DomeBreak-win-arm64.exe DomeBreak-win-ia32.exe)
+WIN_ARTIFACTS=(DomeBreak-win-x64.exe DomeBreak-win-arm64.exe)
 ALL_ARTIFACTS=("${MAC_ARTIFACTS[@]}" "${WIN_ARTIFACTS[@]}")
 
 K=(-i "$VPS_KEY" -o ConnectTimeout=15)

@@ -4,12 +4,13 @@
 #
 #   • macOS (.dmg)  — Apple Silicon (arm64) and Intel (x64), built locally with
 #                     electron-builder. artifactName -> DomeBreak-mac-<arch>.dmg.
-#   • Windows (.exe)— x64, ARM64, and 32-bit (ia32), built NATIVELY on the
-#                     Windows PC over SSH (no Wine), one electron-builder run per
-#                     arch so each yields its own installer. artifactName ->
-#                     DomeBreak-win-<arch>.exe. The PC's repo is refreshed from
-#                     this source first so every installer comes from identical
-#                     code.
+#   • Windows (.exe)— x64 and ARM64, built NATIVELY on the Windows PC over SSH
+#                     (no Wine), one electron-builder run per arch so each
+#                     yields its own installer. artifactName ->
+#                     DomeBreak-win-<arch>.exe. Electron 44 ships no 32-bit
+#                     Windows build, so there is no ia32 installer. The PC's
+#                     repo is refreshed from this source first so every
+#                     installer comes from identical code.
 #
 # Usage:  scripts/build-dist.sh [OUTPUT_DIR]
 #   OUTPUT_DIR defaults to ~/DomeBreak-dist
@@ -27,7 +28,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WIN_HOST="${GD_WIN_HOST:?set GD_WIN_HOST (e.g. user@build-box) in the environment or scripts/deploy.local.env}"
 WIN_KEY="${GD_WIN_KEY:-$HOME/.ssh/id_ed25519}"
 WIN_REPO="${GD_WIN_REPO:?set GD_WIN_REPO (the repo path on the Windows build box)}"
-WIN_ARCHES=(x64 arm64 ia32)
+WIN_ARCHES=(x64 arm64)
 SSH=(ssh -i "$WIN_KEY" -o ConnectTimeout=12)
 SCP=(scp -i "$WIN_KEY" -o ConnectTimeout=12)
 

@@ -37,7 +37,6 @@ const PLATFORMS = [
         builds: [
             {arch: "x64", sub: "64-bit, most PCs", file: "DomeBreak-win-x64.exe"},
             {arch: "ARM64", sub: "Windows on ARM", file: "DomeBreak-win-arm64.exe"},
-            {arch: "32-bit", sub: "Legacy x86", file: "DomeBreak-win-ia32.exe"},
         ],
     },
 ];
