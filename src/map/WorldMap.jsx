@@ -37,6 +37,41 @@ function whenDrawn(signal) {
     });
 }
 
+// The archive a tile URL is read out of, keyed exactly the way the pmtiles
+// client keys its own reader map, so dropping a key here drops the reader that
+// client would otherwise reuse.
+const TILE_URL = /pmtiles:\/\/(.+)\/(\d+)\/(\d+)\/(\d+)/;
+
+function archiveKey(url) {
+    if (typeof url !== "string" || !url.startsWith("pmtiles://")) return null;
+    const match = url.match(TILE_URL);
+    return match ? match[1] : url.slice("pmtiles://".length);
+}
+
+// Which reader each archive is on. A failed read bumps the number, so a burst of
+// tiles failing together replaces the reader once rather than once apiece.
+const archiveGenerations = new Map();
+
+function generationOf(key) {
+    return key ? (archiveGenerations.get(key) ?? 0) : 0;
+}
+
+// Throws the reader for an archive away so the next read builds a fresh one.
+//
+// This is what makes the retry below mean anything. The reader holds the
+// archive's header and directories in a promise cache that is written before the
+// promise settles and is never cleared when it rejects, so one failed read
+// leaves a rejected promise under that archive's key for the life of the page.
+// Every later read then returns that same rejection with no request going out:
+// the map never recovers on its own, and a retry against the same reader
+// re-raises the first error rather than fetching anything. Replacing the reader
+// is the only way to ask for the bytes again.
+function resetArchive(protocol, key, generation) {
+    if (!key || generationOf(key) !== generation) return;
+    archiveGenerations.set(key, generation + 1);
+    protocol.tiles.delete(key);
+}
+
 // A tile that failed to read is asked for once more before it counts as failed.
 // The archives are ranged reads of a gzipped file, and WebKit drops a response
 // already in flight when the page is hidden or navigated away from: the short
@@ -44,12 +79,15 @@ function whenDrawn(signal) {
 // surfaces as corrupt data rather than as a request that was cut off. The same
 // bytes read again once the page is being drawn are whole, and a second failure
 // is a real one and travels on untouched.
-function readTile(tile, params, controller) {
+function readTile(protocol, tile, params, controller) {
     const signal = controller?.signal;
+    const key = archiveKey(params?.url);
+    const generation = generationOf(key);
     return Promise.resolve(tile(params, controller)).catch(async (err) => {
         if (signal?.aborted) throw err;
         await whenDrawn(signal);
         if (signal?.aborted) throw err;
+        resetArchive(protocol, key, generation);
         return tile(params, controller);
     });
 }
@@ -58,7 +96,7 @@ function ensurePmtiles() {
     if (pmtilesRegistered) return;
     const protocol = new Protocol();
     const tile = protocol.tile.bind(protocol);
-    maplibregl.addProtocol("pmtiles", (params, controller) => readTile(tile, params, controller));
+    maplibregl.addProtocol("pmtiles", (params, controller) => readTile(protocol, tile, params, controller));
     pmtilesRegistered = true;
 }
 
