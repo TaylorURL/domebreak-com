@@ -32,7 +32,7 @@ export const ROUTES = {
         path: "/#/download",
         title: "Download DomeBreak for macOS and Windows",
         description:
-            "Installers for Apple Silicon, Intel Mac, and 64-bit and ARM Windows. DomeBreak is free to play — create an account and take command of a nation.",
+            "Installers for Apple Silicon and Intel Macs, and for 64-bit and ARM Windows. DomeBreak is free to play — create an account and take command of a nation.",
         trail: [{name: "Download", path: "/#/download"}],
     },
     privacy: {
