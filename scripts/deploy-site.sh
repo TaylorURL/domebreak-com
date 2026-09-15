@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Deploy the DomeBreak website (Vercel via GitHub Actions) and verify prod.
+# Verify the DomeBreak website is serving a release.
 #
-# version.json is not flipped here — it is a rewrite to the download host's
-# latest.json, which ship-dist.sh already stamped when it repointed the stable
-# installer links. What this run verifies is that the site serves that marker
-# intact, so the release the site advertises is the one players can install.
+# Nothing is deployed from here. Vercel's git integration builds and deploys
+# main on every merge, so by the time this runs the site is already up; what is
+# left to check is the version it advertises. version.json is a rewrite to the
+# download host's latest.json (web/vercel.json), which ship-dist.sh stamps when
+# it repoints the stable installer links, so the marker only moves once the
+# installers behind it are the ones players get.
 #
 # Usage:  scripts/deploy-site.sh <VERSION>
 set -euo pipefail
@@ -14,18 +16,6 @@ V="${V#v}"
 
 log() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 
-log "Triggering release.yml on main"
-gh workflow run release.yml --ref main
-# Give GitHub a moment to register the run, then grab its id.
-for _ in 1 2 3 4 5; do
-  RID=$(gh run list --workflow=release.yml --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null || true)
-  [ -n "${RID:-}" ] && break
-  sleep 2
-done
-[ -n "${RID:-}" ] || { echo "Could not find the workflow run id." >&2; exit 1; }
-log "Watching run $RID"
-gh run watch "$RID" --exit-status
-
 log "Verifying production"
 vj=$(curl -fsS "https://domebreak.com/version.json" || true)
 echo "version.json: $vj"
@@ -33,7 +23,7 @@ got=$(node -pe 'try{JSON.parse(process.argv[1]).version}catch(e){""}' "$vj" 2>/d
 if [ "$got" != "$V" ]; then
   echo "version.json announces '$got', expected '$V' — the download host's" >&2
   echo "latest.json was never stamped for this release, so the installers are" >&2
-  echo "not published. Run ship-dist.sh for v$V before deploying the site." >&2
+  echo "not published. Run ship-dist.sh for v$V first." >&2
   exit 1
 fi
 # The apex must answer version.json directly: the game's update check reads it

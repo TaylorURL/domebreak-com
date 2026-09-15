@@ -37,7 +37,7 @@ function installerUrl(platform, arch) {
     if (platform === "darwin" && ["arm64", "x64"].includes(arch)) {
         return `${DOWNLOAD_BASE}/DomeBreak-mac-${arch}.dmg`;
     }
-    if (platform === "win32" && ["x64", "arm64", "ia32"].includes(arch)) {
+    if (platform === "win32" && ["x64", "arm64"].includes(arch)) {
         return `${DOWNLOAD_BASE}/DomeBreak-win-${arch}.exe`;
     }
     return null;
