@@ -10,7 +10,11 @@
 import {useCallback, useEffect, useMemo, useRef} from "react";
 import maplibregl from "maplibre-gl";
 import {Protocol} from "pmtiles";
-import Map from "react-map-gl/maplibre";
+// Under its own name rather than as `Map`. A default import called `Map` binds
+// that name for the whole module, so `new Map()` anywhere in this file builds a
+// React component instead of a map and throws on the way - and at module scope
+// that takes the whole chunk down before the board ever mounts.
+import MapGL from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {startWater} from "./lib/water.js";
 import {COUNTRY_FILL_OPACITY} from "./lib/mapPaint.js";
@@ -315,7 +319,7 @@ export default function WorldMap({
     );
 
     return (
-        <Map
+        <MapGL
             ref={mapRef}
             initialViewState={{longitude: 12, latitude: 30, zoom: 2.2}}
             minZoom={minZoom}
@@ -348,6 +352,6 @@ export default function WorldMap({
             cursor={cursor}
         >
             {children}
-        </Map>
+        </MapGL>
     );
 }
