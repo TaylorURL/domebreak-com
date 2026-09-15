@@ -1,4 +1,4 @@
-import {lazy, Suspense, useMemo, useState} from "react";
+import {Suspense, useMemo, useState} from "react";
 import SplitRail from "@taylorurl/split-rail";
 import Nav from "./components/Nav.jsx";
 import Hero from "./components/Hero.jsx";
@@ -14,6 +14,8 @@ import ShortcutsOverlay from "./components/ShortcutsOverlay.jsx";
 import {AccountProvider} from "./components/AccountContext.jsx";
 import {useAccount} from "./lib/accountStore.js";
 import {useHotkeys} from "./hooks/useHotkeys.js";
+import RouteErrorBoundary from "./components/RouteErrorBoundary.jsx";
+import lazyRoute from "./lib/lazyRoute.js";
 import {
     useHashRoute,
     isWikiRoute,
@@ -30,14 +32,14 @@ import {SHORTCUTS, scrollToId} from "./lib/nav.js";
 // wiki's unit tables, the installer list and the admin queue are each a page
 // most visits never open — shipping them in the same bundle makes every visit
 // pay for all four.
-const WikiPage = lazy(() => import("./components/WikiPage.jsx"));
-const DownloadPage = lazy(() => import("./components/DownloadPage.jsx"));
-const DownloadLocked = lazy(() => import("./components/DownloadLocked.jsx"));
-const AdminPanel = lazy(() => import("./components/AdminPanel.jsx"));
-const PrivacyPage = lazy(() => import("./components/PrivacyPage.jsx"));
-const TermsPage = lazy(() => import("./components/TermsPage.jsx"));
-const ContactPage = lazy(() => import("./components/ContactPage.jsx"));
-const NotFoundPage = lazy(() => import("./components/NotFoundPage.jsx"));
+const WikiPage = lazyRoute(() => import("./components/WikiPage.jsx"));
+const DownloadPage = lazyRoute(() => import("./components/DownloadPage.jsx"));
+const DownloadLocked = lazyRoute(() => import("./components/DownloadLocked.jsx"));
+const AdminPanel = lazyRoute(() => import("./components/AdminPanel.jsx"));
+const PrivacyPage = lazyRoute(() => import("./components/PrivacyPage.jsx"));
+const TermsPage = lazyRoute(() => import("./components/TermsPage.jsx"));
+const ContactPage = lazyRoute(() => import("./components/ContactPage.jsx"));
+const NotFoundPage = lazyRoute(() => import("./components/NotFoundPage.jsx"));
 
 function Landing({onSignIn, onShowShortcuts}) {
     return (
@@ -180,22 +182,26 @@ function Shell() {
     return (
         <>
             {/* The routed pages arrive as their own chunks; the placeholder holds
-                the page's background so the swap is not a white flash. */}
-            <Suspense fallback={<div className="min-h-dvh bg-bg" />}>
-                {route === "wiki" && <WikiPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "admin" && <AdminPanel onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "download" &&
-                    (signedIn ? (
-                        <DownloadPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />
-                    ) : (
-                        <DownloadLocked onSignIn={openSignIn} onShowShortcuts={openShortcuts} checking={loading} />
-                    ))}
-                {route === "privacy" && <PrivacyPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "terms" && <TermsPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "contact" && <ContactPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "home" && <Landing onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-                {route === "notFound" && <NotFoundPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
-            </Suspense>
+                the page's background so the swap is not a white flash, and the
+                boundary keeps a chunk that never arrives from taking the whole
+                page down with it. */}
+            <RouteErrorBoundary resetKey={route}>
+                <Suspense fallback={<div className="min-h-dvh bg-bg" />}>
+                    {route === "wiki" && <WikiPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "admin" && <AdminPanel onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "download" &&
+                        (signedIn ? (
+                            <DownloadPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />
+                        ) : (
+                            <DownloadLocked onSignIn={openSignIn} onShowShortcuts={openShortcuts} checking={loading} />
+                        ))}
+                    {route === "privacy" && <PrivacyPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "terms" && <TermsPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "contact" && <ContactPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "home" && <Landing onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                    {route === "notFound" && <NotFoundPage onSignIn={openSignIn} onShowShortcuts={openShortcuts} />}
+                </Suspense>
+            </RouteErrorBoundary>
 
             {/* The shared TaylorURL bar, mounted here rather than inside Footer so
                 every route carries it whether or not it remembered the footer.
