@@ -11,12 +11,12 @@ describe("installerUrl", () => {
         expect(installerUrl("darwin", "x64")).toBe("https://download.domebreak.com/DomeBreak-mac-x64.dmg");
         expect(installerUrl("win32", "x64")).toBe("https://download.domebreak.com/DomeBreak-win-x64.exe");
         expect(installerUrl("win32", "arm64")).toBe("https://download.domebreak.com/DomeBreak-win-arm64.exe");
-        expect(installerUrl("win32", "ia32")).toBe("https://download.domebreak.com/DomeBreak-win-ia32.exe");
     });
 
     it("test_returns_null_for_platforms_without_a_published_installer", () => {
         expect(installerUrl("linux", "x64")).toBeNull();
         expect(installerUrl("darwin", "ia32")).toBeNull();
+        expect(installerUrl("win32", "ia32")).toBeNull();
         expect(installerUrl("win32", "mips")).toBeNull();
     });
 });
