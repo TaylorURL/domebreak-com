@@ -14,17 +14,7 @@ import {ensureDiplo, rel} from "./ledger.js";
 import {capPositions, nationPower} from "../perception/perception.js";
 import {survivingFrac} from "../perception/stats.js";
 import {ALLIANCE} from "../tuning.js";
-
-function allyCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "ally") k++;
-    return k;
-}
-
-function sharesEnemy(a, b) {
-    for (const s in a.relations) if (a.relations[s] === "war" && b.relations[s] === "war") return true;
-    return false;
-}
+import {allyCount, sharesEnemy} from "../../relations.js";
 
 // Weighted [slot, weight] candidates this nation would approach right now, or []
 // when it should not be proposing at all. The caller (diplomacyActions) rolls

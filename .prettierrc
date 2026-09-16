@@ -8,7 +8,7 @@
   "endOfLine": "lf",
   "overrides": [
     {
-      "files": ["*.json", "*.yml", "*.yaml", "*.md"],
+      "files": [".prettierrc", "*.json", "*.yml", "*.yaml", "*.md"],
       "options": {"tabWidth": 2}
     }
   ]

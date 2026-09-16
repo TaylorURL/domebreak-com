@@ -4,15 +4,11 @@
 // A slow coastal shimmer "breathes" over the shelf while the isobaths drift in a
 // gentle ellipse, reading as living current. Honors reduced-motion and pauses
 // when the tab is hidden so it never spins the GPU in the background.
-import {startPausableRaf} from "../../lib/raf.js";
+import {prefersReducedMotion, startPausableRaf} from "../../lib/raf.js";
 import {safeMap} from "../../ui/lib/mapSafe.js";
 
 const FPS = 28;
 const MIN_DT = 1000 / FPS;
-
-function prefersReducedMotion() {
-    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 export function startWater(map) {
     if (!map || prefersReducedMotion()) return () => {};

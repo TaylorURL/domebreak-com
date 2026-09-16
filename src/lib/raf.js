@@ -42,3 +42,11 @@ export function startPausableRaf(frame, options = {}) {
         if (pauseWhenHidden) document.removeEventListener("visibilitychange", onVisibility);
     };
 }
+
+// Does this viewer ask for less motion? Every decorative loop in the app gates on
+// it, so it sits beside the loop driver rather than being re-declared next to each
+// one. `matchMedia` is missing under SSR and in the test environment, so an absent
+// implementation reads as no preference.
+export function prefersReducedMotion() {
+    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+}

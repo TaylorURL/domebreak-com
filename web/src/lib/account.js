@@ -95,6 +95,3 @@ export async function listBeta() {
         return {ok: false, status: 0, error: "Network error. Try again."};
     }
 }
-
-// Client-side auth validation rules.
-export const AUTH_RULES = {username: {min: 3, max: 24}, password: {min: 8}};

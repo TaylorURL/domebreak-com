@@ -8,24 +8,9 @@ import {cn} from "../lib/cn.js";
 import {button} from "../lib/variants.js";
 import {useAccount} from "../lib/accountStore.js";
 import {BETA_PLATFORMS} from "../lib/beta.js";
+import {fmtDate} from "../lib/dates.js";
 
 const PLATFORM_LABEL = Object.fromEntries(BETA_PLATFORMS.map((p) => [p.id, p.label]));
-
-// The studio's zone, so a date on this page reads the same wherever it is
-// opened. The site is a separate bundle from the game and carries its own.
-const STUDIO_ZONE = "America/Chicago";
-
-function fmtDate(iso) {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZone: STUDIO_ZONE,
-    });
-}
 
 // Centered status card for the gated states (checking / signed-out / not admin).
 function GateCard({icon, eyebrow, title, body, action}) {

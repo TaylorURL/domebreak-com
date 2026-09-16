@@ -38,7 +38,7 @@ export const shareOfPct = (part, total) => (total > 0 ? Math.round((part / total
 // in one match reading different times off the same message is the thing this
 // settles. The in-game calendar in LiveHud is a synthetic epoch read through
 // getUTC* accessors and is not this.
-export const STUDIO_ZONE = "America/Chicago";
+const STUDIO_ZONE = "America/Chicago";
 
 // Render an ISO timestamp as "Month Year" for account-since strips; null on
 // missing or invalid input.
