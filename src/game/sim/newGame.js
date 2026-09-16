@@ -57,7 +57,7 @@ export const GREAT_POWERS = [
 // same great powers every time. Every ISO here has GDP_T / REAL_POP entries in
 // constants.js so a randomly-picked opponent is economically sized like a real
 // power, not a fallback minnow.
-export const POWER_POOL = [
+const POWER_POOL = [
     "US",
     "CN",
     "RU",

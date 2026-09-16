@@ -37,12 +37,7 @@ import {
     executeScrap,
 } from "./orders/orderQueue.js";
 import {THINK} from "./tuning.js";
-
-function warCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "war") k++;
-    return k;
-}
+import {warCount} from "../relations.js";
 
 function nearPlayer(w, n, caps) {
     const a = caps[n.slot],

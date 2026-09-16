@@ -15,17 +15,7 @@ import {foesToSue} from "./peace.js";
 import {allianceCandidates, allyToBreak} from "./alliance.js";
 import {betrayalTarget} from "./betrayal.js";
 import {DECLARE, PEACE, POSTURE, WANTS} from "../tuning.js";
-
-function warCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "war") k++;
-    return k;
-}
-
-function sharesEnemy(a, b) {
-    for (const s in a.relations) if (a.relations[s] === "war" && b.relations[s] === "war") return true;
-    return false;
-}
+import {sharesEnemy, warCount} from "../../relations.js";
 
 // How stocked the war machine is against its own doctrine floor: strike
 // platforms, a standing wall, and rounds in the magazine. Prevents

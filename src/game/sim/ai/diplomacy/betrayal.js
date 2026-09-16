@@ -9,12 +9,7 @@ import {haversine} from "../../../geo/geo.js";
 import {capPositions, warRangeFor} from "../perception/perception.js";
 import {ensureDiplo, rel} from "./ledger.js";
 import {BETRAYAL, PEACE, POSTURE} from "../tuning.js";
-
-function warCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "war") k++;
-    return k;
-}
+import {warCount} from "../../relations.js";
 
 // Is `m` visibly staggering — losing a war it is already in, or led by a
 // broken command?

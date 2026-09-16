@@ -61,7 +61,7 @@ function turnToward(cur, target, maxDelta) {
 // Turn-rate-limited forward flight: bank the heading toward `desired` (never faster
 // than turnRate), then advance one step along the *actual* heading. No teleporting —
 // the jet always flies where it's pointed and curves onto its target.
-export function advance(u, desired, speedKm, turnRate, dt) {
+function advance(u, desired, speedKm, turnRate, dt) {
     u.hdg = turnToward(u.hdg == null ? desired : u.hdg, desired, turnRate * dt);
     const p = polarFrom(u, speedKm * dt, u.hdg);
     let lat = p.lat,
@@ -92,7 +92,7 @@ export function hangarCapOf(baseType, acType) {
 
 // Rate-limited approach toward a target — kills every altitude pop (go-arounds,
 // capture handoffs) by slewing instead of snapping.
-export function slew(cur, tgt, maxDelta) {
+function slew(cur, tgt, maxDelta) {
     const base = cur ?? tgt;
     return base + clampSym(tgt - base, maxDelta);
 }

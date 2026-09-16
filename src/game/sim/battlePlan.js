@@ -60,7 +60,7 @@ function canEngage(u, tgt) {
 // specific units from the roster — the AI's staged multi-plan solve uses it to keep
 // an attacker already claimed by a higher-priority plan from phantom-saturating this
 // one's targets. Player-authored plans never set it.
-export function planAttackers(w, plan, mySlot) {
+function planAttackers(w, plan, mySlot) {
     const types = new Set(plan.attackerTypes || []);
     return w.units
         .filter(

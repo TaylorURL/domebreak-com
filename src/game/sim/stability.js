@@ -10,13 +10,7 @@ import {STABILITY} from "../data/constants.js";
 import {nationOf} from "./worldState.js";
 import {netIncomeFromAgg, netIncomeOf, populationOf, slotEconomyAggregates} from "./queries.js";
 import {clamp, clamp01} from "../../lib/math.js";
-
-// Wars a nation is currently fighting.
-function warCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "war") k++;
-    return k;
-}
+import {warCount} from "./relations.js";
 
 // A nation's original total population: the sum of pop0 over ALL its cities (alive
 // or dead), so bombing and lost cities surface as a population-loss penalty. A

@@ -89,6 +89,7 @@ Copy `.env.example` to `.env` for the multiplayer backend. Single-player needs n
 | `npm run preview`            | Serve the production build locally.                                                 |
 | `npm test`                   | Run the Vitest suite.                                                               |
 | `npm run lint`               | Lint with ESLint.                                                                   |
+| `npm run lint:fix`           | Lint and apply the fixes ESLint can make itself.                                    |
 | `npm run format`             | Format with Prettier.                                                               |
 | `npm run format:check`       | Check formatting with Prettier.                                                     |
 | `npm run electron`           | Run the desktop shell against the build.                                            |

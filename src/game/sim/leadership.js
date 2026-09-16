@@ -91,14 +91,14 @@ export function leadershipPct(n) {
 }
 
 // National output multiplier from Leadership: commandFloor at 0%, 1.0 at 100%.
-export function commandFactor(n) {
+function commandFactor(n) {
     if (!n?.lead || !n.lead.total) return 1;
     const f = Math.max(0, (n.lead.total - n.lead.lost) / n.lead.total);
     return LEADERSHIP.commandFloor + (1 - LEADERSHIP.commandFloor) * f;
 }
 
 // The nation's living Leadership Bunker (maxCount 1), or null.
-export function bunkerOf(w, slot) {
+function bunkerOf(w, slot) {
     return w.units.find((u) => u.slot === slot && u.type === "bunker" && u.hp > 0) || null;
 }
 
