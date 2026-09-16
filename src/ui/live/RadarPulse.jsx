@@ -10,6 +10,7 @@
 import {useEffect, useRef, useState} from "react";
 import {Layer, Source, useMap} from "react-map-gl/maplibre";
 import {circle, geoCircle, GEODESIC_MAX_KM} from "../../game/geo/geo.js";
+import {prefersReducedMotion} from "../../lib/raf.js";
 
 const PERIOD_MS = 2200; // one full grow-and-fade cycle
 const PULSE_COUNT = 2; // concurrent, evenly-phased pulses per emitter
@@ -23,10 +24,6 @@ const PULSE_MAX_STEPS = 64;
 const SINGLE_PULSE_ABOVE = 10; // emitters past this each carry one pulse, not two
 // Degrees of latitude per km, for the viewport cull's cheap bounding test.
 const DEG_PER_KM = 1 / 111.19;
-
-function prefersReducedMotion() {
-    return typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 // Ease the pulse outward so it launches fast off the emitter and slows as it
 // reaches the coverage edge — a wavefront, not a linear crawl.

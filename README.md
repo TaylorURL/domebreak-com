@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2026.38.3-e0574f?style=for-the-badge" alt="Version 2026.38.3" />
+  <img src="https://img.shields.io/badge/version-2026.38.4-e0574f?style=for-the-badge" alt="Version 2026.38.4" />
   <img src="https://img.shields.io/badge/React-19-e0574f?style=for-the-badge&logo=react&logoColor=white" alt="React 19" />
   <img src="https://img.shields.io/badge/Vite-7-e0574f?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 7" />
   <img src="https://img.shields.io/badge/MapLibre_GL-08090b?style=for-the-badge&logo=maplibre&logoColor=white" alt="MapLibre GL" />
@@ -89,6 +89,7 @@ Copy `.env.example` to `.env` for the multiplayer backend. Single-player needs n
 | `npm run preview`            | Serve the production build locally.                                                 |
 | `npm test`                   | Run the Vitest suite.                                                               |
 | `npm run lint`               | Lint with ESLint.                                                                   |
+| `npm run lint:fix`           | Lint and apply the fixes ESLint can make itself.                                    |
 | `npm run format`             | Format with Prettier.                                                               |
 | `npm run format:check`       | Check formatting with Prettier.                                                     |
 | `npm run electron`           | Run the desktop shell against the build.                                            |

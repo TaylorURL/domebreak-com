@@ -20,6 +20,7 @@ desktop.ini
 INTELLIGENCE.md
 .fleet/
 .junie/
+.claude/
 
 # Vercel CLI link state (project/org ids) is per-machine.
 .vercel

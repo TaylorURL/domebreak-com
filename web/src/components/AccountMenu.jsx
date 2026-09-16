@@ -4,16 +4,7 @@ import {ChevronDown, LogOut, ShieldCheck} from "lucide-react";
 import {cn} from "../lib/cn.js";
 import {useAccount} from "../lib/accountStore.js";
 import GameIcon from "./GameIcon.jsx";
-
-// The studio's zone, so a date on this page reads the same wherever it is
-// opened. The site is a separate bundle from the game and carries its own.
-const STUDIO_ZONE = "America/Chicago";
-
-function monthYear(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleString("en-US", {month: "short", timeZone: STUDIO_ZONE, year: "numeric"});
-}
+import {monthYear} from "../lib/dates.js";
 
 function Avatar({avatar, name, size = 26}) {
     if (avatar) {

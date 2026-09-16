@@ -13,6 +13,7 @@ import {countBy} from "../../lib/iter.js";
 import {evaluatePeaceOffer} from "./ai/diplomacy/peace.js";
 import {evaluateAllianceOffer} from "./ai/diplomacy/alliance.js";
 import {recordAllianceFormed, recordPeaceDeclined, recordWarEnd} from "./ai/diplomacy/ledger.js";
+import {allyCount} from "./relations.js";
 
 // A city's original owner (falls back to the current slot for saves without owner0).
 const origin = (c) => c.owner0 ?? c.slot;
@@ -30,13 +31,6 @@ function ensureWar(w) {
     if (!w.warPopups) w.warPopups = [];
     if (!w.pendingPeace) w.pendingPeace = [];
     if (!w.pendingAlliance) w.pendingAlliance = [];
-}
-
-// Alliances a nation currently holds.
-function allyCount(n) {
-    let k = 0;
-    for (const s in n.relations) if (n.relations[s] === "ally") k++;
-    return k;
 }
 
 // Cities each slot counts as its baseline (by owner0). Cached until the next war

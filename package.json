@@ -3,7 +3,7 @@
   "productName": "DomeBreak",
   "private": true,
   "license": "UNLICENSED",
-  "version": "2026.38.3",
+  "version": "2026.38.4",
   "type": "module",
   "description": "DomeBreak - online multiplayer missile defense/offense game.",
   "main": "electron/main.cjs",
@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "electron": "electron .",
@@ -96,9 +97,9 @@
     }
   },
   "author": "TaylorURL LLC",
-  "homepage": "https://github.com/bradley-t-t/domebreak",
+  "homepage": "https://github.com/TaylorURL/domebreak-com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bradley-t-t/domebreak.git"
+    "url": "https://github.com/TaylorURL/domebreak-com.git"
   }
 }
