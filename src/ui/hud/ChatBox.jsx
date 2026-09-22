@@ -80,10 +80,10 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
     return (
         <div className="pointer-events-auto">
             {open ? (
-                <div className="w-[300px] flex flex-col bg-panel-2 border border-line rounded shadow backdrop-blur-[8px] overflow-hidden motion-safe:animate-[dbPop_120ms_var(--ease-out)]">
+                <div className="db-hud-panel relative w-[300px] flex flex-col overflow-hidden [--db-tab:82px] motion-safe:animate-[dbPop_120ms_var(--ease-out)]">
                     <button
                         type="button"
-                        className="flex items-center gap-[6px] px-[10px] h-[26px] text-[9.5px] tracking-[1px] uppercase text-faint bg-panel border-b border-line hover:text-text transition-colors"
+                        className="flex items-center gap-[7px] w-full px-[10px] h-[26px] font-mono text-[10px] tracking-[0.22em] uppercase text-dim border-b border-hair transition-colors duration-[var(--dur-fast)] hover:text-gold"
                         onClick={() => setOpen(false)}
                         title="Collapse chat"
                         aria-expanded="true"
@@ -100,7 +100,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                             const el = listRef.current;
                             if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
                         }}
-                        className="h-[150px] overflow-y-auto px-[10px] py-[6px] text-[12px] leading-[1.45]"
+                        className="db-scroll h-[150px] overflow-y-auto px-[10px] py-[6px] text-[12px] leading-[1.45]"
                         aria-live="polite"
                         aria-label="Match chat"
                     >
@@ -127,7 +127,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                             e.preventDefault();
                             send();
                         }}
-                        className="flex border-t border-line"
+                        className="flex border-t border-hair"
                     >
                         <input
                             ref={inputRef}
@@ -149,7 +149,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                             aria-label="Chat message"
                             autoComplete="off"
                             spellCheck="false"
-                            className="flex-1 min-w-0 bg-transparent px-[10px] py-[7px] text-[12px] text-text placeholder:text-faint outline-none focus:bg-sunk transition-colors"
+                            className="flex-1 min-w-0 bg-transparent px-[10px] py-[7px] text-[12px] text-text placeholder:text-faint outline-none transition-colors duration-[var(--dur-fast)] focus:bg-sunk focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
                         />
                     </form>
                 </div>
@@ -157,8 +157,8 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                 <button
                     type="button"
                     className={cn(
-                        "relative flex items-center gap-2 h-9 px-3 rounded border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-150 ease-out-db hover:text-text hover:border-blue",
-                        unread > 0 && "text-text",
+                        "db-notch-sm db-brackets relative flex items-center gap-2 h-9 px-3 border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
+                        unread > 0 && "text-text border-gold-line",
                     )}
                     onClick={() => setOpen(true)}
                     title="Open chat (Enter)"
@@ -166,10 +166,10 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                     aria-label="Open chat"
                 >
                     <Icon name="message" size={14} />
-                    <span className="font-display uppercase tracking-[1.5px] text-[10px] font-semibold">Comms</span>
+                    <span className="font-display uppercase tracking-[0.14em] text-[10px] font-semibold">Comms</span>
                     {unread > 0 && (
                         <span
-                            className="min-w-[15px] h-[15px] px-1 grid place-items-center rounded-full bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none"
+                            className="db-notch-sm min-w-[15px] h-[15px] px-1 grid place-items-center bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none tabular-nums"
                             aria-label={`${unread} unread`}
                         >
                             {unread}

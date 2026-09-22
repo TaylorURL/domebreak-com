@@ -50,6 +50,22 @@ const PAINT_FRESH_MS = 40;
 // full fidelity) — halves canvas raster work exactly when a saturation salvo
 // needs it, invisibly below it.
 const VAPOR_LOD_TRAILS = 140;
+// Past this many the plume collapses to a single width instead of the three
+// tapered bands (see drawTrail): one stroke per pass rather than three, so the
+// biggest salvos cost no more to draw than a flat plume would.
+const TAPER_LOD_TRAILS = 90;
+// The plume's three bands, nose to tail. The vapor body widens as it ages and
+// diffuses; the hot core narrows and dims. Multipliers on the trail's own width,
+// so a heavy booster's plume stays proportionally heavier than a MIRV sub's.
+const VAPOR_BAND_W = [0.62, 2.4, 4.17];
+const CORE_BAND_W = [0.92, 0.58, 0.25];
+const CORE_BAND_A = [0.9, 0.55, 0.22];
+// The vapor fades with the same three steps. Three constant widths leave a
+// shoulder where two bands meet; fading the wider one as well puts the step in
+// brightness and in width at the same place, where neither reads as an edge.
+const VAPOR_BAND_A = [0.22, 0.15, 0.09];
+const INT_VAPOR_BAND_A = [0.2, 0.13, 0.08];
+const INT_CORE_BAND_A = [0.95, 0.6, 0.3];
 // Interceptor contrail tint per firing battery. Same plume treatment as the
 // missiles (see drawTrail), just thinner and in the battery's own colour so a
 // defender's shots read apart from the ICBMs they chase.
@@ -121,38 +137,43 @@ function sampleTrack(track, f) {
     return [track[j] + (track[j + 2] - track[j]) * r, track[j + 1] + (track[j + 3] - track[j + 1]) * r];
 }
 
-// Draw one trail: pts is an array of [x,y] screen points (CSS px) with `null`
-// entries marking gaps where the ground track dips behind the globe. Each
-// contiguous run is stroked twice — a wide low-alpha vapor body, then a thin
-// bright core — under a linear gradient that fades the oldest (tail) end to
-// nothing so the plume looks like it's dissipating behind the vehicle.
+// Draw one trail: pts is an array of [x,y] screen points (CSS px) in tail-to-head
+// order, with `null` entries marking gaps where the ground track dips behind the
+// globe. Two passes over the same geometry: a wide low-alpha vapor body in the
+// warhead's smoke colour, then a hot narrow core in its flame colour over the
+// top. Both taper, in opposite directions — the vapor widens toward the tail as
+// the plume ages and diffuses, the core narrows and dims — which is what makes a
+// round read as travelling rather than as a line someone drew.
+//
+// The taper is three constant-width bands rather than a per-segment ramp: a
+// twenty-point trail would otherwise cost twenty strokes a pass, and at three
+// the joints disappear under the round caps. Each band shares the boundary point
+// with its neighbour so the plume has no seam.
+//
 // Runs that never enter the (padded) canvas rect are skipped — the projection
 // work is already done, but the raster fill is the expensive half at Retina
-// pixel densities. `vapor` toggles the wide pass (see VAPOR_LOD_TRAILS).
-function drawTrail(ctx, pts, color, width, cw, ch, vapor) {
+// pixel densities. `vapor` toggles the wide pass (VAPOR_LOD_TRAILS) and `taper`
+// the banding (TAPER_LOD_TRAILS).
+function drawTrail(ctx, pts, core, smoke, width, cw, ch, vapor, taper, coreAlpha, vaporAlpha) {
+    const last = pts.length - 1;
+    if (last < 1) return;
     let run = [];
     let visible = false;
+    let band = taper ? 2 : 1;
     const flush = () => {
         if (run.length >= 2 && visible) {
-            const a = run[0],
-                b = run[run.length - 1];
-            const g = ctx.createLinearGradient(a[0], a[1], b[0], b[1]);
-            g.addColorStop(0, rgba(color, 0));
-            g.addColorStop(0.55, rgba(color, 0.2));
-            g.addColorStop(1, rgba(color, 0.82));
-            ctx.strokeStyle = g;
-            ctx.lineJoin = "round";
-            ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(run[0][0], run[0][1]);
             for (let i = 1; i < run.length; i++) ctx.lineTo(run[i][0], run[i][1]);
             if (vapor) {
-                ctx.globalAlpha = 0.5; // wide diffuse vapor
-                ctx.lineWidth = width * 2.4;
+                ctx.globalAlpha = vaporAlpha[band];
+                ctx.strokeStyle = smoke;
+                ctx.lineWidth = width * VAPOR_BAND_W[band];
                 ctx.stroke();
             }
-            ctx.globalAlpha = 0.92; // bright core (same path)
-            ctx.lineWidth = Math.max(0.8, width * 0.8);
+            ctx.globalAlpha = coreAlpha[band];
+            ctx.strokeStyle = core;
+            ctx.lineWidth = Math.max(0.5, width * CORE_BAND_W[band]);
             ctx.stroke();
         }
         run = [];
@@ -162,22 +183,29 @@ function drawTrail(ctx, pts, color, width, cw, ch, vapor) {
     // per point: at max zoom a long trail's samples can be >1600px apart, so a
     // segment can cross the whole viewport with both endpoints outside it — a
     // point-only test blanked exactly those trails.
+    const sees = (a, b) =>
+        Math.min(a[0], b[0]) < cw + 60 &&
+        Math.max(a[0], b[0]) > -60 &&
+        Math.min(a[1], b[1]) < ch + 60 &&
+        Math.max(a[1], b[1]) > -60;
     let prev = null;
-    for (const p of pts) {
+    for (let i = 0; i <= last; i++) {
+        const p = pts[i];
         if (!p) {
             flush();
             prev = null;
             continue;
         }
-        if (!visible && prev) {
-            if (
-                Math.min(prev[0], p[0]) < cw + 60 &&
-                Math.max(prev[0], p[0]) > -60 &&
-                Math.min(prev[1], p[1]) < ch + 60 &&
-                Math.max(prev[1], p[1]) > -60
-            )
-                visible = true;
-        } else if (!visible && p[0] > -60 && p[0] < cw + 60 && p[1] > -60 && p[1] < ch + 60) visible = true;
+        // 0 is the tail sample and `last` the nose, so the band index counts down.
+        const b = taper ? 2 - Math.min(2, Math.floor((i / last) * 3)) : 1;
+        if (prev && !visible && sees(prev, p)) visible = true;
+        else if (!prev && !visible && sees(p, p)) visible = true;
+        if (b !== band) {
+            run.push(p); // close this band on the boundary point
+            flush();
+            band = b;
+            visible = false; // the next band re-earns its own visibility
+        }
         run.push(p);
         prev = p;
     }
@@ -428,11 +456,20 @@ function update(map, data, canvas, els, tracks) {
         // Aircraft-launched ordnance reads apart from strategic missiles: a lean
         // pale-blue streak for an air-to-air missile, a short amber arc for a bomb.
         const muniTrail =
-            p.muni === "a2a" ? {color: "#bfe6ff", width: 1.5} : p.muni === "bomb" ? {color: "#ffb454", width: 2} : null;
+            p.muni === "a2a"
+                ? {smoke: "#bfe6ff", core: "#7fd0ff", width: 1.5}
+                : p.muni === "bomb"
+                  ? {smoke: "#ffb454", core: "#ff9a3c", width: 2}
+                  : null;
         trails.push({
             pts,
-            color: muniTrail?.color ?? wh.trail ?? "#e3e7ec",
+            // Core in the warhead's flame tint, vapor in its smoke tint — the two
+            // colours the registry already carries for the sprite.
+            core: muniTrail?.core ?? wh.flame ?? "#ff8a1a",
+            smoke: muniTrail?.smoke ?? wh.trail ?? "#e3e7ec",
             width: muniTrail?.width ?? (p.sub ? 1.3 : wh.trailW || 2.4),
+            coreAlpha: CORE_BAND_A,
+            vaporAlpha: VAPOR_BAND_A,
         });
         place(els.get("p" + p.id), head, deg, p.sub ? " scale(0.6)" : p.muni ? " scale(0.8)" : "");
     }
@@ -459,7 +496,15 @@ function update(map, data, canvas, els, tracks) {
             const [x, y] = project(lng, lat);
             pts.push([x, y - (al || 0) * 30]);
         }
-        if (pts.length > 1) trails.push({pts, color: "#dfe4ea", width: 1});
+        if (pts.length > 1)
+            trails.push({
+                pts,
+                core: "#f2f4f6",
+                smoke: "#dfe4ea",
+                width: 1,
+                coreAlpha: INT_CORE_BAND_A,
+                vaporAlpha: INT_VAPOR_BAND_A,
+            });
     }
     const beams = [],
         tracers = [];
@@ -472,7 +517,20 @@ function update(map, data, canvas, els, tracks) {
         }
         const {pts, head, deg} = intGeom(it, project, occluded, refLng);
         if (variant === "cram") tracers.push(pts);
-        else trails.push({pts, color: INT_TRAIL[variant] || INT_TRAIL[""], width: INT_TRAIL_W});
+        else {
+            const tint = INT_TRAIL[variant] || INT_TRAIL[""];
+            // One colour for both passes: an interceptor's plume is the battery's
+            // own hue throughout, which is what keeps it clear of the warhead
+            // plumes it is flying into.
+            trails.push({
+                pts,
+                core: tint,
+                smoke: tint,
+                width: INT_TRAIL_W,
+                coreAlpha: INT_CORE_BAND_A,
+                vaporAlpha: INT_VAPOR_BAND_A,
+            });
+        }
         place(els.get("i" + it.id), head, deg, "");
     }
 
@@ -488,8 +546,15 @@ function update(map, data, canvas, els, tracks) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, pw, ph);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS px; widths in CSS px
+    // Join and cap are the same for every plume, so they are set once a frame
+    // rather than once a band.
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     const vapor = trails.length <= VAPOR_LOD_TRAILS;
-    for (const tr of trails) drawTrail(ctx, tr.pts, tr.color, tr.width, w, hgt, vapor);
+    const taper = trails.length <= TAPER_LOD_TRAILS;
+    for (const tr of trails)
+        drawTrail(ctx, tr.pts, tr.core, tr.smoke, tr.width, w, hgt, vapor, taper, tr.coreAlpha, tr.vaporAlpha);
+    ctx.globalAlpha = 1; // the beams and tracers below carry their own alpha
     const now = performance.now();
     for (const pts of tracers) drawTracer(ctx, pts, now);
     for (const b of beams) drawBeam(ctx, b.a, b.b, now); // beams sit on top of the plumes
@@ -563,6 +628,7 @@ export default function SkyLayer({map, projectiles, interceptors, aircraft}) {
                     className="absolute left-0 top-0 pointer-events-none z-3 will-change-transform"
                 >
                     <div className={`db-interceptor ${variant}`}>
+                        <span className="db-int-glow" />
                         <span className="db-int-body" />
                         <span className="db-int-flame" />
                         {variant === "thaad" && <span className="db-int-spark" />}

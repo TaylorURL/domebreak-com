@@ -1,6 +1,6 @@
 import {Component} from "react";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, panel} from "../lib/variants.js";
 
 // The routed pages load as their own chunks, so any one of them can fail to
 // arrive after the page around it has already rendered. React treats that as a
@@ -27,15 +27,19 @@ export default class RouteErrorBoundary extends Component {
         if (!this.state.failed) return this.props.children;
 
         return (
-            <div className="relative flex min-h-dvh items-center justify-center bg-bg px-5 text-text">
-                <div className="max-w-[560px] text-center">
+            <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-bg px-5 text-text">
+                <div aria-hidden className="pointer-events-none absolute inset-0 db-grid" />
+                <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
+                <div
+                    className={cn(panel({frame: "glass"}), "db-seam w-[min(560px,94vw)] p-[26px] text-center sm:p-10")}
+                >
                     <h1 className="font-display text-[clamp(1.5rem,4vw,2.2rem)] leading-[1.1] font-bold uppercase">
                         This page did not load
                     </h1>
                     <p className="mt-4 text-[15px] leading-relaxed text-dim">
                         Part of the site failed to arrive. Reload the page and it should come back.
                     </p>
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3 border-t border-hair pt-6">
                         <button
                             type="button"
                             onClick={() => window.location.reload()}

@@ -14,7 +14,7 @@ export const CATEGORIES = [
     {
         id: "defense",
         label: "Missile Defense",
-        blurb: "Interceptors, mobile and close-in guns, area defense, and directed energy — the layered shield.",
+        blurb: "Interceptors, mobile and close-in guns, area defense, and directed energy: the layered shield.",
         include: ["battery", "mshorad", "cram", "patriot", "aegis", "thaad", "laser"],
     },
     {
@@ -67,7 +67,7 @@ export const CATEGORIES = [
     {
         id: "industry",
         label: "Industry",
-        blurb: "Non-combat economy — every silo is paid for.",
+        blurb: "Non-combat economy. Every silo is paid for.",
         include: ["factory", "port", "refinery", "techpark"],
     },
 ];
@@ -111,7 +111,7 @@ function buildStats(u) {
     }
     // Defensive engagement window — interceptors + area defense.
     if (u.range != null && u.intercept != null) {
-        const rangeLabel = u.minRange ? `${u.minRange} – ${u.range} km` : fmt(u.range, "km");
+        const rangeLabel = u.minRange ? `${u.minRange} to ${u.range} km` : fmt(u.range, "km");
         rows.push(["Engagement range", rangeLabel]);
         rows.push(["Intercept chance", `${Math.round(u.intercept * 100)}%`]);
         if (u.antiBallistic) rows.push(["Anti-ballistic", "Yes"]);
@@ -119,7 +119,7 @@ function buildStats(u) {
     // Sensor-only platforms: radars, warnsats, reconsats.
     if (u.detect && u.intercept == null && u.damage == null) {
         rows.push(["Detection range", fmt(u.range, "km")]);
-        rows.push(["Cues interceptors", u.warnOnly ? "No — warning only" : "Yes"]);
+        rows.push(["Cues interceptors", u.warnOnly ? "No, warning only" : "Yes"]);
     }
     // Weapon cycle.
     if (u.reload != null) rows.push(["Reload", fmt(u.reload, "s")]);
@@ -138,7 +138,7 @@ function buildStats(u) {
     if (u.capacity) rows.push(["Embark capacity", `${u.capacity} ground units`]);
 
     // Stealth flag — submarine hulls only reveal to sonar.
-    if (u.submarine) rows.push(["Stealth", "Submerged — invisible to radar"]);
+    if (u.submarine) rows.push(["Stealth", "Submerged, invisible to radar"]);
 
     // Ground unit specials.
     if (u.capture) rows.push(["Can capture cities", "Yes"]);
@@ -199,3 +199,15 @@ export const CATEGORIES_WITH_UNITS = CATEGORIES.map((c) => ({
     ...c,
     units: c.include.map(buildEntry).filter(Boolean),
 })).filter((c) => c.units.length > 0);
+
+// The ceiling each headline number reaches across the surfaced roster. The card
+// meters read a value as its share of one of these, so the same bar length means
+// the same thing on every card in the wiki — a number on its own says how much,
+// and the bar says how much of the most there is.
+export const UNIT_MAX = ["cost", "upkeep", "buildTime", "hp"].reduce((max, key) => {
+    max[key] = CATEGORIES_WITH_UNITS.reduce(
+        (top, c) => c.units.reduce((n, u) => (typeof u[key] === "number" && u[key] > n ? u[key] : n), top),
+        0,
+    );
+    return max;
+}, {});

@@ -1,11 +1,11 @@
-import {useEffect} from "react";
+import {useEffect, useMemo, useState} from "react";
 import Nav from "./Nav.jsx";
 import Footer from "./Footer.jsx";
 import Reveal from "./Reveal.jsx";
 import GameIcon from "./GameIcon.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, chip, panel} from "../lib/variants.js";
 import useReleaseVersion from "../hooks/useReleaseVersion.js";
 
 // Installers are self-hosted on the DomeBreak VPS: the stable root names are
@@ -20,59 +20,122 @@ const RELEASE_BASE = "https://download.domebreak.com";
 // they are the symlink names above, not per-version paths.
 const PLATFORMS = [
     {
-        id: "mac",
+        id: "mac-arm64",
         os: "macOS",
         icon: "carrier",
         note: "macOS 10.13+",
-        builds: [
-            {arch: "Apple Silicon", sub: "M1 and newer", file: "DomeBreak-mac-arm64.dmg"},
-            {arch: "Intel", sub: "64-bit", file: "DomeBreak-mac-x64.dmg"},
-        ],
+        arch: "Apple Silicon",
+        sub: "M1 and newer",
+        file: "DomeBreak-mac-arm64.dmg",
     },
     {
-        id: "win",
+        id: "mac-x64",
+        os: "macOS",
+        icon: "carrier",
+        note: "macOS 10.13+",
+        arch: "Intel",
+        sub: "64-bit",
+        file: "DomeBreak-mac-x64.dmg",
+    },
+    {
+        id: "win-x64",
         os: "Windows",
         icon: "factory",
         note: "Windows 10+",
-        builds: [
-            {arch: "x64", sub: "64-bit, most PCs", file: "DomeBreak-win-x64.exe"},
-            {arch: "ARM64", sub: "Windows on ARM", file: "DomeBreak-win-arm64.exe"},
-        ],
+        arch: "x64",
+        sub: "64-bit, most PCs",
+        file: "DomeBreak-win-x64.exe",
+    },
+    {
+        id: "win-arm64",
+        os: "Windows",
+        icon: "factory",
+        note: "Windows 10+",
+        arch: "ARM64",
+        sub: "Windows on ARM",
+        file: "DomeBreak-win-arm64.exe",
     },
 ];
 
-function PlatformCard({platform, version}) {
-    return (
-        <article className="group relative flex h-full flex-col rounded border border-line bg-bg-2 p-6 db-tick transition-colors duration-200 hover:border-gold-line">
-            <header className="flex items-start gap-4">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded border border-line bg-gold-soft text-gold transition-colors duration-200 group-hover:border-gold-line">
-                    <GameIcon name={platform.icon} size={34} />
-                </span>
-                <div className="min-w-0 flex-1">
-                    <h2 className="font-display text-[18px] font-bold uppercase tracking-[0.06em] text-text">
-                        {platform.os}
-                    </h2>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
-                        {platform.note}
-                        {version ? ` · v${version}` : ""}
-                    </p>
-                </div>
-            </header>
+// Which of the four installers this visitor most likely needs. Resolved on the
+// client and never at module scope: there is no navigator during the prerender,
+// and a platform baked into the document would be the build machine's rather
+// than the reader's.
+//
+// The family comes from the platform string, which every engine answers. The CPU
+// inside it only Chromium will say, so where it does not the family's common
+// build stands — Apple Silicon on a Mac, x64 on a PC. A visitor on neither
+// family gets the list in its declared order with nothing singled out.
+function useVisitorPlatform() {
+    const [id, setId] = useState(null);
 
-            <div className="mt-6 flex flex-col gap-2 border-t border-hair pt-5">
-                {platform.builds.map((b) => (
-                    <a
-                        key={b.file}
-                        href={`${RELEASE_BASE}/${b.file}`}
-                        // The visible label is the architecture alone, which says nothing
-                        // on its own to a reader arriving at the link out of context.
-                        aria-label={`Download DomeBreak for ${platform.os} — ${b.arch}, ${b.sub}`}
-                        className={cn(button({variant: "primary", size: "lg"}), "w-full justify-between gap-3")}
-                    >
-                        <span>{b.arch}</span>
-                        <span className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-70">{b.sub}</span>
-                    </a>
-                ))}
+    useEffect(() => {
+        let live = true;
+
+        (async () => {
+            const data = navigator.userAgentData;
+            const name = String(data?.platform || navigator.platform || navigator.userAgent || "");
+            const mac = /mac/i.test(name);
+            if (!mac && !/win/i.test(name)) return;
+
+            // null where the engine will not say, so the two families fall back
+            // in opposite directions without either one guessing from silence.
+            let arm = null;
+            try {
+                const high = await data?.getHighEntropyValues?.(["architecture"]);
+                if (high?.architecture) arm = /arm/i.test(high.architecture);
+            } catch {
+                // Asked and refused reads the same as never having asked.
+            }
+
+            if (!live) return;
+            if (mac) setId(arm === false ? "mac-x64" : "mac-arm64");
+            else setId(arm === true ? "win-arm64" : "win-x64");
+        })();
+
+        return () => {
+            live = false;
+        };
+    }, []);
+
+    return id;
+}
+
+function PlatformCard({platform, version, mine}) {
+    return (
+        <article className={cn(panel(), "flex h-full flex-col gap-3.5 bg-bg-2 p-6", mine && "border-gold-line")}>
+            <span
+                className={cn(
+                    "db-notch-sm flex h-14 w-14 shrink-0 items-center justify-center border border-gold-line bg-gold-soft text-gold",
+                )}
+            >
+                <GameIcon name={platform.icon} size={30} />
+            </span>
+
+            <div>
+                <h2 className="font-display text-[18px] font-bold uppercase tracking-[0.06em] text-text">
+                    {platform.os}
+                </h2>
+                <p className="mt-1 text-[13px] leading-[20px] text-dim">{platform.arch}</p>
+            </div>
+
+            <p className="font-mono text-[10px] uppercase leading-[14px] tracking-[0.22em] text-faint">
+                {platform.sub} · {platform.note}
+            </p>
+
+            {version && <span className={cn(chip({tone: "subtle", shape: "notch"}), "w-fit")}>v{version}</span>}
+
+            <div className="mt-auto border-t border-hair pt-3.5">
+                <a
+                    href={`${RELEASE_BASE}/${platform.file}`}
+                    // The visible label is the same word on all four cards, which
+                    // says nothing on its own to a reader arriving at the link out
+                    // of context.
+                    aria-label={`Download DomeBreak for ${platform.os} on ${platform.arch}: ${platform.sub}`}
+                    className={cn(button({variant: "primary", size: "lg"}), "w-full")}
+                >
+                    Download
+                </a>
             </div>
         </article>
     );
@@ -80,9 +143,23 @@ function PlatformCard({platform, version}) {
 
 export default function DownloadPage({onSignIn, onShowShortcuts}) {
     const version = useReleaseVersion();
+    const mine = useVisitorPlatform();
+
     useEffect(() => {
         window.scrollTo({top: 0, behavior: "auto"});
     }, []);
+
+    // The visitor's own installer leads, the rest of its family follows it, and
+    // the other family keeps its declared order behind them.
+    const ordered = useMemo(() => {
+        const self = PLATFORMS.find((p) => p.id === mine);
+        if (!self) return PLATFORMS;
+        return [
+            self,
+            ...PLATFORMS.filter((p) => p.id !== self.id && p.os === self.os),
+            ...PLATFORMS.filter((p) => p.os !== self.os),
+        ];
+    }, [mine]);
 
     return (
         <div className="relative min-h-dvh bg-bg text-text">
@@ -92,33 +169,37 @@ export default function DownloadPage({onSignIn, onShowShortcuts}) {
                 <section className="relative overflow-hidden pt-28 pb-14 sm:pt-32 sm:pb-16">
                     <div aria-hidden className="pointer-events-none absolute inset-0 db-grid" />
                     <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
-                    <div className="relative mx-auto max-w-[1100px] px-5 sm:px-8">
+                    <div className="relative mx-auto max-w-[1280px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow>Download</Eyebrow>
+                            <Eyebrow framed>Download</Eyebrow>
                             <h1 className="mt-5 max-w-3xl font-display text-[clamp(2rem,5vw,3.6rem)] font-bold uppercase leading-[1.02] text-text">
                                 Get <span className="text-dim">DomeBreak</span>
                                 {version ? ` v${version}` : ""}
                             </h1>
                             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-dim">
-                                Free to play. Pick your platform — installers are served straight from the DomeBreak
+                                Free to play. Pick your platform: installers are served straight from the DomeBreak
                                 server. See First launch below the first time you open the game.
                             </p>
                         </Reveal>
                     </div>
                 </section>
 
-                <div className="mx-auto max-w-[1100px] px-5 pb-24 sm:px-8">
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        {PLATFORMS.map((p, i) => (
-                            <Reveal key={p.id} delay={Math.min(i * 0.06, 0.24)}>
-                                <PlatformCard platform={p} version={version} />
+                <div className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-8">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                        {ordered.map((p, i) => (
+                            <Reveal
+                                key={p.id}
+                                delay={Math.min(i * 0.06, 0.24)}
+                                className={cn("db-brackets relative h-full", p.id !== mine && "db-brackets-hover")}
+                            >
+                                <PlatformCard platform={p} version={version} mine={p.id === mine} />
                             </Reveal>
                         ))}
                     </div>
 
                     <Reveal>
-                        <div className="mt-12 rounded border border-line bg-bg-2 p-6">
-                            <h3 className="font-display text-[12px] font-semibold uppercase tracking-[0.22em] text-faint">
+                        <div className={cn(panel(), "db-tab-rule mt-12 bg-bg-2 p-6")}>
+                            <h3 className="font-display text-[12px] font-semibold uppercase tracking-[0.22em] text-dim">
                                 First launch
                             </h3>
                             <p className="mt-3 text-[13px] leading-relaxed text-dim">

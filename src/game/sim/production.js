@@ -61,11 +61,11 @@ export function declareWar(w, a, b) {
     const na = nationOf(w, a),
         nb = nationOf(w, b);
     if (!na || !nb || a === b) return {error: "Invalid order."};
-    if (na.relations[b] === "ally") return {error: "You are allied — break the alliance first."};
+    if (na.relations[b] === "ally") return {error: "You are allied. Break the alliance first."};
     // Opening grace is a hard ceasefire for the whole world — no nation, human
     // or AI, may open a war until the window elapses.
     const grace = w.rules?.playerGraceSec ?? DIPLOMACY.playerGraceSec;
-    if (grace > 0 && w.time < grace) return {error: "Opening grace is in effect — no wars may be declared yet."};
+    if (grace > 0 && w.time < grace) return {error: "Opening grace is in effect, so no war may be declared yet."};
     setWar(w, na, nb, a, b);
     w.events.push({id: nextId(w, "e"), t: w.time, type: "war", a, b});
     // Defensive pact: an attack on b pulls b's allies in against the aggressor.
@@ -186,7 +186,7 @@ export function queueUnit(w, slot, type, lng, lat, territoryOk) {
             n.prod.queue.filter((it) => it.kind === "unit" && UNITS[it.type]?.kind === "industry").length +
             (cur?.kind === "unit" && UNITS[cur.type]?.kind === "industry" ? 1 : 0);
         if (industryCountOf(w, slot) + queued >= industryCapOf(w, slot)) {
-            return {error: "Industrial capacity reached — grow your population."};
+            return {error: "Industrial capacity reached. Grow your population."};
         }
     }
     // Industry is exempt from the deficit gate — building it is how you recover.

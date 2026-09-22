@@ -3,6 +3,9 @@ import {createPortal} from "react-dom";
 import {AnimatePresence, motion, useReducedMotion} from "motion/react";
 import {Menu, X, LogIn, LogOut, ShieldCheck} from "lucide-react";
 import {scrollToId} from "../lib/nav.js";
+import {button} from "../lib/variants.js";
+import {cn} from "../lib/cn.js";
+import useReleaseVersion from "../hooks/useReleaseVersion.js";
 import {NAV_MENUS} from "../lib/navMenus.js";
 import {useAccount} from "../lib/accountStore.js";
 import {Wordmark} from "./Primitives.jsx";
@@ -27,6 +30,7 @@ const DRAWER_ID = "site-menu-drawer";
 export default function MobileNav({onSignIn}) {
     const reduce = useReducedMotion();
     const {signedIn, isAdmin, signOut} = useAccount();
+    const version = useReleaseVersion();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -81,7 +85,7 @@ export default function MobileNav({onSignIn}) {
                         // contained so a flick past either end scrolls the menu, not the page.
                         className="db-scroll absolute right-0 top-0 flex h-[100dvh] max-h-[100dvh] w-[min(360px,88vw)] flex-col overflow-y-auto overscroll-contain border-l border-line bg-panel-solid shadow"
                     >
-                        <div className="flex items-center justify-between border-b border-hair px-5 py-4">
+                        <div className="flex h-16 items-center justify-between border-b border-gold-line px-5">
                             <div className="flex items-center gap-3">
                                 <GameIcon name="dome" size={20} className="text-gold" />
                                 <Wordmark className="text-[15px]" />
@@ -89,7 +93,7 @@ export default function MobileNav({onSignIn}) {
                             <button
                                 onClick={close}
                                 aria-label="Close menu"
-                                className="flex h-11 w-11 items-center justify-center rounded-sm border border-line text-dim transition-colors duration-150 hover:border-blue hover:text-text"
+                                className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line text-dim transition-colors duration-[var(--dur-fast)] hover:border-blue hover:text-text"
                             >
                                 <X size={15} />
                             </button>
@@ -101,11 +105,11 @@ export default function MobileNav({onSignIn}) {
                                     close();
                                     scrollToId("play");
                                 }}
-                                className="group/item mb-3 flex w-full items-center gap-3 rounded-sm border border-gold-line bg-gold-soft px-3 py-3 text-left transition-colors duration-150 hover:border-text"
+                                className="group/item mb-3 flex w-full items-center gap-3 db-notch-sm border border-gold-line bg-gold-soft px-3 py-3 text-left transition-colors duration-[var(--dur-fast)] hover:border-gold"
                             >
-                                <span className="h-[7px] w-[7px] shrink-0 rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
+                                <span className="db-led db-led-live" />
                                 <span className="min-w-0">
-                                    <span className="block font-display text-[12.5px] font-semibold uppercase tracking-[0.1em] text-text">
+                                    <span className="block font-display text-[12.5px] font-semibold uppercase tracking-[0.1em] text-gold">
                                         Play Free
                                     </span>
                                     <span className="mt-1 block font-mono text-[10.5px] text-faint">
@@ -143,7 +147,7 @@ export default function MobileNav({onSignIn}) {
                                             <a
                                                 href="#/admin"
                                                 onClick={close}
-                                                className="flex items-center gap-3 rounded-sm px-3 py-3 text-[13px] text-dim transition-colors hover:bg-bg-2 hover:text-text"
+                                                className="flex items-center gap-3 db-notch-sm border border-transparent px-3 py-3 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-gold-line hover:bg-gold-soft hover:text-gold"
                                             >
                                                 <ShieldCheck size={15} />
                                                 <span>Admin Panel</span>
@@ -154,7 +158,7 @@ export default function MobileNav({onSignIn}) {
                                                 close();
                                                 signOut();
                                             }}
-                                            className="flex items-center gap-3 rounded-sm px-3 py-3 text-left text-[13px] text-dim transition-colors hover:bg-bg-2 hover:text-danger"
+                                            className="flex items-center gap-3 db-notch-sm border border-transparent px-3 py-3 text-left text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
                                         >
                                             <LogOut size={15} />
                                             <span>Sign Out</span>
@@ -166,13 +170,19 @@ export default function MobileNav({onSignIn}) {
                                             close();
                                             onSignIn();
                                         }}
-                                        className="flex w-full items-center justify-center gap-2 rounded-sm border border-line px-3 py-3 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-dim transition-colors duration-150 hover:border-blue hover:text-text"
+                                        className={cn(button({variant: "ghost"}), "w-full")}
                                     >
                                         <LogIn size={14} />
                                         <span>Sign In</span>
                                     </button>
                                 )}
                             </div>
+
+                            {version && (
+                                <p className="mt-4 border-t border-hair pt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+                                    {`v${version}`}
+                                </p>
+                            )}
                         </div>
                     </motion.aside>
                 </motion.div>
@@ -188,7 +198,7 @@ export default function MobileNav({onSignIn}) {
                 aria-haspopup="menu"
                 aria-expanded={open}
                 aria-controls={DRAWER_ID}
-                className="flex h-11 w-11 items-center justify-center rounded-sm border border-line bg-field text-dim transition-colors duration-150 hover:border-blue hover:text-text"
+                className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line bg-field text-dim transition-colors duration-[var(--dur-fast)] hover:border-blue hover:text-text"
             >
                 <Menu size={17} />
             </button>

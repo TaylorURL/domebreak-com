@@ -46,10 +46,11 @@ function Landing({onSignIn, onShowShortcuts}) {
         <div className="relative min-h-dvh bg-bg text-text">
             <Nav onSignIn={onSignIn} />
             <main>
-                {/* Alternating dark / light bands down the page. */}
+                {/* Bands alternate the ground down the page: --bg for a section
+                    on the base surface, .db-band for one on the raised one. */}
                 <Hero onSignIn={onSignIn} />
 
-                <div id="doctrine" className="db-paper scroll-mt-16 border-t border-line">
+                <div id="doctrine" className="db-band scroll-mt-16 border-t border-line">
                     <Manifesto />
                 </div>
 
@@ -62,7 +63,7 @@ function Landing({onSignIn, onShowShortcuts}) {
                     icon="reconsat"
                     kicker="The world map"
                     title="A map you can actually read"
-                    body="Every capital, border, and city is real geography on a 3D globe. Switch the view — diplomacy, radar coverage, defense range, population — to read the whole theater at a glance."
+                    body="Every capital, border, and city is real geography on a 3D globe. Switch the view between diplomacy, radar coverage, defense range and population to read the whole theater at a glance."
                     points={[
                         "222 nations on the real world map",
                         "Zoom from the whole globe down to a single city",
@@ -72,14 +73,14 @@ function Landing({onSignIn, onShowShortcuts}) {
                     imageAlt="DomeBreak command map of North America on the 3D globe"
                 />
 
-                <div className="db-paper border-y border-line">
+                <div className="db-band border-y border-line">
                     <ShowcaseSection
                         index="02"
                         side="right"
                         icon="dome"
                         kicker="Build the dome"
                         title="Early warning to intercept"
-                        body="Blanket your territory in radar and early warning, then layer it in depth — close-in guns, interceptors, THAAD, and a directed-energy grid. Every sensor and launch site is placed by you and paid for."
+                        body="Blanket your territory in radar and early warning, then layer it in depth: close-in guns, interceptors, THAAD, and a directed-energy grid. Every sensor and launch site is placed by you and paid for."
                         points={[
                             "Radar and early-warning coverage across your territory",
                             "Close-in guns, interceptors, THAAD, and directed energy in depth",
@@ -92,7 +93,7 @@ function Landing({onSignIn, onShowShortcuts}) {
 
                 <StatBand />
 
-                <div className="db-paper border-y border-line">
+                <div className="db-band border-y border-line">
                     <ShowcaseSection
                         index="03"
                         side="left"
@@ -103,7 +104,7 @@ function Landing({onSignIn, onShowShortcuts}) {
                         points={[
                             "Author multi-launcher attack plans on the globe",
                             "Choose targets and preview trajectories before you commit",
-                            "Warheads from standard to cluster, hypersonic, and thermonuclear MIRV",
+                            "Standard, cluster, hypersonic, and thermonuclear MIRV warheads",
                         ]}
                         image="/shots/battle-plan.webp"
                         imageAlt="DomeBreak battle planning panel"
@@ -116,17 +117,17 @@ function Landing({onSignIn, onShowShortcuts}) {
                     icon="factory"
                     kicker="Run the nation"
                     title="Every silo is paid for"
-                    body="You run a country, not just an army. Balance GDP, industry, and stability while rival nations pressure your borders. Overreach and the home front cracks."
+                    body="You run the whole country, the army included. Balance GDP, industry, and stability while rival nations pressure your borders. Overreach and the home front cracks."
                     points={[
                         "GDP, industry, leadership, and stability all in play",
-                        "Real-time clock — pause, or run from 0.5× to 10×",
+                        "Real-time clock: pause, or run from 0.5× to 10×",
                         "Diplomacy with every rival nation",
                     ]}
                     image="/shots/wartime-command.webp"
-                    imageAlt="DomeBreak console at war — missiles in flight while the economy panel tracks the strain"
+                    imageAlt="DomeBreak console at war, missiles in flight while the economy panel tracks the strain"
                 />
 
-                <div className="db-paper border-y border-line">
+                <div className="db-band border-y border-line">
                     <FeatureGrid />
                 </div>
 

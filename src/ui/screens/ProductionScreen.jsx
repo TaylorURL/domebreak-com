@@ -64,7 +64,7 @@ const CATS = [
     {id: "Munitions", name: "Munitions", icon: "munitions"},
 ];
 
-export default function ProductionScreen({world, api, mySlot, placing, setPlacing, onClose}) {
+export default function ProductionScreen({world, api, mySlot, placing, setPlacing, onClose, head}) {
     const me = world.nations.find((n) => n.slot === mySlot);
     const points = me?.points ?? 0;
     const income = incomeOf(world, mySlot),
@@ -174,20 +174,19 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
             <button
                 key={key}
                 className={cn(
-                    "db-ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded bg-sunk text-text cursor-pointer transition-[border-color,transform,box-shadow] duration-150 ease-out-db",
-                    !lock &&
-                        "hover:border-gold-line hover:-translate-y-px hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)] active:scale-[0.99]",
+                    "db-ucard db-notch-sm db-brackets group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform,background-color] duration-[var(--dur-fast)] ease-out-db",
+                    !lock && "hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
                     placing === key
-                        ? "active border-gold bg-[rgba(245,197,49,0.07)]"
+                        ? "active border-gold bg-gold-soft"
                         : lock
-                          ? "locked opacity-[0.55] grayscale-[0.85] cursor-not-allowed border-dashed"
-                          : !afford && "poor opacity-50",
+                          ? "locked db-brackets-hover opacity-[0.55] grayscale-[0.85] cursor-not-allowed border-dashed"
+                          : cn("db-brackets-hover", !afford && "poor opacity-50"),
                 )}
                 onClick={() => !lock && pick(key)}
                 disabled={!!lock}
                 aria-disabled={!!lock}
                 aria-label={
-                    lock ? `${unitLabel(key, me?.iso)} — locked: ${lock}` : `${unitLabel(key, me?.iso)}, ${cost} points`
+                    lock ? `${unitLabel(key, me?.iso)}, locked: ${lock}` : `${unitLabel(key, me?.iso)}, ${cost} points`
                 }
                 title={lock || u.hint || `${cap(u.kind)} · builds in ${u.buildTime}s`}
             >
@@ -199,7 +198,12 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                     />
                 )}
                 <span
-                    className="db-ucard-ico flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-sm"
+                    className={cn(
+                        "db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db",
+                        placing === key
+                            ? "border-gold-line bg-gold-soft text-gold"
+                            : !lock && "group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft",
+                    )}
                     data-kind={u.kind}
                     data-domain={u.domain || "land"}
                 >
@@ -216,23 +220,23 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         {line}
                     </span>
                     {rows.length > 0 && (
-                        <dl className="db-ucard-stats grid grid-cols-2 gap-x-3 gap-y-0.5 mt-[5px] mb-px pt-1.5 border-t border-line-soft">
+                        <dl className="db-ucard-stats grid grid-cols-2 gap-x-2 gap-y-0.5 mt-[5px] mb-px pt-1.5 border-t border-line-soft">
                             {rows.map(([k, v]) => (
                                 <div
                                     key={k}
                                     className="flex items-baseline justify-between gap-1.5 min-w-0 overflow-hidden"
                                 >
-                                    <dt className="flex-shrink flex-grow-0 basis-auto min-w-0 overflow-hidden text-ellipsis text-[8.5px] tracking-[0.4px] uppercase text-faint whitespace-nowrap">
+                                    <dt className="flex-shrink flex-grow-0 basis-auto min-w-0 overflow-hidden text-ellipsis font-mono text-[8px] tracking-[0.06em] uppercase text-faint whitespace-nowrap">
                                         {k}
                                     </dt>
-                                    <dd className="flex-none m-0 font-mono text-[10.5px] text-text whitespace-nowrap">
+                                    <dd className="flex-none m-0 font-mono tabular-nums text-[10.5px] text-text whitespace-nowrap">
                                         {v}
                                     </dd>
                                 </div>
                             ))}
                         </dl>
                     )}
-                    <div className="db-ucard-foot flex flex-wrap gap-2 font-mono text-[9.5px] tracking-[0.3px] text-faint">
+                    <div className="db-ucard-foot flex flex-wrap gap-2 font-mono tabular-nums text-[9.5px] tracking-[0.3px] text-faint">
                         <span className="inline-flex items-center gap-1">
                             <Icon name="timer" size={11} />
                             {u.buildTime}s
@@ -257,16 +261,16 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
             <button
                 key={key}
                 className={cn(
-                    "db-ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded bg-sunk text-text cursor-pointer transition-[border-color,transform,box-shadow] duration-150 ease-out-db hover:border-gold-line hover:-translate-y-px hover:shadow-[0_6px_18px_rgba(0,0,0,0.4)] active:scale-[0.99]",
+                    "db-ucard db-notch-sm db-brackets db-brackets-hover group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
                     !afford && "poor opacity-50",
                 )}
                 onClick={(e) => {
                     for (let i = 0, n = e.shiftKey ? 5 : 1; i < n; i++) if (api.produceAmmo(key)?.error) break;
                 }}
                 aria-label={`${wh.name}, ${wh.prodCost} points, ${stock} in stock. Shift-click to queue five.`}
-                title={`${wh.name} — ${wh.desc}${fallout ? " · Contaminates ground zero with radioactive fallout." : ""}`}
+                title={`${wh.name}: ${wh.desc}${fallout ? " · Contaminates ground zero with radioactive fallout." : ""}`}
             >
-                <span className="db-ucard-ico flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-sm">
+                <span className="db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft">
                     <UnitIcon name={WARHEAD_ICON[key]} size={30} />
                 </span>
                 <div className="db-ucard-body flex-1 min-w-0 flex flex-col gap-1">
@@ -302,7 +306,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         </div>
                     )}
                     {fallout && (
-                        <span className="db-ucard-tag db-contam self-start mt-0.5 inline-flex items-center gap-1 font-mono text-[9px] tracking-[0.3px] py-px px-[5px] rounded-[3px] border border-[rgba(140,255,58,0.5)] bg-[rgba(140,255,58,0.1)] text-[#a6ff5c]">
+                        <span className="db-ucard-tag db-contam self-start mt-0.5 inline-flex items-center gap-1 font-mono text-[9px] tracking-[0.3px] py-px px-[5px] rounded-none border border-[rgba(140,255,58,0.5)] bg-[rgba(140,255,58,0.1)] text-[#a6ff5c]">
                             <Icon name="radiation" size={10} />
                             Leaves fallout
                         </span>
@@ -331,7 +335,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         if (id === "Munitions") {
             return (
                 <section key="Munitions" className="db-arsec">
-                    <h3 className="db-arsec-h flex items-center gap-2 mb-3 font-display font-semibold text-xs tracking-[2px] uppercase text-dim after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
+                    <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
                         Munitions <span className="font-mono text-[10px] text-faint">{WARHEAD_ORDER.length}</span>
                     </h3>
                     <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
@@ -344,7 +348,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         if (!g?.length) return null;
         return (
             <section key={id} className="db-arsec">
-                <h3 className="db-arsec-h flex items-center gap-2 mb-3 font-display font-semibold text-xs tracking-[2px] uppercase text-dim after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
+                <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
                     {id} <span className="font-mono text-[10px] text-faint">{g.length}</span>
                 </h3>
                 <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
@@ -360,11 +364,11 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
             : [cat];
 
     return (
-        <ScreenFrame title="PRODUCTION" subtitle="Arsenal & national build line" bare onClose={onClose}>
+        <ScreenFrame title="Production" subtitle="Arsenal & national build line" bare head={head} onClose={onClose}>
             <div className="db-prod grid grid-cols-[236px_minmax(0,1fr)_304px] h-full">
                 <aside className="db-prod-rail db-scroll flex flex-col gap-3 p-[18px] overflow-auto bg-panel border-r border-line-soft">
-                    <div className="db-prod-bank flex flex-col gap-px py-3 px-3.5 bg-sunk border border-line rounded">
-                        <span className="db-prod-bank-l text-[9px] tracking-[1.5px] uppercase text-faint">
+                    <div className="db-prod-bank db-notch-sm flex flex-col gap-px py-3 px-3.5 bg-sunk border border-line rounded-none">
+                        <span className="db-prod-bank-l font-mono text-[9px] tracking-[0.2em] uppercase text-faint">
                             Treasury
                         </span>
                         <Points
@@ -374,43 +378,52 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         />
                         <span
                             className={cn(
-                                "db-prod-bank-net font-mono text-[11px]",
-                                net < 0 ? "neg text-red" : "pos text-[#46d38a]",
+                                "db-prod-bank-net inline-flex items-center gap-1.5 font-mono text-[11px]",
+                                net < 0 ? "neg text-red" : "pos text-good",
                             )}
                         >
+                            <i className={cn("db-led", net < 0 ? "db-led-live" : "db-led-ok")} aria-hidden="true" />
                             {fmtNet(net, 1)}/s
                         </span>
                     </div>
                     <div className="db-prod-econ grid grid-cols-2 gap-[7px]">
-                        <div className="flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-sm">
-                            <span className="text-[8.5px] tracking-[1px] uppercase text-faint">Income</span>
-                            <b className="pos font-mono text-[13px] text-[#46d38a]">+{income.toFixed(1)}</b>
+                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
+                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
+                                Income
+                            </span>
+                            <b className="pos font-mono text-[13px] text-good">+{income.toFixed(1)}</b>
                         </div>
-                        <div className="flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-sm">
-                            <span className="text-[8.5px] tracking-[1px] uppercase text-faint">Upkeep</span>
+                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
+                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
+                                Upkeep
+                            </span>
                             <b className="neg font-mono text-[13px] text-red">−{upkeep.toFixed(1)}</b>
                         </div>
-                        <div className="flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-sm">
-                            <span className="text-[8.5px] tracking-[1px] uppercase text-faint">GDP</span>
+                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
+                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">GDP</span>
                             <b className="font-mono text-[13px]">{fmtGdp(gdpOf(world, mySlot))}</b>
                         </div>
                         <div
-                            className="flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-sm"
+                            className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none"
                             title={`${industryCount} standing${industryPending ? ` + ${industryPending} in production` : ""} / ${industryCap} population-supported cap`}
                         >
-                            <span className="text-[8.5px] tracking-[1px] uppercase text-faint">Industry</span>
+                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
+                                Industry
+                            </span>
                             <b className={cn("font-mono text-[13px]", industryUsed >= industryCap && "neg text-red")}>
                                 {industryUsed}/{industryCap}
                             </b>
                         </div>
-                        <div className="flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-sm">
-                            <span className="text-[8.5px] tracking-[1px] uppercase text-faint">Fielded</span>
+                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
+                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
+                                Fielded
+                            </span>
                             <b className="font-mono text-[13px]">{mine.length}</b>
                         </div>
                     </div>
                     {net < 0 && (
-                        <div className="db-prod-warn text-[10px] leading-[1.35] text-red py-2 px-2.5 border border-[rgba(224,87,79,0.4)] rounded-sm bg-[rgba(224,87,79,0.08)]">
-                            In deficit — build Industry or scrap units to recover.
+                        <div className="db-prod-warn db-notch-sm text-[10px] leading-[1.35] text-red py-2 px-2.5 border border-[rgba(224,87,79,0.4)] rounded-none bg-[rgba(224,87,79,0.08)]">
+                            In deficit. Build Industry or scrap units to recover.
                         </div>
                     )}
                     <nav
@@ -422,8 +435,8 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                             <button
                                 key={c.id}
                                 className={cn(
-                                    "db-prod-cat flex items-center gap-[10px] py-[9px] px-[11px] border border-transparent rounded-sm bg-transparent text-dim cursor-pointer text-left transition-[color,background-color,border-color] duration-150 ease-out-db hover:text-text hover:bg-sunk active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue",
-                                    cat === c.id && "active text-text bg-sunk border-gold-line",
+                                    "db-prod-cat flex items-center gap-[10px] py-[9px] px-[11px] border border-transparent border-l-2 rounded-none bg-transparent text-dim cursor-pointer text-left transition-[color,background-color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-sunk active:scale-[0.98]",
+                                    cat === c.id && "active text-gold bg-gold-soft border-gold-line border-l-gold",
                                 )}
                                 role="tab"
                                 aria-selected={cat === c.id}
@@ -435,7 +448,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                                     size={18}
                                     className={cn("db-prod-cat-g", cat === c.id && "text-gold")}
                                 />
-                                <span className="db-prod-cat-n flex-1 font-display font-semibold text-[11.5px] tracking-[0.4px]">
+                                <span className="db-prod-cat-n flex-1 font-display font-semibold text-[11.5px] tracking-[0.08em] uppercase">
                                     {c.name}
                                 </span>
                                 <span className="db-prod-cat-c font-mono text-[10px] text-faint">{countFor(c.id)}</span>
@@ -446,8 +459,8 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
 
                 <main className="db-prod-main db-scroll overflow-auto py-5 px-[22px] flex flex-col gap-[22px]">
                     {placing && (
-                        <div className="db-prod-placing text-[11px] leading-[1.4] text-text py-2.5 px-3 border border-gold-line rounded-sm bg-[rgba(245,197,49,0.07)]">
-                            Placing <b>{unitLabel(placing, me?.iso)}</b> — click{" "}
+                        <div className="db-prod-placing db-notch-sm text-[11px] leading-[1.4] text-text py-2.5 px-3 border border-gold-line rounded-none bg-gold-soft">
+                            Placing <b>{unitLabel(placing, me?.iso)}</b>, click{" "}
                             {UNITS[placing].coastal
                                 ? "your coastline"
                                 : UNITS[placing].domain === "sea"
@@ -463,10 +476,10 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                 </main>
 
                 <aside className="db-prod-queue flex flex-col p-[18px] overflow-hidden bg-panel border-l border-line-soft">
-                    <h3 className="db-queue-h flex items-center gap-2 mb-3 font-display font-semibold text-xs tracking-[2px] uppercase text-dim">
+                    <h3 className="db-queue-h flex items-center gap-2 mb-3 pb-2 border-b border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
                         Build Queue{" "}
                         {(cur ? 1 : 0) + queue.length > 0 && (
-                            <span className="font-mono text-[10px] text-faint">{(cur ? 1 : 0) + queue.length}</span>
+                            <span className="ml-auto text-faint">{(cur ? 1 : 0) + queue.length}</span>
                         )}
                     </h3>
                     <div
@@ -481,12 +494,12 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         )}
                         {cur && (
                             <button
-                                className="db-qitem building group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 border border-gold-line rounded-sm bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-150 ease-out-db hover:border-red"
+                                className="db-qitem building db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 pb-3 border border-gold-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
                                 onClick={() => api.cancelProd(-1)}
-                                title="Building — click to cancel for a refund"
+                                title="Building. Click to cancel for a refund"
                             >
                                 <i
-                                    className="db-qitem-fill absolute inset-0 right-auto bg-[rgba(245,197,49,0.14)] pointer-events-none"
+                                    className="db-qitem-fill absolute inset-0 right-auto bg-gold-soft pointer-events-none"
                                     style={{width: `${fmtPct(cur.progress)}%`}}
                                 />
                                 <UnitIcon name={icon(cur.item)} size={16} />
@@ -496,14 +509,19 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                                 <b className="db-qitem-pct relative font-mono text-[10px] text-gold">
                                     {fmtPct(cur.progress, {suffix: true})}
                                 </b>
+                                {/* The line's own progress, read as lit ticks rather than a
+                                    smooth bar so a glance can count how far along it is. */}
+                                <span className="db-seg absolute left-0 right-0 bottom-0 h-[4px] bg-sunk pointer-events-none">
+                                    <i className="block h-full bg-gold" style={{width: `${fmtPct(cur.progress)}%`}} />
+                                </span>
                             </button>
                         )}
                         {queue.map((it, i) => (
                             <button
                                 key={i}
-                                className="db-qitem group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 border border-line rounded-sm bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-150 ease-out-db hover:border-red"
+                                className="db-qitem db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 border border-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
                                 onClick={() => api.cancelProd(i)}
-                                title={`${label(it)} · ${timeOf(it)}s — click to cancel`}
+                                title={`${label(it)} · ${timeOf(it)}s. Click to cancel`}
                             >
                                 <span className="db-qitem-n w-3.5 font-mono text-[10px] text-faint">{i + 2}</span>
                                 <UnitIcon name={icon(it)} size={16} />

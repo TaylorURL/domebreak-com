@@ -1,0 +1,258 @@
+/* Menu-surface rules: the .db-card modal surface and its header strip, the
+   overflow regions a card scrolls, the splash boot scan, the matchmaking radar,
+   and the keyframes those use.
+
+   Imported by src/index.css, which owns the tokens, the shared chrome
+   utilities and the shared keyframes these rules read. Everything here sits
+   inside the @layer vfx block so it keeps sitting above Tailwind's utilities. */
+
+@layer vfx {
+    /* The modal card. Same tactical shell as .db-hud-panel, one size up: the
+       8px notch rather than the 5px one, the heavier --panel-2 glass a dialog
+       needs to hold its own over a live globe, a --line hairline, and the gold
+       seam along the top edge. Scanlines and the notch itself ride on the
+       .db-scan and .db-notch utilities the card() variant carries, so the only
+       thing that has to live here is the seam and the header strip.
+
+       A clipped surface paints nothing outside its own edge, so the card has no
+       drop shadow; the hairline and the seam are what separate it. */
+    .db-card {
+        background: var(--panel-2);
+        backdrop-filter: blur(14px) saturate(1.15);
+    }
+
+    /* The gold seam: a 1px rule along the top edge, starting where the corner
+       cut lets the edge begin so it never runs off into the chamfer. */
+    .db-card::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 0;
+        top: 0;
+        height: 1px;
+        background: linear-gradient(90deg, var(--gold), var(--gold-line) 62%, transparent);
+        pointer-events: none;
+    }
+
+    /* The card's header strip: the display title and its sentence-case
+       subtitle over a hairline that separates them from the body. */
+    .db-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin: -4px 0 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--hair);
+    }
+
+    /* Overflow regions inside a card. The dark thumb matches .db-scroll in
+       styles/hud.css, so a list reads the same wherever it is docked. */
+    .db-country-list,
+    .db-newgame,
+    .db-card-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #575f6a transparent;
+    }
+
+    .db-country-list::-webkit-scrollbar,
+    .db-newgame::-webkit-scrollbar,
+    .db-card-scroll::-webkit-scrollbar {
+        width: 11px;
+        height: 11px;
+    }
+
+    .db-country-list::-webkit-scrollbar-track,
+    .db-newgame::-webkit-scrollbar-track,
+    .db-card-scroll::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.035);
+    }
+
+    .db-country-list::-webkit-scrollbar-thumb,
+    .db-newgame::-webkit-scrollbar-thumb,
+    .db-card-scroll::-webkit-scrollbar-thumb {
+        background: #575f6a;
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .db-country-list::-webkit-scrollbar-thumb:hover,
+    .db-newgame::-webkit-scrollbar-thumb:hover,
+    .db-card-scroll::-webkit-scrollbar-thumb:hover {
+        background: #78818d;
+        background-clip: padding-box;
+    }
+
+    /* Range sliders inside a card and in the settings panel. accent-color alone
+       leaves the track at the UA default, which is a pale grey bar on a dark
+       surface; this sinks the track and lights the thumb amber. */
+    .db-range {
+        appearance: none;
+        -webkit-appearance: none;
+        height: 14px;
+        background: transparent;
+        outline-offset: 3px;
+    }
+
+    .db-range::-webkit-slider-runnable-track {
+        height: 6px;
+        border-radius: 999px;
+        background: var(--sunk);
+        border: 1px solid var(--line);
+    }
+
+    .db-range::-moz-range-track {
+        height: 6px;
+        border-radius: 999px;
+        background: var(--sunk);
+        border: 1px solid var(--line);
+    }
+
+    .db-range::-webkit-slider-thumb {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 14px;
+        height: 14px;
+        margin-top: -5px;
+        border-radius: 50%;
+        background: var(--gold);
+        border: 1px solid var(--gold-contrast);
+        box-shadow: 0 0 8px rgba(242, 181, 68, 0.45);
+    }
+
+    .db-range::-moz-range-thumb {
+        width: 13px;
+        height: 13px;
+        border: 1px solid var(--gold-contrast);
+        border-radius: 50%;
+        background: var(--gold);
+    }
+
+    .db-range:disabled::-webkit-slider-thumb {
+        background: var(--faint);
+        box-shadow: none;
+    }
+
+    .db-range:disabled::-moz-range-thumb {
+        background: var(--faint);
+    }
+
+    /* Boot scan bar: the splash's loading rule and the match boot curtain's.
+       An amber sweep across a sunk track. */
+    .db-boot-bar i {
+        display: block;
+        width: 46%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        animation: dbBootScan 1.15s ease-in-out infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-boot-bar i {
+            animation: none;
+            width: 100%;
+            opacity: 0.55;
+        }
+    }
+
+    [data-reduce-motion="true"] .db-boot-bar i {
+        animation: none;
+        width: 100%;
+        opacity: 0.55;
+    }
+
+    /* Matchmaking radar. Three static rings in the sensor colour with a wedge
+       sweeping a full turn every four seconds, transform-only. The .still
+       modifier is the caller passing the setting down as a prop; the two
+       stand-down rules answer for the OS preference and the document root. */
+    .db-radar {
+        position: relative;
+        width: 128px;
+        height: 128px;
+        border-radius: 50%;
+        border: 1px solid rgba(127, 212, 255, 0.35);
+        background:
+            radial-gradient(circle, rgba(127, 212, 255, 0.06) 0%, transparent 70%),
+            repeating-radial-gradient(
+                circle,
+                transparent 0 20px,
+                rgba(127, 212, 255, 0.18) 20px 21px,
+                transparent 21px 22px
+            );
+    }
+
+    .db-radar::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: 50%;
+        border: 1px dashed rgba(127, 212, 255, 0.2);
+    }
+
+    .db-radar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: conic-gradient(
+            from 0deg,
+            rgba(127, 212, 255, 0.28) 0deg,
+            rgba(127, 212, 255, 0.1) 22deg,
+            rgba(127, 212, 255, 0.04) 46deg,
+            transparent 78deg
+        );
+        animation: dbRadarSweep 4s linear infinite;
+    }
+
+    .db-radar .db-radar-spoke {
+        position: absolute;
+        left: 50%;
+        top: 4px;
+        bottom: 50%;
+        width: 2px;
+        margin-left: -1px;
+        transform-origin: 50% 100%;
+        background: linear-gradient(180deg, transparent, var(--cyan));
+        animation: dbRadarSweep 4s linear infinite;
+    }
+
+    .db-radar.still::after,
+    .db-radar.still .db-radar-spoke {
+        animation: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-radar::after,
+        .db-radar .db-radar-spoke {
+            animation: none;
+        }
+    }
+
+    [data-reduce-motion="true"] .db-radar::after,
+    [data-reduce-motion="true"] .db-radar .db-radar-spoke {
+        animation: none;
+    }
+
+    @keyframes dbRadarSweep {
+        to {
+            transform: rotate(1turn);
+        }
+    }
+
+    @keyframes dbSplashIn {
+        from {
+            opacity: 0;
+            transform: scale(0.985);
+        }
+    }
+
+    @keyframes dbBootScan {
+        from {
+            transform: translateX(-130%);
+        }
+        to {
+            transform: translateX(330%);
+        }
+    }
+}

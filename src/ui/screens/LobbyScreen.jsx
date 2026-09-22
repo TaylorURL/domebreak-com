@@ -19,7 +19,7 @@ import {cn} from "../lib/cn.js";
 // living world (every other country is world AI, as in single player).
 
 const RAIL_PAD = 360; // left projection padding so the globe clears the rail
-const MINE_COLOR = "#f4c02a"; // vivid gold for YOUR own claimed nation — unmistakable vs the grey map
+const MINE_COLOR = "#f2b544"; // the amber accent for YOUR own claimed nation — unmistakable vs the grey map
 
 // Average lng/lat of a nation's cities — a good-enough centroid to fly the globe
 // to when the player claims that country.
@@ -113,13 +113,13 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
     const allReady = members.length > 0 && readyCount === members.length;
     const starting = lobby?.status === "starting" || lobby?.status === "active";
     const statusLine = starting
-        ? "All commanders ready — deploying to the theater…"
+        ? "All commanders ready, deploying to the theater…"
         : allReady
-          ? "Everyone ready — launching…"
+          ? "Everyone ready, launching…"
           : !myIso
             ? "Claim your nation to continue."
             : ready
-              ? `Standing by — waiting on ${members.length - readyCount} more.`
+              ? `Standing by, waiting on ${members.length - readyCount} more.`
               : "Ready up when you're set.";
 
     // Live activity feed: diff the roster each realtime update into human-readable
@@ -153,7 +153,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
     // A launch line the moment the server flips the lobby to starting/active.
     useEffect(() => {
         if (starting)
-            setFeed((f) => [...f, {id: ++feedIdRef.current, t: "Deploying — establishing theater command…"}].slice(-6));
+            setFeed((f) => [...f, {id: ++feedIdRef.current, t: "Deploying, establishing theater command…"}].slice(-6));
     }, [starting]);
 
     // Tint every member's claimed nation on the globe, keyed by slot color. A
@@ -358,23 +358,21 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
             >
                 <div className="mb-[34px]">
                     <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-rail-dot w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_7px_var(--danger)] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
+                        <span className="db-led db-led-live" />
                         Matchmaking · War Room
                     </div>
-                    <h1 className={menuTitle({sm: true})}>
+                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
                         WAR
-                        <span className="text-text [text-shadow:var(--glow-gold)] animate-[dbTitleGlow_6s_var(--ease-in-out)_infinite_alternate]">
-                            ROOM
-                        </span>
+                        <span className="db-title-glow block text-text">ROOM</span>
                     </h1>
-                    <p className="text-dim tracking-[3px] uppercase text-[13px] mt-3 mb-0">
+                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
                         {humans} commander{humans !== 1 ? "s" : ""} in the war room
                     </p>
                 </div>
 
                 {revertErr && (
-                    <p className="text-danger bg-[rgba(224,87,79,0.1)] border border-danger rounded-sm py-2 px-3 text-[12.5px] mt-2.5 pointer-events-auto">
-                        War server unreachable — try again.
+                    <p className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 pointer-events-auto">
+                        War server unreachable. Try again.
                     </p>
                 )}
 
@@ -408,16 +406,16 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                             <div
                                 key={m.userId ?? `p-${m.slot}`}
                                 className={cn(
-                                    "flex items-center gap-[9px] py-2 px-[11px] rounded-[var(--radius)] border border-line-soft bg-[rgba(9,11,15,0.5)] transition-colors [&_.db-flag]:w-[22px] [&_.db-flag]:rounded-[2px] [&_.db-flag]:shrink-0 [&_img]:w-[22px] [&_img]:rounded-[2px] [&_img]:shrink-0",
-                                    r && "border-gold-line bg-[rgba(244,192,42,0.08)]",
+                                    "db-notch-sm flex items-center gap-[9px] py-2 px-[11px] border border-line-soft bg-[rgba(9,11,15,0.5)] transition-colors duration-[var(--dur-fast)] [&_.db-flag]:w-[22px] [&_.db-flag]:rounded-[2px] [&_.db-flag]:shrink-0 [&_img]:w-[22px] [&_img]:rounded-[2px] [&_img]:shrink-0",
+                                    r && "border-gold-line bg-gold-soft",
                                     own && !r && "border-gold-line bg-[rgba(9,11,15,0.72)]",
                                 )}
                                 role="listitem"
-                                aria-label={`${m.username || "Commander"}${own ? " (you)" : ""} — ${m.iso || "no nation"} — ${r ? "ready" : "not ready"}`}
+                                aria-label={`${m.username || "Commander"}${own ? " (you)" : ""}, ${m.iso || "no nation"}, ${r ? "ready" : "not ready"}`}
                             >
                                 <span
-                                    className="w-[9px] h-[9px] rounded-full shrink-0"
-                                    style={{background: own ? MINE_COLOR : SLOT_COLOR[m.slot]}}
+                                    className="db-led shrink-0"
+                                    style={{color: own ? MINE_COLOR : SLOT_COLOR[m.slot]}}
                                 />
                                 <Flag iso={m.iso} />
                                 <span className="flex-1 text-[13px] text-text whitespace-nowrap overflow-hidden text-ellipsis">
@@ -455,10 +453,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                 <div
                                     key={m.userId ?? m.slot}
                                     className={cn(
-                                        "h-[5px] flex-1 rounded-full transition-colors duration-200",
-                                        r
-                                            ? "bg-gold shadow-[0_0_6px_var(--glow-gold,rgba(244,192,42,0.7))]"
-                                            : "bg-[rgba(255,255,255,0.12)]",
+                                        "h-[6px] flex-1 transition-colors duration-[var(--dur)] motion-reduce:transition-none",
+                                        r ? "bg-gold" : "bg-line-soft",
                                     )}
                                 />
                             );
@@ -466,8 +462,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     </div>
                     <span
                         className={cn(
-                            "self-start inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[1.5px] uppercase px-2 py-1 rounded-sm border transition-colors",
-                            ready ? "text-gold border-gold-line bg-[rgba(244,192,42,0.1)]" : "text-faint border-line",
+                            "db-notch-sm self-start inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[1.5px] uppercase px-2 py-1 border transition-colors duration-[var(--dur-fast)]",
+                            ready ? "text-gold border-gold-line bg-gold-soft" : "text-faint border-line",
                         )}
                     >
                         {ready && <Icon name="check" size={10} strokeWidth={2.4} />}
@@ -499,8 +495,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     <button
                         type="button"
                         className={cn(
-                            "w-full flex items-center justify-between gap-2 px-3 py-2 rounded-sm border border-line-soft bg-[rgba(9,11,15,0.5)] text-left transition-colors hover:border-line",
-                            rulesOpen && "border-gold-line bg-[rgba(244,192,42,0.06)]",
+                            "db-notch-sm w-full flex items-center justify-between gap-2 px-3 py-2 border border-line-soft bg-[rgba(9,11,15,0.5)] text-left transition-colors duration-[var(--dur-fast)] hover:border-line",
+                            rulesOpen && "border-gold-line bg-gold-soft",
                         )}
                         onClick={() => setRulesOpen((o) => !o)}
                         aria-expanded={rulesOpen}
@@ -527,7 +523,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     {rulesOpen && (
                         <div
                             id="db-lobby-rules"
-                            className="max-h-[46vh] overflow-y-auto rounded-sm border border-line-soft bg-[rgba(9,11,15,0.6)] p-3"
+                            className="db-card-scroll db-notch-sm max-h-[46vh] overflow-y-auto border border-line-soft bg-[rgba(9,11,15,0.6)] p-3"
                         >
                             <GameRulesForm mode="mp" rules={rules} onChange={onRulesChange} />
                             <p className="mt-2 font-mono text-[10px] text-faint tracking-[1px] uppercase">
@@ -536,11 +532,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                         </div>
                     )}
                     <button
-                        className={cn(
-                            menuButton({variant: "primary"}),
-                            "w-full text-center disabled:opacity-50",
-                            ready && "bg-gold text-gold-contrast border-gold-line",
-                        )}
+                        className={cn(menuButton({variant: "primary"}), "w-full text-center disabled:opacity-50")}
                         disabled={!myIso}
                         onClick={toggleReady}
                         aria-pressed={ready}
@@ -549,7 +541,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                         {ready ? (
                             <span className="inline-flex items-center gap-2">
                                 <Icon name="check" size={13} strokeWidth={2.4} />
-                                Ready — Stand By
+                                Ready · Stand By
                             </span>
                         ) : (
                             "Ready Up"

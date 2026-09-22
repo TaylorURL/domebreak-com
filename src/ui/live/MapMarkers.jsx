@@ -36,11 +36,25 @@ const HEADING_STEP_DEG = 2;
 // it only changes identity when the difference could actually show on screen.
 const quantize = (v, steps) => Math.round(v * steps) / steps;
 
-// Module-stable pieces shared by every render: the selection ring's children
-// element and the capture badge's fixed screen offset. Constant identity keeps
+// Module-stable pieces shared by every render: the selection marks' children
+// elements and the capture badge's fixed screen offset. Constant identity keeps
 // the library Marker memo intact even while the badge/ring reposition.
-const SELECTED_RING = (
-    <div className="w-4 h-4 rounded-full border-[1.5px] border-[rgba(255,255,255,0.75)] shadow-[0_0_6px_rgba(255,255,255,0.3)]" />
+//
+// Selection is a bracket box in the accent, the same four-corner mark the rest
+// of the chrome uses, so what is selected on the map reads the way a selected
+// control does everywhere else. The city keeps a ring inside its brackets
+// because a city is a place rather than a thing.
+const SELECTION_MARK = (
+    <span className="db-sel-mark" aria-hidden="true">
+        <i className="tr" />
+        <i className="bl" />
+    </span>
+);
+const SELECTED_CITY = (
+    <div className="relative grid place-items-center">
+        <div className="db-sel-ring" />
+        {SELECTION_MARK}
+    </div>
 );
 const CAPTURE_OFFSET = [0, -13];
 
@@ -113,11 +127,11 @@ const UnitMarker = memo(function UnitMarker({
                     // targets it so a unit right-click deterministically runs the
                     // UNIT menu instead of racing the map handler for a city
                     // underneath — without it the outcome hangs on event ordering.
-                    "db-unit grid place-items-center cursor-pointer [filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)",
+                    "db-unit relative grid place-items-center cursor-pointer [filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)",
                     selected && "scale-[1.35] transition-transform duration-[140ms] ease-out-db",
                 )}
                 title={label}
-                aria-label={`${label} — ${nationName(slot)}`}
+                aria-label={`${label}, ${nationName(slot)}`}
                 onClick={(e) => events.click(id, e)}
                 onContextMenu={(e) => events.menu(id, e)}
                 onMouseEnter={(e) => events.enter(id, e)}
@@ -133,6 +147,11 @@ const UnitMarker = memo(function UnitMarker({
                 >
                     <UnitIcon name={UNIT_ICON[type]} color={color} size={air ? 16 : orbital ? 18 : 22} />
                 </span>
+                {/* The bracket box sits outside the rotating/scaling icon span so
+                    it stays square to the screen whatever heading the unit holds.
+                    Its own scale rides the selected transform above, which is what
+                    makes it snap on rather than pop in. */}
+                {selected && SELECTION_MARK}
             </div>
         );
     }, [id, type, slot, air, alt, vis, heading, orbital, selected, color, labelOf, nationName, events]);
@@ -238,7 +257,7 @@ export default function MapMarkers({
         <>
             {selectedCity && (
                 <Marker longitude={selectedCity.lng} latitude={selectedCity.lat} anchor="center" opacityWhenCovered="0">
-                    {SELECTED_RING}
+                    {SELECTED_CITY}
                 </Marker>
             )}
             {/* Capture HUD: a floating badge over every city being taken — the

@@ -54,86 +54,95 @@ export default function ProductionBar({world, api, mySlot}) {
     const queuedCount = queue.length;
 
     return (
-        <div className="pointer-events-auto flex flex-col gap-[7px] min-w-[240px] max-w-[min(560px,72vw)] max-h-[42vh] bg-panel border border-line rounded-lg px-[11px] py-[9px] shadow overflow-y-auto backdrop-blur-[12px] motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+        <div className="db-hud-panel relative pointer-events-auto flex flex-col min-w-[240px] max-w-[min(560px,72vw)] max-h-[42vh] [--db-tab:99px] motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
             {/* Header: line label + a live summary of what's left to build. */}
-            <div className="flex items-center gap-2">
-                <span className="font-display text-[9px] tracking-[1.5px] uppercase text-faint">Production</span>
+            <header className="flex items-center gap-2 px-[11px] h-[26px] flex-none">
+                <span>Production</span>
                 {queuedCount > 0 && (
-                    <span className="font-mono text-[9.5px] text-dim tabular-nums">{queuedCount} queued</span>
+                    <span className="font-mono text-[9.5px] text-dim tabular-nums tracking-normal normal-case">
+                        {queuedCount} queued
+                    </span>
                 )}
                 <span
-                    className="ml-auto font-mono text-[9.5px] text-faint tabular-nums"
+                    className="ml-auto font-mono text-[9.5px] text-faint tabular-nums tracking-normal normal-case"
                     title="Time remaining on the whole line"
                 >
                     ~{fmtDur(totalLeft)} left
                 </span>
-            </div>
+            </header>
 
-            {/* Polite live region: re-announces only when the item on the line changes
-                identity, so a new build start is spoken without narrating every tick. */}
-            <span className="sr-only" aria-live="polite">
-                {cur ? `Now building ${label(cur.item)}` : ""}
-            </span>
+            <div className="db-scroll flex flex-col gap-[7px] overflow-y-auto px-[11px] pt-[9px] pb-[10px]">
+                {/* Polite live region: re-announces only when the item on the line changes
+                    identity, so a new build start is spoken without narrating every tick. */}
+                <span className="sr-only" aria-live="polite">
+                    {cur ? `Now building ${label(cur.item)}` : ""}
+                </span>
 
-            {/* Active item — the prominent progress row. */}
-            {cur && (
-                <button
-                    className="relative overflow-hidden flex items-center gap-[8px] w-full px-[10px] py-[7px] bg-btn-bg border border-gold-line rounded-sm text-text text-[12px] whitespace-nowrap cursor-pointer text-left"
-                    style={cur.item.kind === "ammo" ? {"--flame": WARHEADS[cur.item.type].flame} : undefined}
-                    role="progressbar"
-                    aria-valuenow={pct}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`Building ${label(cur.item)} - ${pct}%, ${eta}s remaining. Click to cancel for a refund.`}
-                    title={`${label(cur.item)} - building. Click to cancel for a refund.`}
-                    onClick={() => api.cancelProd(-1)}
-                >
-                    <i
-                        className="absolute left-0 top-0 bottom-0 bg-[var(--flame,var(--gold-soft))] opacity-[0.22] transition-[width] duration-300 ease-out-db pointer-events-none"
-                        style={{width: `${pct}%`}}
-                    />
-                    <UnitIcon name={prodIcon(cur.item)} size={16} />
-                    <span className="relative z-1 flex-1 min-w-0 overflow-hidden text-ellipsis font-medium">
-                        {label(cur.item)}
-                    </span>
-                    <b className="relative z-1 font-mono text-[11px]">{pct}%</b>
-                    <span className="relative z-1 font-mono text-[10px] text-faint tracking-[0.3px]">{eta}s</span>
-                </button>
-            )}
-
-            {/* Queue — a wrapping grid of counted, per-type chips. */}
-            {groups.length > 0 && (
-                <div className="flex flex-wrap gap-[6px]">
-                    {groups.map((g) => (
-                        <button
-                            key={g.key}
-                            className="group relative flex items-center gap-[6px] pl-[8px] pr-[7px] py-[5px] bg-btn-bg border border-line rounded-sm text-dim text-[11px] whitespace-nowrap cursor-pointer transition-colors hover:text-text hover:border-danger"
-                            style={g.item.kind === "ammo" ? {"--flame": WARHEADS[g.item.type].flame} : undefined}
-                            title={
-                                g.count > 1
-                                    ? `${label(g.item)} x${g.count} queued - ${prodTime(g.item)}s each. Click to cancel one for a refund.`
-                                    : `${label(g.item)} - ${prodTime(g.item)}s on the line. Click to cancel for a refund.`
-                            }
-                            onClick={() => api.cancelProd(g.lastIndex)}
+                {/* Active item — the prominent progress row. The fill behind the label is
+                    ticked by .db-seg, so the bar reads as counted progress rather than a
+                    smear; the gaps are punched in the row's own surface. */}
+                {cur && (
+                    <button
+                        className="db-notch-sm relative overflow-hidden flex items-center gap-[8px] w-full px-[10px] py-[8px] bg-btn-bg border border-gold-line text-text text-[12px] whitespace-nowrap cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-gold active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                        style={cur.item.kind === "ammo" ? {"--flame": WARHEADS[cur.item.type].flame} : undefined}
+                        role="progressbar"
+                        aria-valuenow={pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Building ${label(cur.item)}: ${pct}%, ${eta}s remaining. Click to cancel for a refund.`}
+                        title={`${label(cur.item)} is building. Click to cancel for a refund.`}
+                        onClick={() => api.cancelProd(-1)}
+                    >
+                        <span
+                            className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out-db pointer-events-none"
+                            style={{width: `${pct}%`}}
+                            aria-hidden="true"
                         >
-                            <UnitIcon name={prodIcon(g.item)} size={14} />
-                            <span className="max-w-[120px] overflow-hidden text-ellipsis">{label(g.item)}</span>
-                            {g.count > 1 && (
-                                <b className="flex-none font-mono text-[10px] leading-none px-[5px] py-[2px] rounded-full bg-gold-soft text-text tabular-nums">
-                                    x{g.count}
-                                </b>
-                            )}
-                            {/* Cancel affordance: a subtle × that firms up on hover. */}
-                            <span
-                                className="flex-none grid place-items-center w-[13px] h-[13px] -mr-[1px] rounded-full text-danger text-[13px] leading-none opacity-0 transition-opacity duration-[120ms] ease-out-db group-hover:opacity-100"
-                                aria-hidden="true"
+                            <i className="db-seg [--db-seg-gap:var(--btn-bg)] block h-full w-full bg-[var(--flame,var(--gold))] opacity-[0.26]" />
+                        </span>
+                        <UnitIcon name={prodIcon(cur.item)} size={16} className="relative z-1" />
+                        <span className="relative z-1 flex-1 min-w-0 overflow-hidden text-ellipsis font-medium">
+                            {label(cur.item)}
+                        </span>
+                        <b className="relative z-1 font-mono text-[11px] tabular-nums">{pct}%</b>
+                        <span className="relative z-1 font-mono text-[10px] text-faint tabular-nums">{eta}s</span>
+                    </button>
+                )}
+
+                {/* Queue — a wrapping grid of counted, per-type chips. */}
+                {groups.length > 0 && (
+                    <div className="flex flex-wrap gap-[6px]">
+                        {groups.map((g) => (
+                            <button
+                                key={g.key}
+                                className="db-notch-sm db-brackets group relative flex items-center gap-[6px] pl-[8px] pr-[7px] py-[6px] bg-btn-bg border border-line text-dim text-[11px] whitespace-nowrap cursor-pointer transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-danger active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                style={g.item.kind === "ammo" ? {"--flame": WARHEADS[g.item.type].flame} : undefined}
+                                title={
+                                    g.count > 1
+                                        ? `${label(g.item)} x${g.count} queued, ${prodTime(g.item)}s each. Click to cancel one for a refund.`
+                                        : `${label(g.item)}, ${prodTime(g.item)}s on the line. Click to cancel for a refund.`
+                                }
+                                onClick={() => api.cancelProd(g.lastIndex)}
                             >
-                                &times;
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            )}
+                                <UnitIcon name={prodIcon(g.item)} size={14} />
+                                <span className="max-w-[120px] overflow-hidden text-ellipsis">{label(g.item)}</span>
+                                {g.count > 1 && (
+                                    <b className="flex-none font-mono text-[10px] leading-none px-[5px] py-[2px] bg-gold-soft text-gold tabular-nums">
+                                        x{g.count}
+                                    </b>
+                                )}
+                                {/* Cancel affordance: a subtle × that firms up on hover. */}
+                                <span
+                                    className="flex-none grid place-items-center w-[13px] h-[13px] -mr-[1px] text-danger text-[13px] leading-none opacity-0 transition-opacity duration-[var(--dur-fast)] ease-out-db group-hover:opacity-100"
+                                    aria-hidden="true"
+                                >
+                                    &times;
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

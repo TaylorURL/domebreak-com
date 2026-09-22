@@ -12,14 +12,14 @@ native application, not in the browser.
 
 ## Pages
 
-- [Home](https://domebreak.com/): what the game is — the world map, building
+- [Home](https://domebreak.com/): what the game is. The world map, building
   the dome, planning a strike, and running the nation that pays for both.
 - [Download](https://domebreak.com/#/download): installers for Apple Silicon
-  and Intel Mac, and for 64-bit, ARM and 32-bit Windows. A free account is
+  and Intel Mac, and for 64-bit and ARM Windows. A free account is
   required; the download page explains the first-launch confirmation an
   unsigned application asks for.
 - [Unit Wiki](https://domebreak.com/#/wiki): every unit and building in the
-  game with the figures the simulation uses — cost in build points, upkeep,
+  game with the figures the simulation uses: cost in build points, upkeep,
   build time in game-seconds, hit points, range in kilometers, and payload.
   Grouped into missile defense, strike and offense, sensors and warning, naval,
   air wing, ground forces, command and bases, and industry.

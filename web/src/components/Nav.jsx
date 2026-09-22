@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {cn} from "../lib/cn.js";
+import {button} from "../lib/variants.js";
 import {scrollToId} from "../lib/nav.js";
 import {NAV_MENUS} from "../lib/navMenus.js";
 import {useAccount} from "../lib/accountStore.js";
@@ -11,14 +12,14 @@ import MobileNav from "./MobileNav.jsx";
 import {PlayNavLink} from "./PlayCta.jsx";
 
 // Featured, always-visible link to the "play free" band — the site's headline
-// call to action, so it gets a live status dot instead of sitting in a menu.
+// call to action, so it gets a live status LED instead of sitting in a menu.
 function PlayLink() {
     return (
         <button
             onClick={() => scrollToId("play")}
-            className="hidden items-center gap-2 rounded-sm px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-text transition-colors duration-150 hover:text-gold-hi md:inline-flex cursor-pointer"
+            className="hidden items-center gap-2 rounded-sm px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-text transition-colors duration-[var(--dur-fast)] ease-out-db hover:text-gold-hi md:inline-flex cursor-pointer"
         >
-            <span className="h-[6px] w-[6px] rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
+            <span className="db-led db-led-live" />
             Play Free
         </button>
     );
@@ -38,9 +39,12 @@ export default function Nav({onSignIn}) {
     return (
         <header
             className={cn(
+                // Off the top of the page the bar is glass over an amber
+                // hairline, which is the one line that says the chrome is
+                // sitting above the page rather than in it.
                 "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-300 ease-out-db",
                 scrolled
-                    ? "border-b border-line bg-chrome backdrop-blur-[14px] backdrop-saturate-[1.1]"
+                    ? "border-b border-gold-line bg-chrome backdrop-blur-[14px] backdrop-saturate-[1.1]"
                     : "border-b border-transparent bg-transparent",
             )}
         >
@@ -72,7 +76,7 @@ export default function Nav({onSignIn}) {
                     <PlayNavLink className="hidden sm:inline-flex" />
 
                     {loading ? (
-                        <div className="hidden h-9 w-9 rounded-sm border border-line bg-panel md:block" />
+                        <div className="hidden h-9 w-9 db-notch-sm border border-line bg-panel md:block" />
                     ) : signedIn ? (
                         <div className="hidden md:block">
                             <AccountMenu />
@@ -80,7 +84,7 @@ export default function Nav({onSignIn}) {
                     ) : (
                         <button
                             onClick={onSignIn}
-                            className="hidden font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-dim transition-colors duration-150 hover:text-text px-3 py-2 cursor-pointer md:inline-block"
+                            className={cn(button({variant: "ghost", size: "sm"}), "hidden md:inline-flex")}
                         >
                             Sign In
                         </button>

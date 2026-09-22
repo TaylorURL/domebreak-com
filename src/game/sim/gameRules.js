@@ -60,7 +60,7 @@ const RULES_META = [
     {
         key: "playerGraceSec",
         label: "Opening Grace",
-        help: "Seconds at match start during which no nation — human or AI — may declare war. Up to one full hour.",
+        help: "Seconds at match start during which no nation, human or AI, may declare war. Up to one full hour.",
         type: "range",
         min: 0,
         max: 3600,

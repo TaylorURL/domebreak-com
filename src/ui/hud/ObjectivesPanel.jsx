@@ -40,11 +40,11 @@ function LeadershipSection({world, api, mySlot, flash}) {
     // now, escalating to a warning tint when leaders are exposed during a war.
     const danger = lead.atWar && lead.exposed && !sheltering;
     const status = sheltering
-        ? "Airlift underway — sheltering"
+        ? "Airlift underway, sheltering"
         : releasing
           ? "Releasing back to cities"
           : lead.atWar && lead.exposed
-            ? "Exposed — enemy can decapitate you"
+            ? "Exposed: enemy can decapitate you"
             : lead.sheltered > 0
               ? "Sheltered in the bunker"
               : "Secure in your cities";
@@ -74,7 +74,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
     const prompt = danger
         ? {
               tone: "danger",
-              title: "Leadership Exposed — War Declared",
+              title: "Leadership Exposed: War Declared",
               body: `Your national command is spread across ${where}. Airlift them to the bunker before an enemy strike decapitates you.`,
           }
         : !lead.atWar && lead.sheltered > 0 && !releasing
@@ -87,16 +87,14 @@ function LeadershipSection({world, api, mySlot, flash}) {
 
     return (
         <div className="border-t border-hair">
-            <div className="flex items-center gap-2 px-3 pt-[9px] pb-[6px]">
+            <div className="flex items-center gap-2 px-3 h-[26px] border-b border-hair">
                 <Icon
                     name="leadership"
                     size={13}
                     className="flex-none"
                     style={{color: danger ? VIT_RED : vitColor(lead.pct)}}
                 />
-                <span className="font-display font-semibold text-[11px] tracking-[0.3px] uppercase text-dim">
-                    Leadership
-                </span>
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim">Leadership</span>
                 <span
                     className="ml-auto font-mono text-[11px] font-semibold tabular-nums"
                     style={{color: vitColor(lead.pct)}}
@@ -106,7 +104,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                 </span>
             </div>
             <div
-                className={cn("px-3 text-[10.5px] leading-snug", danger ? "text-red" : "text-faint")}
+                className={cn("px-3 pt-[8px] text-[10.5px] leading-snug", danger ? "text-red" : "text-faint")}
                 role="status"
                 aria-live="polite"
             >
@@ -115,10 +113,10 @@ function LeadershipSection({world, api, mySlot, flash}) {
             {prompt && (
                 <div
                     className={cn(
-                        "mx-3 mt-[8px] rounded-[6px] border px-[9px] py-[7px]",
+                        "db-notch-sm relative mx-3 mt-[8px] border px-[9px] py-[7px]",
                         prompt.tone === "danger"
-                            ? "border-red/60 bg-red/10 animate-[db-lead-pulse_1.8s_ease-in-out_infinite] motion-reduce:animate-none"
-                            : "border-gold/45 bg-gold/10",
+                            ? "db-war-pulse border-danger bg-[rgba(224,87,79,0.12)]"
+                            : "border-gold-line bg-gold-soft",
                     )}
                     role={prompt.tone === "danger" ? "alert" : "status"}
                     aria-live={prompt.tone === "danger" ? "assertive" : "polite"}
@@ -135,7 +133,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                 </div>
             )}
             {/* Composition bar: where the nation's command currently sits. */}
-            <div className="mx-3 mt-[7px] flex h-[5px] overflow-hidden rounded-full bg-sunk" aria-hidden="true">
+            <div className="db-seg mx-3 mt-[9px] flex h-[6px] overflow-hidden bg-sunk" aria-hidden="true">
                 {segs.map((s) => (
                     <i
                         key={s.label}
@@ -150,7 +148,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                         <b className="font-mono text-[11px] tabular-nums" style={{color: s.color}}>
                             {s.value}%
                         </b>
-                        <span className="text-[8.5px] tracking-[0.4px] uppercase text-faint">{s.label}</span>
+                        <span className="font-mono text-[8.5px] tracking-[0.16em] uppercase text-faint">{s.label}</span>
                     </div>
                 ))}
             </div>
@@ -192,7 +190,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                 </button>
             </div>
             {infraHint && (
-                <div className="px-3 pb-[10px] -mt-[4px] text-[10px] font-mono text-gold leading-snug">{infraHint}</div>
+                <div className="px-3 pb-[10px] -mt-[4px] font-mono text-[10px] text-gold leading-snug">{infraHint}</div>
             )}
         </div>
     );
@@ -228,7 +226,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
         if (!leadershipStatus(world, mySlot)) return null;
         return (
             <div
-                className="w-[248px] rounded-lg bg-panel-2 border border-line shadow backdrop-blur-[14px] overflow-hidden"
+                className="db-hud-panel relative w-[248px] overflow-hidden [--db-tab:96px]"
                 role="region"
                 aria-label="Objectives"
             >
@@ -249,25 +247,23 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
 
     return (
         <div
-            className="w-[248px] rounded-lg bg-panel-2 border border-line shadow backdrop-blur-[14px] overflow-hidden"
+            className="db-hud-panel relative w-[248px] overflow-hidden [--db-tab:96px]"
             role="region"
             aria-label="Objectives"
         >
-            <div className="flex items-center gap-2 px-3 py-[9px] border-b border-hair">
-                <Icon name="target" size={14} className={cn("flex-none", allDone ? "text-good" : "text-gold")} />
-                <span className="font-display font-bold text-[12px] tracking-[0.4px] uppercase text-text">
-                    Objectives
-                </span>
+            <header className="flex items-center gap-2 px-3 h-[26px]">
+                <Icon name="target" size={13} className={cn("flex-none", allDone ? "text-good" : "text-gold")} />
+                <span>Objectives</span>
                 <span
                     className={cn(
-                        "ml-auto font-mono text-[10px] font-semibold tabular-nums",
-                        allDone ? "text-good" : "text-dim",
+                        "ml-auto font-mono text-[11px] font-semibold tabular-nums tracking-normal",
+                        allDone ? "text-good" : "text-gold",
                     )}
                     aria-live="polite"
                 >
                     {doneCount} / {objectives.length}
                 </span>
-            </div>
+            </header>
 
             {allDone ? (
                 <div className="flex items-center gap-2 px-3 py-[11px] text-good">
@@ -280,7 +276,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                         <li key={o.id} className={cn("px-3 py-[10px]", i > 0 && "border-t border-hair")}>
                             <div className="flex items-start gap-[9px]">
                                 <span
-                                    className="flex-none mt-[1px] w-[18px] h-[18px] grid place-items-center rounded-full border bg-sunk border-line text-dim text-[10px] font-mono font-bold"
+                                    className="db-notch-sm flex-none mt-[1px] w-[18px] h-[18px] grid place-items-center border bg-sunk border-line text-dim text-[10px] font-mono font-bold tabular-nums"
                                     aria-hidden="true"
                                 >
                                     {i + 1}
@@ -296,7 +292,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                                                 <div className="flex items-center gap-2">
                                                     <span
                                                         className={cn(
-                                                            "flex-none w-[13px] h-[13px] grid place-items-center rounded-[3px] border",
+                                                            "db-notch-sm flex-none w-[13px] h-[13px] grid place-items-center border",
                                                             t.done
                                                                 ? "bg-good/25 border-good/60 text-good"
                                                                 : "border-line text-transparent",
@@ -338,7 +334,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                     {queuedCount > 0 && (
                         <li className="px-3 py-[7px] border-t border-hair flex items-center gap-2">
                             <span
-                                className="flex-none w-[18px] h-[18px] grid place-items-center rounded-full border border-dashed border-line text-dim text-[10px] font-mono font-bold"
+                                className="db-notch-sm flex-none w-[18px] h-[18px] grid place-items-center border border-dashed border-line text-dim text-[10px] font-mono font-bold tabular-nums"
                                 aria-hidden="true"
                             >
                                 +{queuedCount}
@@ -356,14 +352,12 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                     <button
                         type="button"
                         onClick={toggleLog}
-                        className="w-full flex items-center gap-2 px-3 py-[8px] text-left hover:bg-panel-1/60 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-[8px] text-left transition-colors duration-[var(--dur-fast)] hover:bg-hair"
                         aria-expanded={logOpen}
                         aria-controls="objectives-log"
                     >
                         <Icon name="check" size={12} className="flex-none text-good" strokeWidth={2.2} />
-                        <span className="font-display font-semibold text-[11px] tracking-[0.3px] uppercase text-dim">
-                            Completed
-                        </span>
+                        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim">Completed</span>
                         <span className="font-mono text-[10px] font-semibold tabular-nums text-good">{doneCount}</span>
                         <Icon
                             name="chevron-down"
@@ -376,7 +370,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                             {completed.map((o) => (
                                 <li key={o.id} className="flex items-start gap-[9px] px-3 py-[6px]">
                                     <span
-                                        className="flex-none mt-[1px] w-[18px] h-[18px] grid place-items-center rounded-full bg-good/20 border border-good/60 text-good"
+                                        className="db-notch-sm flex-none mt-[1px] w-[18px] h-[18px] grid place-items-center bg-good/20 border border-good/60 text-good"
                                         aria-hidden="true"
                                     >
                                         <Icon name="check" size={12} strokeWidth={2.4} />

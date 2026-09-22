@@ -42,7 +42,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
     };
     const seatOf = (n) => {
         if (n.slot === mySlot) return {label: "You", cls: "text-gold-contrast bg-gold border-gold"};
-        if (isHuman(n.slot)) return {label: "Player", cls: "text-[#5fa8ff] border-[#3f5a80]"};
+        if (isHuman(n.slot)) return {label: "Player", cls: "text-[var(--ally)] border-[rgba(95,168,255,0.45)]"};
         return {label: "AI", cls: ""};
     };
     const commanderOf = (n) => {
@@ -57,19 +57,19 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
     return (
         <div className={overlay({placement: "center"})} onClick={onClose}>
             <div
-                className={cn(card(), "w-[min(900px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
+                className={cn(card(), "db-card-scroll w-[min(900px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="db-players-title"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-start justify-between gap-3 mb-1">
+                <div className="db-card-head">
                     <div>
                         <div className={menuTitle({sm: true})} id="db-players-title">
                             Players
                         </div>
-                        <div className="font-mono text-[11px] tracking-[0.02em] text-dim mt-1">
-                            Every active power in this match — release Tab to close
+                        <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim mt-1.5">
+                            Every active power in this match · release Tab to close
                         </div>
                     </div>
                     <button
@@ -81,11 +81,11 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                         <Icon name="close" size={15} />
                     </button>
                 </div>
-                <div className="mt-3" role="table" aria-label="Players in this match">
+                <div role="table" aria-label="Players in this match">
                     <div
                         className={cn(
                             rowGrid,
-                            "sticky top-0 z-[1] bg-panel-solid border-b border-line text-[9px] tracking-[1.2px] uppercase text-faint",
+                            "sticky top-0 z-[1] bg-panel-solid border-b border-line font-mono text-[10px] tracking-[0.22em] uppercase text-faint",
                         )}
                         role="row"
                     >
@@ -121,7 +121,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                 className={cn(
                                     rowGrid,
                                     !n.alive && "opacity-50",
-                                    isMe && "bg-[rgba(245,197,49,0.05)]",
+                                    isMe && "bg-gold-soft",
                                     open && "cursor-pointer hover:bg-[rgba(255,255,255,0.03)]",
                                 )}
                                 role={open ? "button" : "row"}
@@ -199,9 +199,9 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                     ) : r === "war" ? (
                                         <span className="font-mono text-[11px] text-red">At War</span>
                                     ) : r === "ally" ? (
-                                        <span className="font-mono text-[11px] text-[#5fa8ff]">Allied</span>
+                                        <span className="font-mono text-[11px] text-[var(--ally)]">Allied</span>
                                     ) : (
-                                        <span className="font-mono text-[11px] text-[#46d38a]">At Peace</span>
+                                        <span className="font-mono text-[11px] text-good">At Peace</span>
                                     )}
                                 </span>
                             </div>

@@ -19,38 +19,38 @@ function content(kind, foe) {
         case "victory":
             return {
                 title: "Victory",
-                tone: "text-good [text-shadow:0_0_26px_rgba(62,227,139,0.55)]",
+                tone: "text-good [text-shadow:0_0_26px_rgba(95,227,154,0.55)]",
                 body: `${foe} has surrendered. Every territory you occupied is yours to keep.`,
             };
         case "defeat":
             return {
                 title: "Defeat",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(255,91,110,0.5)]",
+                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
                 body: `You have surrendered to ${foe}. The land they occupied is lost, and your nation is shaken for a year to come.`,
             };
         case "whitepeace":
             return {
                 title: "White Peace",
                 tone: "text-dim",
-                body: `You and ${foe} agree to end the war. All occupied territory returns to its rightful owner — no ground changes hands.`,
+                body: `You and ${foe} agree to end the war. All occupied territory returns to its rightful owner, so no ground changes hands.`,
             };
         case "offer":
             return {
                 title: "Peace Offer",
                 tone: "text-dim",
-                body: `${foe} offers a white peace — end the war now, with both sides returning to their pre-war borders.`,
+                body: `${foe} offers a white peace: end the war now, with both sides returning to their pre-war borders.`,
             };
         case "ally-offer":
             return {
                 title: "Alliance Proposal",
-                tone: "text-[#5fa8ff]",
+                tone: "text-[#5fa8ff] [text-shadow:0_0_24px_rgba(95,168,255,0.45)]",
                 body: `${foe} proposes a mutual-defense pact. Neither of you will make war on the other, and an attack on one draws in the other.`,
             };
         case "ally-formed":
             return {
                 title: "Alliance Forged",
-                tone: "text-good [text-shadow:0_0_26px_rgba(62,227,139,0.45)]",
-                body: `${foe} accepts your alliance. Your nations now stand together — an attack on either is an attack on both.`,
+                tone: "text-good [text-shadow:0_0_26px_rgba(95,227,154,0.45)]",
+                body: `${foe} accepts your alliance. Your nations now stand together. An attack on either is an attack on both.`,
             };
         case "ally-refused":
             return {
@@ -61,14 +61,14 @@ function content(kind, foe) {
         case "war-declared":
             return {
                 title: "War Declared",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(255,91,110,0.5)]",
+                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
                 body: `${foe} has declared war on you.`,
             };
         case "called-to-arms":
             return {
                 title: "Called to Arms",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(255,91,110,0.5)]",
-                body: `Your ally has been attacked — you are now at war with ${foe}.`,
+                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
+                body: `Your ally has been attacked, so you are now at war with ${foe}.`,
             };
         case "refused":
         default:
@@ -118,14 +118,16 @@ export default function WarOutcomeModal({world, api, pop: popOverride, onDismiss
         >
             <div className={cn(card({size: "wide"}), "motion-safe:animate-[dbPop_240ms_var(--ease-out)]")}>
                 {foeNation?.iso && (
-                    <Flag
-                        iso={foeNation.iso}
-                        className="mx-auto mb-3 text-[26px] rounded-[3px] shadow-[0_0_0_1px_var(--line)]"
-                    />
+                    <span className="db-notch-sm db-brackets relative mx-auto mb-4 grid place-items-center w-[74px] h-[50px] overflow-hidden border border-line bg-sunk [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
+                        <Flag iso={foeNation.iso} className="text-[26px]" />
+                    </span>
                 )}
                 <div
                     id="db-war-title"
-                    className={cn("font-display text-[34px] font-bold tracking-[3px] uppercase text-center mb-3", tone)}
+                    className={cn(
+                        "font-display text-[34px] font-bold tracking-[0.09em] uppercase text-center mb-3 leading-[1.08]",
+                        tone,
+                    )}
                 >
                     {title}
                 </div>

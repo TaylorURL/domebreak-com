@@ -1,7 +1,7 @@
 import {useMemo, useState} from "react";
 import Flag from "../common/Flag.jsx";
 import {GREAT_POWERS} from "../../game/sim/newGame.js";
-import {button, card, chip, input, label, row} from "../lib/variants.js";
+import {button, card, chip, input, label, menuTitle, row} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 
 // Nation select: claim the ONE country you command. Rival powers (up to 8, chosen
@@ -30,20 +30,24 @@ export default function NewGame({data, onStart, onBack, settings}) {
     const sel = data?.countries.find((c) => c.iso === iso);
     const countryRow = (active) =>
         cn(
-            "flex items-center gap-2.5 px-2.5 py-2 rounded border text-left text-text",
-            active ? "border-gold-line bg-gold-soft" : "border-transparent bg-transparent hover:bg-black/[0.06]",
+            "flex items-center gap-2.5 px-2.5 py-2 rounded-sm border text-left text-text transition-colors duration-[var(--dur-fast)]",
+            active
+                ? "border-gold-line bg-gold-soft text-gold"
+                : "border-transparent bg-transparent hover:border-line-soft hover:bg-[rgba(255,255,255,0.045)]",
         );
     return (
         <div className="absolute inset-0 z-10 grid place-items-center overflow-auto p-6">
             <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_130%_95%_at_50%_42%,transparent_42%,rgba(4,6,9,0.32)_76%,rgba(4,6,9,0.6)_100%)]" />
             <div className={cn(card(), "db-newgame w-[min(460px,94vw)] text-left max-h-[90vh] overflow-auto")}>
-                <div className="text-[26px] tracking-[3px] mb-4 font-bold uppercase m-0 text-dim">New Game</div>
+                <div className="db-card-head">
+                    <div className={menuTitle({sm: true})}>New Game</div>
+                </div>
                 {!data && <p className="text-dim m-0 mb-5 text-sm leading-[1.5]">Loading world data…</p>}
                 <div
                     id="db-newgame-nation-label"
                     className={cn(label(), "flex flex-wrap items-center gap-x-2 gap-y-1.5")}
                 >
-                    <span>Choose Your Nation — Every Rival Power Is a Live AI</span>
+                    <span>Choose Your Nation: Every Rival Power Is a Live AI</span>
                     {sel && (
                         <span
                             className={cn(
@@ -57,7 +61,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                     )}
                 </div>
                 <div
-                    className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded p-1.5 bg-sunk"
+                    className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded-sm p-1.5 bg-sunk"
                     role="list"
                     aria-labelledby="db-newgame-nation-label"
                 >
@@ -66,7 +70,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             className={countryRow(true)}
                             role="listitem"
                             onClick={() => setIso(sel.iso)}
-                            aria-label={`${sel.name} — you`}
+                            aria-label={`${sel.name} (you)`}
                         >
                             <span className="text-lg w-[22px]">
                                 <Flag iso={sel.iso} />
@@ -74,7 +78,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {sel.name}
                             </span>
-                            <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-ink bg-ink text-white">
+                            <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
                                 You
                             </span>
                         </button>
@@ -85,7 +89,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             className={countryRow(iso === c.iso)}
                             role="listitem"
                             onClick={() => setIso(c.iso)}
-                            aria-label={`${c.name}${iso === c.iso ? " — you" : ""}`}
+                            aria-label={`${c.name}${iso === c.iso ? " (you)" : ""}`}
                         >
                             <span className="text-lg w-[22px]">
                                 <Flag iso={c.iso} />
@@ -95,7 +99,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             </span>
                             <span className="font-mono text-xs text-dim">{c.count}</span>
                             {iso === c.iso && (
-                                <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-ink bg-ink text-white">
+                                <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
                                     You
                                 </span>
                             )}
@@ -114,7 +118,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                 />
                 {searchList.length > 0 && (
                     <div
-                        className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded p-1.5 bg-sunk"
+                        className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded-sm p-1.5 bg-sunk"
                         role="list"
                         style={{maxHeight: "18vh"}}
                     >
@@ -123,7 +127,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                                 key={c.iso}
                                 className={countryRow(iso === c.iso)}
                                 role="listitem"
-                                aria-label={`${c.name} — you`}
+                                aria-label={`${c.name}${iso === c.iso ? " (you)" : ""}`}
                                 onClick={() => {
                                     setIso(c.iso);
                                     setQ("");
@@ -146,7 +150,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                         {(settings?.globe ?? true) ? "Globe" : "Flat"} view
                     </p>
                 )}
-                <div className={row()} style={{marginTop: 14}}>
+                <div className={cn(row(), "justify-end mt-[18px] pt-4 border-t border-hair")}>
                     <button className={button()} onClick={onBack}>
                         Back
                     </button>

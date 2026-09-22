@@ -71,16 +71,16 @@ export default function LoginScreen() {
             >
                 <div className="mb-[30px]">
                     <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-rail-dot w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_7px_var(--danger)] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
+                        <span className="db-led db-led-live" />
                         Authorization Required
                     </div>
-                    <h1 className="text-[46px] tracking-[8px] leading-[0.96] text-dim">
+                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
                         DOME
-                        <span className="block text-text [text-shadow:var(--glow-gold)] animate-[dbTitleGlow_6s_var(--ease-in-out)_infinite_alternate] motion-reduce:animate-none">
-                            BREAK
-                        </span>
+                        <span className="db-title-glow block text-text">BREAK</span>
                     </h1>
-                    <p className="text-dim tracking-[3px] uppercase text-[13px] mt-3 mb-0">Global Missile Command</p>
+                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
+                        Global Missile Command
+                    </p>
                 </div>
 
                 <form
@@ -95,7 +95,7 @@ export default function LoginScreen() {
                     {/* Segmented mode switch: both options are visible up front, so
                         signing up is never hidden behind a link under the form. */}
                     <div
-                        className="flex gap-1 mb-[22px] p-1 rounded-sm border border-line-soft bg-[rgba(9,11,15,0.55)]"
+                        className="db-notch-sm flex gap-1 mb-[22px] p-1 border border-line-soft bg-[rgba(9,11,15,0.55)]"
                         role="tablist"
                         aria-label="Authentication mode"
                     >
@@ -106,7 +106,7 @@ export default function LoginScreen() {
                             disabled={busy}
                             onClick={() => selectMode("signin")}
                             className={cn(
-                                "flex-1 py-[9px] rounded-[3px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-150 ease-out-db border",
+                                "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
                                 mode === "signin"
                                     ? "text-gold bg-gold-soft border-gold-line"
                                     : "text-faint border-transparent enabled:hover:text-text",
@@ -121,7 +121,7 @@ export default function LoginScreen() {
                             disabled={busy}
                             onClick={() => selectMode("signup")}
                             className={cn(
-                                "flex-1 py-[9px] rounded-[3px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-150 ease-out-db border",
+                                "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
                                 mode === "signup"
                                     ? "text-gold bg-gold-soft border-gold-line"
                                     : "text-faint border-transparent enabled:hover:text-text",
@@ -156,7 +156,7 @@ export default function LoginScreen() {
                                 className={input()}
                                 maxLength={24}
                                 autoComplete="username"
-                                placeholder="3–24 characters"
+                                placeholder="3-24 characters"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 disabled={busy}
@@ -183,7 +183,7 @@ export default function LoginScreen() {
                     <div aria-live="assertive">
                         {error && (
                             <p
-                                className="text-danger bg-[rgba(224,87,79,0.1)] border border-danger rounded-sm px-3 py-2 text-[12.5px] mt-3.5 mb-0"
+                                className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger px-3 py-2 text-[12.5px] mt-3.5 mb-0"
                                 id="db-login-err"
                             >
                                 {error}
@@ -202,7 +202,7 @@ export default function LoginScreen() {
                     <p className="text-faint text-[11px] leading-[1.5] tracking-[0.3px] mt-4 mb-0">
                         {mode === "signin"
                             ? "Your account carries your callsign, match history, and career stats across every deployment."
-                            : "One free account. No email confirmation required — you deploy the moment you enlist."}
+                            : "One free account. There is no confirmation email, so you deploy the moment you enlist."}
                     </p>
                 </form>
             </aside>

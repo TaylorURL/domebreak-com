@@ -213,7 +213,7 @@ export default function AdjustablePanel({
     const eff = live ? {...panel, ...live} : panel;
     const visible = open || !!live;
     const gripBtn =
-        "w-6 h-6 grid place-items-center rounded text-dim hover:text-text hover:bg-[rgba(160,168,178,0.12)] transition-colors";
+        "db-notch-sm w-6 h-6 grid place-items-center text-dim transition-[color,background] duration-[var(--dur-fast)] ease-out-db hover:text-gold hover:bg-gold-soft active:scale-[0.94] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]";
     const alignJustify =
         tabAlign === "center" ? "justify-center" : tabAlign === "right" ? "justify-end" : "justify-start";
     // Drop below the panel only when there's no room above; the small offset (pt/pb)
@@ -259,7 +259,7 @@ export default function AdjustablePanel({
             <div className={cn("absolute left-0 right-0 z-30 flex pointer-events-none", alignJustify, vertCls)}>
                 {visible ? (
                     <div
-                        className="pointer-events-auto flex items-center gap-1 rounded-md bg-panel-2 border border-line px-1.5 py-1 shadow backdrop-blur-[10px] select-none motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
+                        className="db-hud-panel db-hud-solid relative pointer-events-auto flex items-center gap-1 px-1.5 py-1 select-none [--db-tab:0px] motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
                         role="toolbar"
                         aria-label={`${label} layout controls`}
                     >
@@ -293,7 +293,7 @@ export default function AdjustablePanel({
                                 max={HUD_OPACITY_MAX}
                                 step={0.05}
                                 value={eff.opacity}
-                                className="w-14 accent-gold cursor-pointer"
+                                className="w-14 h-[3px] accent-gold cursor-pointer"
                                 aria-label={`${label} opacity`}
                                 onInput={(e) => setLive({opacity: Number(e.target.value)})}
                                 onChange={(e) => commit({opacity: Number(e.target.value)})}
@@ -317,7 +317,7 @@ export default function AdjustablePanel({
                         >
                             <Icon name="eye-off" size={13} />
                         </button>
-                        <div className="w-px self-stretch bg-line mx-0.5" aria-hidden="true" />
+                        <div className="w-px self-stretch bg-line-soft mx-0.5" aria-hidden="true" />
                         <button
                             type="button"
                             className={cn(gripBtn, "text-gold hover:text-gold")}
@@ -332,15 +332,15 @@ export default function AdjustablePanel({
                     <button
                         type="button"
                         className={cn(
-                            "pointer-events-auto flex items-center gap-1 h-[19px] px-1.5 rounded bg-panel-2/95 border border-line shadow backdrop-blur-[10px] text-dim hover:text-text hover:border-blue transition-[opacity,color,border-color] duration-150",
+                            "db-notch-sm pointer-events-auto flex items-center gap-1 h-[19px] px-[7px] bg-panel-2/95 border border-line backdrop-blur-[10px] text-dim transition-[opacity,color,border-color] duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
                             hovered ? "opacity-100" : "opacity-0 focus-visible:opacity-100",
                         )}
                         onClick={openToolbar}
-                        aria-label={`Adjust ${label} — move, resize, fade, or hide`}
-                        title={`Adjust ${label} — move, resize, fade, or hide`}
+                        aria-label={`Adjust ${label}: move, resize, fade, or hide`}
+                        title={`Adjust ${label}: move, resize, fade, or hide`}
                     >
                         <Icon name="sliders" size={12} />
-                        <span className="font-display text-[8.5px] tracking-[1.2px] uppercase leading-none">
+                        <span className="font-display text-[8.5px] tracking-[0.14em] uppercase leading-none">
                             Adjust
                         </span>
                     </button>

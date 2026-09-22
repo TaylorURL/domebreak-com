@@ -43,16 +43,16 @@ export default function StartMenu({
             >
                 <div className="mb-[34px]">
                     <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-rail-dot w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_7px_var(--danger)] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
+                        <span className="db-led db-led-live" />
                         System Online
                     </div>
-                    <h1 className="text-[46px] tracking-[8px] leading-[0.96] text-dim">
+                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
                         DOME
-                        <span className="block text-text [text-shadow:var(--glow-gold)] animate-[dbTitleGlow_6s_var(--ease-in-out)_infinite_alternate]">
-                            BREAK
-                        </span>
+                        <span className="db-title-glow block text-text">BREAK</span>
                     </h1>
-                    <p className="text-dim tracking-[3px] uppercase text-[13px] mt-3 mb-0">Global Missile Command</p>
+                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
+                        Global Missile Command
+                    </p>
                 </div>
                 <nav className="flex flex-col gap-[9px] w-full mx-0 mb-[22px] pointer-events-auto">
                     {updateAvailable && (
@@ -61,11 +61,11 @@ export default function StartMenu({
                             onClick={onUpdate}
                             aria-label={
                                 latestVersion
-                                    ? `Update available — install DomeBreak v${latestVersion}`
-                                    : "Update available — install the latest DomeBreak"
+                                    ? `Install the DomeBreak v${latestVersion} update`
+                                    : "Install the latest DomeBreak update"
                             }
                         >
-                            <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_7px_currentColor] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
+                            <span className="db-led motion-safe:animate-[dbBlink_2.4s_var(--ease-io)_infinite]" />
                             {latestVersion ? `Update to v${latestVersion}` : "Update Available"}
                         </button>
                     )}
@@ -96,10 +96,10 @@ export default function StartMenu({
                                 aria-label={
                                     onlineCount != null
                                         ? `${onlineCount} commanders online`
-                                        : "Commanders online — connecting"
+                                        : "Commanders online, connecting"
                                 }
                             >
-                                <span className="w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_7px_var(--danger)] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
+                                <span className={cn("db-led", onlineCount != null ? "db-led-ok" : "db-led-warn")} />
                                 {onlineCount != null ? `${onlineCount} Online` : "Connecting…"}
                             </div>
                             <button
@@ -136,7 +136,7 @@ export default function StartMenu({
                         </>
                     )}
                 </nav>
-                <div className="w-full m-0 pointer-events-auto px-4 py-3 border border-line-soft rounded-sm bg-[rgba(16,18,20,0.5)] text-left">
+                <div className="db-notch-sm db-scan relative w-full m-0 pointer-events-auto px-4 py-3 border border-line-soft bg-panel text-left">
                     <div className="flex items-center justify-between gap-2">
                         <span className="font-display font-bold text-[13px] tracking-[0.5px] text-text">
                             {profile?.username || "—"}
@@ -157,27 +157,27 @@ export default function StartMenu({
                         role="group"
                         aria-label="Career record"
                     >
-                        <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins — unavailable"}>
+                        <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins unavailable"}>
                             {stats ? `${stats.wins}W` : "—"}
                         </span>
-                        <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses — unavailable"}>
+                        <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses unavailable"}>
                             {stats ? `${stats.losses}L` : "—"}
                         </span>
                         <span
                             title="Total matches played"
-                            aria-label={stats ? `${total} matches played` : "Matches — unavailable"}
+                            aria-label={stats ? `${total} matches played` : "Matches unavailable"}
                         >
                             {stats ? `${total} Matches` : "—"}
                         </span>
                         <span
                             title="Win rate"
-                            aria-label={stats ? `${winRate} percent win rate` : "Win rate — unavailable"}
+                            aria-label={stats ? `${winRate} percent win rate` : "Win rate unavailable"}
                         >
                             {stats ? `${winRate}% Win Rate` : "—"}
                         </span>
                         <span
                             title="Total time in command"
-                            aria-label={hours != null ? `${hours} hours playtime` : "Playtime — unavailable"}
+                            aria-label={hours != null ? `${hours} hours playtime` : "Playtime unavailable"}
                         >
                             {hours != null ? `${hours}h Playtime` : "—"}
                         </span>

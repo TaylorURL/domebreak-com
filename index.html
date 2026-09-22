@@ -5,12 +5,8 @@
         <meta content="width=device-width, initial-scale=1.0" name="viewport" />
         <meta content="#04060d" name="theme-color" />
         <title>DomeBreak</title>
-        <link href="https://fonts.googleapis.com" rel="preconnect" />
-        <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
-            rel="stylesheet"
-        />
+        <!-- Every typeface is bundled through src/index.css, so nothing here
+       reaches out for one; the packaged desktop build starts with no network. -->
         <!-- Critical background prevents a white flash before styles and the map load -->
         <style>
             html {
