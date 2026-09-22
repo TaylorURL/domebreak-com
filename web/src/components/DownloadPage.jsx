@@ -115,8 +115,10 @@ function PlatformCard({platform, version, mine}) {
             <div>
                 <h2 className="font-display text-[18px] font-bold uppercase tracking-[0.06em] text-text">
                     {platform.os}
+                    <span className="mt-1 block font-sans text-[13px] font-normal normal-case leading-[20px] tracking-normal text-dim">
+                        {platform.arch}
+                    </span>
                 </h2>
-                <p className="mt-1 text-[13px] leading-[20px] text-dim">{platform.arch}</p>
             </div>
 
             <p className="font-mono text-[10px] uppercase leading-[14px] tracking-[0.22em] text-faint">
@@ -128,13 +130,13 @@ function PlatformCard({platform, version, mine}) {
             <div className="mt-auto border-t border-hair pt-3.5">
                 <a
                     href={`${RELEASE_BASE}/${platform.file}`}
-                    // The visible label is the same word on all four cards, which
-                    // says nothing on its own to a reader arriving at the link out
-                    // of context.
+                    // The visible label names the build; the accessible name adds
+                    // the OS and the file's own line for a reader arriving at the
+                    // link out of context.
                     aria-label={`Download DomeBreak for ${platform.os} on ${platform.arch}: ${platform.sub}`}
                     className={cn(button({variant: "primary", size: "lg"}), "w-full")}
                 >
-                    Download
+                    Get {platform.arch}
                 </a>
             </div>
         </article>

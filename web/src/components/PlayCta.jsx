@@ -13,7 +13,7 @@ export default function PlayCta({className, size = "lg", onClick}) {
         <button
             type="button"
             onClick={onClick ?? (() => scrollToId("download"))}
-            aria-label="Play DomeBreak free, go to the download page"
+            aria-label="Play DomeBreak free: go to the download page"
             className={cn(button({variant: "primary", size}), className)}
         >
             <Play size={size === "lg" ? 16 : 14} fill="currentColor" />
@@ -29,7 +29,7 @@ export function PlayNavLink({className}) {
         <button
             type="button"
             onClick={() => scrollToId("download")}
-            aria-label="Play DomeBreak free, go to the download page"
+            aria-label="Play DomeBreak free: go to the download page"
             className={cn(button({variant: "primary", size: "sm"}), className)}
         >
             <Play size={13} fill="currentColor" />

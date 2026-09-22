@@ -68,7 +68,7 @@ function content(kind, foe) {
             return {
                 title: "Called to Arms",
                 tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
-                body: `Your ally has been attacked, so you are now at war with ${foe}.`,
+                body: `${foe} attacked your ally, so you are now at war with them.`,
             };
         case "refused":
         default:
