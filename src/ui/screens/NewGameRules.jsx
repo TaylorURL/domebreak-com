@@ -52,7 +52,7 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                         type="button"
                         className={cn(
                             "db-notch-sm w-full flex items-center justify-between gap-2 px-3 py-2 border border-line-soft bg-sunk text-left transition-colors duration-[var(--dur-fast)] hover:border-line",
-                            aiOpen && "border-gold-line bg-gold-soft",
+                            aiOpen && "border-accent-line bg-accent-soft",
                         )}
                         onClick={() => setAiOpen((o) => !o)}
                         aria-expanded={aiOpen}

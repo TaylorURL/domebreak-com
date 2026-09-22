@@ -136,7 +136,7 @@ export default function ControlsOverlay({keys, onClose}) {
                 <div className="db-controls-grid grid grid-cols-1 sm:grid-cols-2 gap-x-[34px] gap-y-1 mb-5">
                     {groups.map((g) => (
                         <div className="db-ctrl-group [break-inside:avoid]" key={g.h}>
-                            <div className="db-ctrl-group-h font-mono text-[10px] tracking-[0.22em] uppercase text-gold mt-3.5 mb-1.5 pb-[5px] border-b border-hair">
+                            <div className="db-ctrl-group-h font-mono text-[10px] tracking-[0.22em] uppercase text-accent mt-3.5 mb-1.5 pb-[5px] border-b border-hair">
                                 {g.h}
                             </div>
                             {g.rows.map((r) => (

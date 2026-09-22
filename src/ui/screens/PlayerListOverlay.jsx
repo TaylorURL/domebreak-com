@@ -41,7 +41,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
         return r === "war" ? "war" : r === "ally" ? "ally" : "peace";
     };
     const seatOf = (n) => {
-        if (n.slot === mySlot) return {label: "You", cls: "text-gold-contrast bg-gold border-gold"};
+        if (n.slot === mySlot) return {label: "You", cls: "text-accent-ink bg-accent border-accent"};
         if (isHuman(n.slot)) return {label: "Player", cls: "text-[var(--ally)] border-[rgba(95,168,255,0.45)]"};
         return {label: "AI", cls: ""};
     };
@@ -121,7 +121,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                 className={cn(
                                     rowGrid,
                                     !n.alive && "opacity-50",
-                                    isMe && "bg-gold-soft",
+                                    isMe && "bg-accent-soft",
                                     open && "cursor-pointer hover:bg-[rgba(255,255,255,0.03)]",
                                 )}
                                 role={open ? "button" : "row"}

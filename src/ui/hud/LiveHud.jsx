@@ -189,7 +189,7 @@ export default function LiveHud({
     // A speed / nav control that is currently the active one. The amber wash plus
     // its hairline is the whole active vocabulary in the HUD: the solid amber fill
     // stays reserved for the one primary action a modal offers.
-    const ACTIVE = "bg-gold-soft border-gold-line text-gold";
+    const ACTIVE = "bg-accent-soft border-accent-line text-accent";
 
     return (
         <div
@@ -220,7 +220,7 @@ export default function LiveHud({
                 </div>
                 <Divider />
                 <div className="flex flex-col items-start leading-none">
-                    <span className="font-display text-[26px] font-bold text-gold leading-[28px] [text-shadow:var(--glow-gold)]">
+                    <span className="font-display text-[26px] font-bold text-accent leading-[28px] [text-shadow:var(--glow-accent)]">
                         {Math.floor(myNation?.points ?? 0)}
                     </span>
                     <span className={cn(KICKER, "mt-[1px]", net < 0 && "text-danger")}>PTS · {fmtNet(net)}/s</span>
@@ -308,7 +308,7 @@ export default function LiveHud({
                                                     >
                                                         <span className="text-dim truncate flex items-center gap-1">
                                                             {!!c.cap && (
-                                                                <Icon name="star" size={9} className="text-gold" />
+                                                                <Icon name="star" size={9} className="text-accent" />
                                                             )}
                                                             {c.name}
                                                         </span>
@@ -444,7 +444,7 @@ export default function LiveHud({
                     >
                         <span className="db-led db-led-live" aria-hidden="true" />
                         {world.startsIn > 0 ? (
-                            <span className="font-mono text-xs font-bold text-gold [text-shadow:var(--glow-gold)] tabular-nums">
+                            <span className="font-mono text-xs font-bold text-accent [text-shadow:var(--glow-accent)] tabular-nums">
                                 Battle begins in {world.startsIn}s
                             </span>
                         ) : (
@@ -501,7 +501,7 @@ export default function LiveHud({
                             <button
                                 key={n.id}
                                 className={cn(
-                                    "db-brackets relative flex items-center gap-[6px] px-[11px] py-[7px] font-display font-semibold text-[10.5px] tracking-[0.12em] uppercase whitespace-nowrap text-dim bg-sunk border border-line rounded-sm cursor-pointer transition-[border-color,color,background] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-gold-line active:scale-[0.98]",
+                                    "db-brackets relative flex items-center gap-[6px] px-[11px] py-[7px] font-display font-semibold text-[10.5px] tracking-[0.12em] uppercase whitespace-nowrap text-dim bg-sunk border border-line rounded-sm cursor-pointer transition-[border-color,color,background] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-accent-line active:scale-[0.98]",
                                     panel === n.id && ACTIVE,
                                 )}
                                 onClick={() => onPanel(n.id)}

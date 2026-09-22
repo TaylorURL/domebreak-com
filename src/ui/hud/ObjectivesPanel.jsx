@@ -116,7 +116,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                         "db-notch-sm relative mx-3 mt-[8px] border px-[9px] py-[7px]",
                         prompt.tone === "danger"
                             ? "db-war-pulse border-danger bg-[rgba(224,87,79,0.12)]"
-                            : "border-gold-line bg-gold-soft",
+                            : "border-accent-line bg-accent-soft",
                     )}
                     role={prompt.tone === "danger" ? "alert" : "status"}
                     aria-live={prompt.tone === "danger" ? "assertive" : "polite"}
@@ -124,7 +124,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                     <div
                         className={cn(
                             "font-display font-semibold text-[11px] tracking-[0.3px] leading-tight",
-                            prompt.tone === "danger" ? "text-red" : "text-gold",
+                            prompt.tone === "danger" ? "text-red" : "text-accent",
                         )}
                     >
                         {prompt.title}
@@ -190,7 +190,7 @@ function LeadershipSection({world, api, mySlot, flash}) {
                 </button>
             </div>
             {infraHint && (
-                <div className="px-3 pb-[10px] -mt-[4px] font-mono text-[10px] text-gold leading-snug">{infraHint}</div>
+                <div className="px-3 pb-[10px] -mt-[4px] font-mono text-[10px] text-accent leading-snug">{infraHint}</div>
             )}
         </div>
     );
@@ -252,12 +252,12 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
             aria-label="Objectives"
         >
             <header className="flex items-center gap-2 px-3 h-[26px]">
-                <Icon name="target" size={13} className={cn("flex-none", allDone ? "text-good" : "text-gold")} />
+                <Icon name="target" size={13} className={cn("flex-none", allDone ? "text-good" : "text-accent")} />
                 <span>Objectives</span>
                 <span
                     className={cn(
                         "ml-auto font-mono text-[11px] font-semibold tabular-nums tracking-normal",
-                        allDone ? "text-good" : "text-gold",
+                        allDone ? "text-good" : "text-accent",
                     )}
                     aria-live="polite"
                 >
@@ -321,7 +321,7 @@ export default function ObjectivesPanel({world, api, mySlot, flash}) {
                                                 <Meter
                                                     frac={t.progress}
                                                     className="mt-[4px] ml-[21px] h-[3px]"
-                                                    fillClass={t.done ? "bg-good" : "bg-gold"}
+                                                    fillClass={t.done ? "bg-good" : "bg-accent"}
                                                     ariaLabel={`${t.label} progress`}
                                                 />
                                             </li>

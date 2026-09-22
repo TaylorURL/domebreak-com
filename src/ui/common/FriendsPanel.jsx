@@ -208,7 +208,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                     className={cn(
                                         miniButton(),
                                         "flex-1 capitalize",
-                                        party.join_mode === mode && "border-gold-line text-gold",
+                                        party.join_mode === mode && "border-accent-line text-accent",
                                     )}
                                     disabled={partyBusy}
                                     aria-pressed={party.join_mode === mode}
@@ -227,7 +227,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 Launch Private
                             </button>
                             <button
-                                className={cn(miniButton(), "flex-1 border-gold-line text-gold")}
+                                className={cn(miniButton(), "flex-1 border-accent-line text-accent")}
                                 disabled={partyBusy}
                                 onClick={() => partyAct(partyCtl.queuePublic)}
                             >

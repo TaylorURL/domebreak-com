@@ -407,8 +407,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                 key={m.userId ?? `p-${m.slot}`}
                                 className={cn(
                                     "db-notch-sm flex items-center gap-[9px] py-2 px-[11px] border border-line-soft bg-[rgba(9,11,15,0.5)] transition-colors duration-[var(--dur-fast)] [&_.db-flag]:w-[22px] [&_.db-flag]:rounded-[2px] [&_.db-flag]:shrink-0 [&_img]:w-[22px] [&_img]:rounded-[2px] [&_img]:shrink-0",
-                                    r && "border-gold-line bg-gold-soft",
-                                    own && !r && "border-gold-line bg-[rgba(9,11,15,0.72)]",
+                                    r && "border-accent-line bg-accent-soft",
+                                    own && !r && "border-accent-line bg-[rgba(9,11,15,0.72)]",
                                 )}
                                 role="listitem"
                                 aria-label={`${m.username || "Commander"}${own ? " (you)" : ""}, ${m.iso || "no nation"}, ${r ? "ready" : "not ready"}`}
@@ -425,7 +425,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                 <span
                                     className={cn(
                                         "inline-flex items-center gap-1 font-mono text-[10px] tracking-[1px] uppercase shrink-0",
-                                        r ? "text-gold" : "text-faint",
+                                        r ? "text-accent" : "text-faint",
                                     )}
                                 >
                                     {r && <Icon name="check" size={10} strokeWidth={2.4} />}
@@ -441,7 +441,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     <div className="flex items-center justify-between">
                         <span className="font-mono text-[10px] tracking-[2.5px] uppercase text-faint">Ready</span>
                         <span
-                            className={cn("font-mono text-[12px] tracking-[1px]", allReady ? "text-gold" : "text-dim")}
+                            className={cn("font-mono text-[12px] tracking-[1px]", allReady ? "text-accent" : "text-dim")}
                         >
                             {readyCount} / {members.length}
                         </span>
@@ -454,7 +454,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                     key={m.userId ?? m.slot}
                                     className={cn(
                                         "h-[6px] flex-1 transition-colors duration-[var(--dur)] motion-reduce:transition-none",
-                                        r ? "bg-gold" : "bg-line-soft",
+                                        r ? "bg-accent" : "bg-line-soft",
                                     )}
                                 />
                             );
@@ -463,14 +463,14 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     <span
                         className={cn(
                             "db-notch-sm self-start inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[1.5px] uppercase px-2 py-1 border transition-colors duration-[var(--dur-fast)]",
-                            ready ? "text-gold border-gold-line bg-gold-soft" : "text-faint border-line",
+                            ready ? "text-accent border-accent-line bg-accent-soft" : "text-faint border-line",
                         )}
                     >
                         {ready && <Icon name="check" size={10} strokeWidth={2.4} />}
                         {ready ? "You are ready" : "You are not ready"}
                     </span>
                     <span
-                        className={cn("text-[12px] leading-snug", starting || allReady ? "text-gold" : "text-dim")}
+                        className={cn("text-[12px] leading-snug", starting || allReady ? "text-accent" : "text-dim")}
                         role="status"
                         aria-live="polite"
                     >
@@ -496,7 +496,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                         type="button"
                         className={cn(
                             "db-notch-sm w-full flex items-center justify-between gap-2 px-3 py-2 border border-line-soft bg-[rgba(9,11,15,0.5)] text-left transition-colors duration-[var(--dur-fast)] hover:border-line",
-                            rulesOpen && "border-gold-line bg-gold-soft",
+                            rulesOpen && "border-accent-line bg-accent-soft",
                         )}
                         onClick={() => setRulesOpen((o) => !o)}
                         aria-expanded={rulesOpen}

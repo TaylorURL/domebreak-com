@@ -39,14 +39,14 @@ export const button = cva(
             // The default fill is a dark vertical gradient (a background-IMAGE);
             // it lives in the variant, not the base, so the primary variant can
             // fully replace it with a solid background-COLOR. In the base it
-            // would paint over primary's bg-gold (which resets only
+            // would paint over primary's bg-accent (which resets only
             // background-color), rendering the primary button dark with
             // unreadable dark text.
             variant: {
                 default:
                     "db-brackets db-brackets-hover relative bg-linear-to-b from-btn-bg to-btn-bg-2 text-text shadow-[inset_0_1px_0_var(--hair)] enabled:hover:shadow-[0_0_0_rgba(0,0,0,0),inset_0_1px_0_var(--hair)]",
                 primary:
-                    "primary db-notch-sm relative overflow-hidden rounded-none bg-gold text-gold-contrast tracking-[0.12em] border-[rgba(0,0,0,0.25)] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] enabled:hover:bg-gold-hi [--db-ring:var(--gold-contrast)]",
+                    "primary db-notch-sm relative overflow-hidden rounded-none bg-accent text-accent-ink tracking-[0.12em] border-[rgba(0,0,0,0.25)] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] enabled:hover:bg-accent-hi [--db-ring:var(--accent-ink)]",
                 ghost: "bg-transparent border-transparent shadow-none text-dim enabled:hover:text-text enabled:hover:border-line",
                 danger: "db-brackets db-brackets-hover relative bg-transparent border-[rgba(224,87,79,0.45)] text-danger enabled:hover:bg-[rgba(224,87,79,0.12)] enabled:hover:border-danger",
             },
@@ -112,11 +112,11 @@ export const menuButton = cva(
             variant: {
                 default: "db-brackets",
                 primary:
-                    "primary db-brackets db-notch-sm rounded-none bg-gold text-gold-contrast border-[rgba(0,0,0,0.25)] hover:bg-gold-hi [--db-ring:var(--gold-contrast)]",
+                    "primary db-brackets db-notch-sm rounded-none bg-accent text-accent-ink border-[rgba(0,0,0,0.25)] hover:bg-accent-hi [--db-ring:var(--accent-ink)]",
                 back: "back bg-transparent border-transparent text-text opacity-70 mt-1 hover:opacity-100 hover:border-line focus-visible:opacity-100 focus-visible:border-line",
                 danger: "danger db-brackets hover:border-danger hover:text-danger",
                 section:
-                    "section relative text-[10px] font-semibold tracking-[3px] uppercase text-gold opacity-80 px-0.5 pb-0.5 mb-0.5 border-b border-line",
+                    "section relative text-[10px] font-semibold tracking-[3px] uppercase text-accent opacity-80 px-0.5 pb-0.5 mb-0.5 border-b border-line",
             },
         },
         defaultVariants: {variant: "default"},
@@ -127,7 +127,7 @@ export const menuButton = cva(
  * No VFX hook — no @layer vfx rule targets .db-chip.
  */
 export const chip = cva(
-    "font-display text-xs font-semibold tracking-[1.5px] uppercase text-gold bg-gold-soft border border-gold-line px-3 py-[5px] rounded",
+    "font-display text-xs font-semibold tracking-[1.5px] uppercase text-accent bg-accent-soft border border-accent-line px-3 py-[5px] rounded",
     {
         variants: {
             subtle: {
@@ -197,7 +197,7 @@ export const overlay = cva(
  * No VFX hook — no @layer vfx rule targets .db-input.
  */
 export const input = cva(
-    "w-full bg-sunk border border-line text-text rounded-sm px-[14px] py-3 text-[15px] outline-none placeholder:text-faint transition-[border-color,box-shadow,background] duration-150 ease-out-db focus:border-text focus:bg-sunk focus:shadow-[0_0_0_3px_var(--gold-soft)]",
+    "w-full bg-sunk border border-line text-text rounded-sm px-[14px] py-3 text-[15px] outline-none placeholder:text-faint transition-[border-color,box-shadow,background] duration-150 ease-out-db focus:border-text focus:bg-sunk focus:shadow-[0_0_0_3px_var(--accent-soft)]",
     {
         variants: {
             mono: {
@@ -232,7 +232,7 @@ export const row = cva("flex gap-[10px] mt-4");
 export const badge = cva("font-display text-[11px] font-semibold text-dim px-[10px] py-1 border border-line rounded", {
     variants: {
         you: {
-            true: "you text-gold border-gold-line bg-gold-soft",
+            true: "you text-accent border-accent-line bg-accent-soft",
             false: "",
         },
     },

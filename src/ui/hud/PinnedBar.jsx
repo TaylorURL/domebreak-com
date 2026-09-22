@@ -9,7 +9,7 @@ export default function PinnedBar({pins, onGo, onRemove}) {
                 {pins.map((p) => (
                     <div key={p.key} className="flex items-center gap-1">
                         <button
-                            className="db-notch-sm flex-1 flex items-center gap-[7px] bg-transparent border border-transparent text-text text-left text-xs px-[5px] py-1 whitespace-nowrap overflow-hidden text-ellipsis transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                            className="db-notch-sm flex-1 flex items-center gap-[7px] bg-transparent border border-transparent text-text text-left text-xs px-[5px] py-1 whitespace-nowrap overflow-hidden text-ellipsis transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                             onClick={() => onGo(p)}
                             title="Fly To"
                             aria-label={`Fly to ${p.label}`}

@@ -161,7 +161,7 @@ export default function HoverPopups({
                                 <i className="db-led" style={{color: teamColor(hoverEnt.slot)}} aria-hidden="true" />
                                 <span className="inline-flex items-center gap-1">
                                     {hoverEnt.name}
-                                    {!!hoverEnt.cap && <Icon name="star" size={9} className="text-gold" />}
+                                    {!!hoverEnt.cap && <Icon name="star" size={9} className="text-accent" />}
                                 </span>
                             </>
                         );

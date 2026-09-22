@@ -73,7 +73,7 @@ export default function ContextMenu({x, y, title, items, onClose}) {
                             <button
                                 key={i}
                                 className={cn(
-                                    "db-notch-sm flex justify-between gap-[10px] w-full text-left px-[9px] py-2 border border-transparent bg-transparent text-text text-[13px] transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-gold-soft enabled:hover:border-gold-line enabled:hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
+                                    "db-notch-sm flex justify-between gap-[10px] w-full text-left px-[9px] py-2 border border-transparent bg-transparent text-text text-[13px] transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-accent-soft enabled:hover:border-accent-line enabled:hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
                                     it.danger &&
                                         "enabled:hover:bg-[rgba(224,87,79,0.14)] enabled:hover:border-danger enabled:hover:text-danger",
                                     it.disabled && "opacity-40",

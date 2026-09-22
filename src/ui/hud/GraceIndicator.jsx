@@ -53,13 +53,13 @@ export default function GraceIndicator({world}) {
                 <div
                     role="status"
                     aria-live="polite"
-                    className="db-notch-sm absolute bottom-4 left-[60px] z-6 flex items-center gap-[9px] h-[38px] px-[14px] border border-gold-line bg-gold-soft text-gold pointer-events-none backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
+                    className="db-notch-sm absolute bottom-4 left-[60px] z-6 flex items-center gap-[9px] h-[38px] px-[14px] border border-accent-line bg-accent-soft text-accent pointer-events-none backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                 >
                     <span className="db-led db-led-warn" aria-hidden="true" />
                     <span className="font-display uppercase tracking-[0.14em] text-[10px] font-semibold">
                         Opening Grace
                     </span>
-                    <span className="font-mono text-[13px] font-bold tabular-nums [text-shadow:var(--glow-gold)]">
+                    <span className="font-mono text-[13px] font-bold tabular-nums [text-shadow:var(--glow-accent)]">
                         {formatHms(remaining)}
                     </span>
                 </div>

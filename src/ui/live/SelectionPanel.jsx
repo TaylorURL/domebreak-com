@@ -58,7 +58,7 @@ function StanceButtons({unit, api}) {
                         key={k}
                         className={cn(
                             "db-notch-sm flex-1 py-1.5 px-2 border border-line bg-btn-bg text-dim rounded-none font-display text-[11px] font-semibold uppercase tracking-[0.1em] transition-[background-color,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text",
-                            stance === k && "bg-gold text-gold-contrast border-transparent hover:text-gold-contrast",
+                            stance === k && "bg-accent text-accent-ink border-transparent hover:text-accent-ink",
                         )}
                         aria-pressed={stance === k}
                         title={tip}
@@ -347,7 +347,7 @@ export default function SelectionPanel({
                                             className={cn(
                                                 "db-notch-sm flex-1 min-w-10 py-1.5 px-2 border border-line bg-btn-bg text-dim rounded-none font-mono text-xs transition-[background-color,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text",
                                                 (selectedUnit.patrolSize || 0) === n &&
-                                                    "bg-gold text-gold-contrast border-transparent hover:text-gold-contrast",
+                                                    "bg-accent text-accent-ink border-transparent hover:text-accent-ink",
                                             )}
                                             aria-pressed={(selectedUnit.patrolSize || 0) === n}
                                             aria-label={

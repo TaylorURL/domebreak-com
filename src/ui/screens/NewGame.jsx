@@ -32,7 +32,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
         cn(
             "flex items-center gap-2.5 px-2.5 py-2 rounded-sm border text-left text-text transition-colors duration-[var(--dur-fast)]",
             active
-                ? "border-gold-line bg-gold-soft text-gold"
+                ? "border-accent-line bg-accent-soft text-accent"
                 : "border-transparent bg-transparent hover:border-line-soft hover:bg-[rgba(255,255,255,0.045)]",
         );
     return (
@@ -78,7 +78,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {sel.name}
                             </span>
-                            <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
+                            <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-accent bg-accent text-accent-ink">
                                 You
                             </span>
                         </button>
@@ -99,7 +99,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             </span>
                             <span className="font-mono text-xs text-dim">{c.count}</span>
                             {iso === c.iso && (
-                                <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
+                                <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-accent bg-accent text-accent-ink">
                                     You
                                 </span>
                             )}

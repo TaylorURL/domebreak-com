@@ -1,0 +1,11 @@
+/* The map instruments: the selection card, the hover readouts, the cursor
+   context menu, the country popup and the war outcome card. Everything that
+   floats over the map about one thing the player pointed at.
+
+   Imported by src/index.css, which owns the tokens, the shared chrome
+   utilities and the shared keyframes these rules read. Anything added here
+   belongs inside the @layer vfx block below so it keeps sitting above
+   Tailwind's utilities. */
+
+@layer vfx {
+}

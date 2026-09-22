@@ -96,7 +96,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
 
     const seat = (n) =>
         n.slot === mySlot
-            ? {label: "You", cls: "text-gold-contrast bg-gold border-gold"}
+            ? {label: "You", cls: "text-accent-ink bg-accent border-accent"}
             : isHuman(n.slot)
               ? {label: "Player", cls: "text-[#5fa8ff] border-[#3f5a80]"}
               : {label: "AI", cls: ""};
@@ -179,7 +179,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                         return (
                             <div
                                 key={n.slot}
-                                className={cn(rowGrid, !n.alive && "opacity-50", isMe && "bg-gold-soft")}
+                                className={cn(rowGrid, !n.alive && "opacity-50", isMe && "bg-accent-soft")}
                                 role="row"
                                 aria-current={isMe ? "true" : undefined}
                             >

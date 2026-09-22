@@ -175,9 +175,9 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                 key={key}
                 className={cn(
                     "db-ucard db-notch-sm db-brackets group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform,background-color] duration-[var(--dur-fast)] ease-out-db",
-                    !lock && "hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
+                    !lock && "hover:border-accent-line hover:-translate-y-px active:scale-[0.99]",
                     placing === key
-                        ? "active border-gold bg-gold-soft"
+                        ? "active border-accent bg-accent-soft"
                         : lock
                           ? "locked db-brackets-hover opacity-[0.55] grayscale-[0.85] cursor-not-allowed border-dashed"
                           : cn("db-brackets-hover", !afford && "poor opacity-50"),
@@ -201,8 +201,8 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                     className={cn(
                         "db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db",
                         placing === key
-                            ? "border-gold-line bg-gold-soft text-gold"
-                            : !lock && "group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft",
+                            ? "border-accent-line bg-accent-soft text-accent"
+                            : !lock && "group-hover/ucard:border-accent-line group-hover/ucard:bg-accent-soft",
                     )}
                     data-kind={u.kind}
                     data-domain={u.domain || "land"}
@@ -214,7 +214,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         <b className="db-ucard-name flex-1 min-w-0 font-display font-bold text-[12.5px] whitespace-nowrap overflow-hidden text-ellipsis">
                             {unitLabel(key, me?.iso)}
                         </b>
-                        <Points value={cost} className="db-ucard-cost font-mono text-xs text-gold" />
+                        <Points value={cost} className="db-ucard-cost font-mono text-xs text-accent" />
                     </div>
                     <span className={cn("db-ucard-line text-[10.5px] leading-[1.3] text-dim", lock && "text-faint")}>
                         {line}
@@ -242,8 +242,8 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                             {u.buildTime}s
                         </span>
                         {u.kind !== "industry" && <span>−{u.upkeep}/s</span>}
-                        {qn > 0 && <span className="db-ucard-q text-gold">{qn} queued</span>}
-                        {placing === key && <span className="db-ucard-q hot text-gold-hi">Placing…</span>}
+                        {qn > 0 && <span className="db-ucard-q text-accent">{qn} queued</span>}
+                        {placing === key && <span className="db-ucard-q hot text-accent-hi">Placing…</span>}
                     </div>
                 </div>
             </button>
@@ -261,7 +261,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
             <button
                 key={key}
                 className={cn(
-                    "db-ucard db-notch-sm db-brackets db-brackets-hover group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
+                    "db-ucard db-notch-sm db-brackets db-brackets-hover group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-accent-line hover:-translate-y-px active:scale-[0.99]",
                     !afford && "poor opacity-50",
                 )}
                 onClick={(e) => {
@@ -270,7 +270,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                 aria-label={`${wh.name}, ${wh.prodCost} points, ${stock} in stock. Shift-click to queue five.`}
                 title={`${wh.name}: ${wh.desc}${fallout ? " · Contaminates ground zero with radioactive fallout." : ""}`}
             >
-                <span className="db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft">
+                <span className="db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db group-hover/ucard:border-accent-line group-hover/ucard:bg-accent-soft">
                     <UnitIcon name={WARHEAD_ICON[key]} size={30} />
                 </span>
                 <div className="db-ucard-body flex-1 min-w-0 flex flex-col gap-1">
@@ -278,7 +278,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         <b className="db-ucard-name flex-1 min-w-0 font-display font-bold text-[12.5px] whitespace-nowrap overflow-hidden text-ellipsis">
                             {wh.name}
                         </b>
-                        <Points value={wh.prodCost} className="db-ucard-cost font-mono text-xs text-gold" />
+                        <Points value={wh.prodCost} className="db-ucard-cost font-mono text-xs text-accent" />
                     </div>
                     <span className="db-ucard-line text-[10.5px] leading-[1.3] text-dim">{wh.desc}</span>
                     {users.length > 0 && (
@@ -324,7 +324,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                             <Icon name="shift" size={9} />
                             ×5
                         </span>
-                        {qn > 0 && <span className="db-ucard-q text-gold">{qn} queued</span>}
+                        {qn > 0 && <span className="db-ucard-q text-accent">{qn} queued</span>}
                     </div>
                 </div>
             </button>
@@ -335,7 +335,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         if (id === "Munitions") {
             return (
                 <section key="Munitions" className="db-arsec">
-                    <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
+                    <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-accent after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
                         Munitions <span className="font-mono text-[10px] text-faint">{WARHEAD_ORDER.length}</span>
                     </h3>
                     <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
@@ -348,7 +348,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         if (!g?.length) return null;
         return (
             <section key={id} className="db-arsec">
-                <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
+                <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-accent after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
                     {id} <span className="font-mono text-[10px] text-faint">{g.length}</span>
                 </h3>
                 <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
@@ -374,7 +374,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         <Points
                             value={Math.floor(points)}
                             size={17}
-                            className="db-prod-bank-v font-mono text-[22px] font-bold text-gold"
+                            className="db-prod-bank-v font-mono text-[22px] font-bold text-accent"
                         />
                         <span
                             className={cn(
@@ -436,7 +436,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                                 key={c.id}
                                 className={cn(
                                     "db-prod-cat flex items-center gap-[10px] py-[9px] px-[11px] border border-transparent border-l-2 rounded-none bg-transparent text-dim cursor-pointer text-left transition-[color,background-color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-sunk active:scale-[0.98]",
-                                    cat === c.id && "active text-gold bg-gold-soft border-gold-line border-l-gold",
+                                    cat === c.id && "active text-accent bg-accent-soft border-accent-line border-l-accent",
                                 )}
                                 role="tab"
                                 aria-selected={cat === c.id}
@@ -446,7 +446,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                                 <Icon
                                     name={c.icon}
                                     size={18}
-                                    className={cn("db-prod-cat-g", cat === c.id && "text-gold")}
+                                    className={cn("db-prod-cat-g", cat === c.id && "text-accent")}
                                 />
                                 <span className="db-prod-cat-n flex-1 font-display font-semibold text-[11.5px] tracking-[0.08em] uppercase">
                                     {c.name}
@@ -459,7 +459,7 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
 
                 <main className="db-prod-main db-scroll overflow-auto py-5 px-[22px] flex flex-col gap-[22px]">
                     {placing && (
-                        <div className="db-prod-placing db-notch-sm text-[11px] leading-[1.4] text-text py-2.5 px-3 border border-gold-line rounded-none bg-gold-soft">
+                        <div className="db-prod-placing db-notch-sm text-[11px] leading-[1.4] text-text py-2.5 px-3 border border-accent-line rounded-none bg-accent-soft">
                             Placing <b>{unitLabel(placing, me?.iso)}</b>, click{" "}
                             {UNITS[placing].coastal
                                 ? "your coastline"
@@ -494,25 +494,25 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
                         )}
                         {cur && (
                             <button
-                                className="db-qitem building db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 pb-3 border border-gold-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
+                                className="db-qitem building db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 pb-3 border border-accent-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
                                 onClick={() => api.cancelProd(-1)}
                                 title="Building. Click to cancel for a refund"
                             >
                                 <i
-                                    className="db-qitem-fill absolute inset-0 right-auto bg-gold-soft pointer-events-none"
+                                    className="db-qitem-fill absolute inset-0 right-auto bg-accent-soft pointer-events-none"
                                     style={{width: `${fmtPct(cur.progress)}%`}}
                                 />
                                 <UnitIcon name={icon(cur.item)} size={16} />
                                 <span className="db-qitem-name relative flex-1 min-w-0 text-[11px] whitespace-nowrap overflow-hidden text-ellipsis">
                                     {label(cur.item)}
                                 </span>
-                                <b className="db-qitem-pct relative font-mono text-[10px] text-gold">
+                                <b className="db-qitem-pct relative font-mono text-[10px] text-accent">
                                     {fmtPct(cur.progress, {suffix: true})}
                                 </b>
                                 {/* The line's own progress, read as lit ticks rather than a
                                     smooth bar so a glance can count how far along it is. */}
                                 <span className="db-seg absolute left-0 right-0 bottom-0 h-[4px] bg-sunk pointer-events-none">
-                                    <i className="block h-full bg-gold" style={{width: `${fmtPct(cur.progress)}%`}} />
+                                    <i className="block h-full bg-accent" style={{width: `${fmtPct(cur.progress)}%`}} />
                                 </span>
                             </button>
                         )}

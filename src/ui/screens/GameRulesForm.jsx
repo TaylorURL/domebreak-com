@@ -43,7 +43,7 @@ export default function GameRulesForm({mode, rules, onChange, readOnly = false, 
                 <button
                     type="button"
                     onClick={reset}
-                    className="self-start font-display text-[10px] font-semibold tracking-[2px] uppercase text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line"
+                    className="self-start font-display text-[10px] font-semibold tracking-[2px] uppercase text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-accent hover:border-accent-line"
                 >
                     Reset to Defaults
                 </button>
@@ -59,7 +59,7 @@ function RangeRow({meta, value, readOnly, onChange}) {
                 <span className="font-display uppercase tracking-[1.5px] text-[11px] font-semibold text-faint">
                     {meta.label}
                 </span>
-                <span className="font-mono text-[12px] text-gold tabular-nums">{meta.format(value)}</span>
+                <span className="font-mono text-[12px] text-accent tabular-nums">{meta.format(value)}</span>
             </span>
             <input
                 type="range"
@@ -69,7 +69,7 @@ function RangeRow({meta, value, readOnly, onChange}) {
                 value={value}
                 disabled={readOnly}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="db-range db-rules-range w-full accent-gold disabled:opacity-40 disabled:cursor-not-allowed"
+                className="db-range db-rules-range w-full accent-accent disabled:opacity-40 disabled:cursor-not-allowed"
             />
             <span className="text-[11px] leading-snug text-dim">{meta.help}</span>
         </label>
@@ -91,13 +91,13 @@ function ToggleRow({meta, value, readOnly, onChange}) {
                     onClick={() => onChange(!value)}
                     className={cn(
                         "relative w-10 h-5 rounded-full border transition-colors duration-[var(--dur-fast)] disabled:opacity-40 disabled:cursor-not-allowed",
-                        value ? "bg-gold border-gold-line" : "bg-sunk border-line",
+                        value ? "bg-accent border-accent-line" : "bg-sunk border-line",
                     )}
                 >
                     <span
                         className={cn(
                             "absolute top-[2px] w-3.5 h-3.5 rounded-full transition-[left,background] duration-150 ease-out motion-reduce:transition-none",
-                            value ? "left-[22px] bg-gold-contrast" : "left-[2px] bg-dim",
+                            value ? "left-[22px] bg-accent-ink" : "left-[2px] bg-dim",
                         )}
                     />
                 </button>

@@ -915,7 +915,7 @@ export default function LiveGame({
 
             {moving && (
                 <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-accent-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >
@@ -933,7 +933,7 @@ export default function LiveGame({
             )}
             {following && (
                 <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-accent-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >
@@ -945,7 +945,7 @@ export default function LiveGame({
             )}
             {disembarkId && (
                 <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-accent-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >

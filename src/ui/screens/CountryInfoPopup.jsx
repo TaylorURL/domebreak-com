@@ -46,7 +46,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
     const human = isHuman(n.slot);
     const seatLabel = isMe ? "You" : human ? "Player" : "AI";
-    const seatCls = isMe ? "text-gold-contrast bg-gold border-gold" : human ? "text-[#5fa8ff] border-[#3f5a80]" : "";
+    const seatCls = isMe ? "text-accent-ink bg-accent border-accent" : human ? "text-[#5fa8ff] border-[#3f5a80]" : "";
     const commander = isMe ? "You" : human ? usernameOf.get(n.slot) || "Commander" : null;
 
     const standing = isMe

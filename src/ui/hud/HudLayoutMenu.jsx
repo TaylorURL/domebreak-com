@@ -35,7 +35,7 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
                                         type="button"
                                         role="menuitemcheckbox"
                                         aria-checked={!hidden}
-                                        className="db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                        className="db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                                         onClick={() => onToggle(p.id, {hidden: !hidden})}
                                         title={hidden ? `Show ${p.label}` : `Hide ${p.label}`}
                                     >
@@ -43,14 +43,14 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
                                         {hidden ? (
                                             <Icon name="eye-off" size={14} className="flex-none text-faint" />
                                         ) : (
-                                            <Icon name="eye" size={14} className="flex-none text-gold" />
+                                            <Icon name="eye" size={14} className="flex-none text-accent" />
                                         )}
                                     </button>
                                 );
                             })}
                             <button
                                 type="button"
-                                className="db-notch-sm flex items-center gap-2 w-full mt-2 pt-[9px] px-2 py-[7px] border border-transparent border-t-hair text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                className="db-notch-sm flex items-center gap-2 w-full mt-2 pt-[9px] px-2 py-[7px] border border-transparent border-t-hair text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                                 onClick={() => onResetAll()}
                                 title="Reset all HUD panels to default"
                             >
@@ -64,8 +64,8 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
             <button
                 type="button"
                 className={cn(
-                    "db-notch-sm db-brackets relative w-9 h-9 grid place-items-center border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
-                    open && "text-gold border-gold-line",
+                    "db-notch-sm db-brackets relative w-9 h-9 grid place-items-center border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                    open && "text-accent border-accent-line",
                 )}
                 onClick={toggle}
                 aria-expanded={open}
@@ -76,7 +76,7 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
                 <Icon name="sliders" size={16} />
                 {hiddenCount > 0 && !open && (
                     <span
-                        className="db-notch-sm absolute top-0 right-0 min-w-[14px] h-[14px] px-1 grid place-items-center bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none tabular-nums"
+                        className="db-notch-sm absolute top-0 right-0 min-w-[14px] h-[14px] px-1 grid place-items-center bg-accent text-accent-ink font-mono text-[9px] font-bold leading-none tabular-nums"
                         aria-label={`${hiddenCount} hidden`}
                     >
                         {hiddenCount}

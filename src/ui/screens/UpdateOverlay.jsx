@@ -83,10 +83,10 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
             aria-modal="true"
             aria-labelledby="db-update-title"
         >
-            <div className="db-notch db-scan relative w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-gold-line bg-[rgba(18,16,8,0.96)] text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+            <div className="db-notch db-scan relative w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-accent-line bg-[rgba(18,16,8,0.96)] text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
                 <div
                     id="db-update-title"
-                    className="font-display text-gold text-[22px] font-bold tracking-[2px] uppercase text-center"
+                    className="font-display text-accent text-[22px] font-bold tracking-[2px] uppercase text-center"
                 >
                     {forced ? "Update Required" : "Update Available"}
                 </div>
@@ -111,7 +111,7 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
                         aria-valuenow={phase === "downloading" ? Math.round(percent * 100) : undefined}
                     >
                         <div
-                            className="h-full bg-gold transition-[width] duration-150 motion-reduce:transition-none"
+                            className="h-full bg-accent transition-[width] duration-150 motion-reduce:transition-none"
                             style={{width: `${phase === "downloading" ? Math.round(percent * 100) : 100}%`}}
                         />
                     </div>

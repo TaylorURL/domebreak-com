@@ -30,7 +30,7 @@
         right: 0;
         top: 0;
         height: 1px;
-        background: linear-gradient(90deg, var(--gold), var(--gold-line) 62%, transparent);
+        background: linear-gradient(90deg, var(--accent), var(--accent-line) 62%, transparent);
         pointer-events: none;
     }
 
@@ -116,17 +116,17 @@
         height: 14px;
         margin-top: -5px;
         border-radius: 50%;
-        background: var(--gold);
-        border: 1px solid var(--gold-contrast);
+        background: var(--accent);
+        border: 1px solid var(--accent-ink);
         box-shadow: 0 0 8px rgba(242, 181, 68, 0.45);
     }
 
     .db-range::-moz-range-thumb {
         width: 13px;
         height: 13px;
-        border: 1px solid var(--gold-contrast);
+        border: 1px solid var(--accent-ink);
         border-radius: 50%;
-        background: var(--gold);
+        background: var(--accent);
     }
 
     .db-range:disabled::-webkit-slider-thumb {
@@ -144,7 +144,7 @@
         display: block;
         width: 46%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
         animation: dbBootScan 1.15s ease-in-out infinite;
     }
 

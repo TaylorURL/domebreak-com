@@ -83,7 +83,7 @@ export default function ProductionBar({world, api, mySlot}) {
                     smear; the gaps are punched in the row's own surface. */}
                 {cur && (
                     <button
-                        className="db-notch-sm relative overflow-hidden flex items-center gap-[8px] w-full px-[10px] py-[8px] bg-btn-bg border border-gold-line text-text text-[12px] whitespace-nowrap cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-gold active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                        className="db-notch-sm relative overflow-hidden flex items-center gap-[8px] w-full px-[10px] py-[8px] bg-btn-bg border border-accent-line text-text text-[12px] whitespace-nowrap cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-accent active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                         style={cur.item.kind === "ammo" ? {"--flame": WARHEADS[cur.item.type].flame} : undefined}
                         role="progressbar"
                         aria-valuenow={pct}
@@ -98,7 +98,7 @@ export default function ProductionBar({world, api, mySlot}) {
                             style={{width: `${pct}%`}}
                             aria-hidden="true"
                         >
-                            <i className="db-seg [--db-seg-gap:var(--btn-bg)] block h-full w-full bg-[var(--flame,var(--gold))] opacity-[0.26]" />
+                            <i className="db-seg [--db-seg-gap:var(--btn-bg)] block h-full w-full bg-[var(--flame,var(--accent))] opacity-[0.26]" />
                         </span>
                         <UnitIcon name={prodIcon(cur.item)} size={16} className="relative z-1" />
                         <span className="relative z-1 flex-1 min-w-0 overflow-hidden text-ellipsis font-medium">
@@ -115,7 +115,7 @@ export default function ProductionBar({world, api, mySlot}) {
                         {groups.map((g) => (
                             <button
                                 key={g.key}
-                                className="db-notch-sm db-brackets group relative flex items-center gap-[6px] pl-[8px] pr-[7px] py-[6px] bg-btn-bg border border-line text-dim text-[11px] whitespace-nowrap cursor-pointer transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-danger active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                className="db-notch-sm db-brackets group relative flex items-center gap-[6px] pl-[8px] pr-[7px] py-[6px] bg-btn-bg border border-line text-dim text-[11px] whitespace-nowrap cursor-pointer transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-danger active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                                 style={g.item.kind === "ammo" ? {"--flame": WARHEADS[g.item.type].flame} : undefined}
                                 title={
                                     g.count > 1
@@ -127,7 +127,7 @@ export default function ProductionBar({world, api, mySlot}) {
                                 <UnitIcon name={prodIcon(g.item)} size={14} />
                                 <span className="max-w-[120px] overflow-hidden text-ellipsis">{label(g.item)}</span>
                                 {g.count > 1 && (
-                                    <b className="flex-none font-mono text-[10px] leading-none px-[5px] py-[2px] bg-gold-soft text-gold tabular-nums">
+                                    <b className="flex-none font-mono text-[10px] leading-none px-[5px] py-[2px] bg-accent-soft text-accent tabular-nums">
                                         x{g.count}
                                     </b>
                                 )}

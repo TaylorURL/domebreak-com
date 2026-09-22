@@ -109,7 +109,7 @@ export default function SearchingScreen({onMatched, onCancel, reduceMotion, preQ
                         <div role="status" aria-live="polite">
                             <p className="db-searching-label text-sm text-text m-0">Searching for commanders…</p>
                             <p
-                                className="db-searching-elapsed font-mono text-xl text-gold mt-2 tracking-[2px]"
+                                className="db-searching-elapsed font-mono text-xl text-accent mt-2 tracking-[2px]"
                                 aria-label={`Elapsed time ${mm} minutes ${ss} seconds`}
                             >
                                 {mm}:{ss}

@@ -36,7 +36,7 @@ function StandingGroup({icon, label, tone, verb, nations, onOpenCountry}) {
                 <button
                     key={n.slot}
                     type="button"
-                    className="grid place-items-center text-[18px] leading-none rounded-[2px] transition-transform duration-[var(--dur-fast)] ease-out-db hover:scale-110 active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--gold)]"
+                    className="grid place-items-center text-[18px] leading-none rounded-[2px] transition-transform duration-[var(--dur-fast)] ease-out-db hover:scale-110 active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--accent)]"
                     title={`${verb} ${n.name}, open dossier`}
                     aria-label={`Open ${n.name} dossier`}
                     onClick={() => onOpenCountry?.(n.slot)}

@@ -108,7 +108,7 @@ export default function LoginScreen() {
                             className={cn(
                                 "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
                                 mode === "signin"
-                                    ? "text-gold bg-gold-soft border-gold-line"
+                                    ? "text-accent bg-accent-soft border-accent-line"
                                     : "text-faint border-transparent enabled:hover:text-text",
                             )}
                         >
@@ -123,7 +123,7 @@ export default function LoginScreen() {
                             className={cn(
                                 "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
                                 mode === "signup"
-                                    ? "text-gold bg-gold-soft border-gold-line"
+                                    ? "text-accent bg-accent-soft border-accent-line"
                                     : "text-faint border-transparent enabled:hover:text-text",
                             )}
                         >

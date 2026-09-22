@@ -38,7 +38,7 @@
         left: -14px;
         right: -14px;
         height: 2px;
-        background: var(--gold);
+        background: var(--accent);
         pointer-events: none;
     }
 
@@ -77,8 +77,8 @@
 
     .db-tab.active,
     .db-tab[aria-selected="true"] {
-        color: var(--gold);
-        border-bottom-color: var(--gold);
+        color: var(--accent);
+        border-bottom-color: var(--accent);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -105,22 +105,6 @@
     .db-bracket-host:hover .db-brackets::after,
     .db-bracket-host:focus-within .db-brackets::before,
     .db-bracket-host:focus-within .db-brackets::after {
-        border-color: var(--gold);
-    }
-
-    /* The selection panel is a .db-hud-panel, so its header strip would other-
-       wise read as the shared mono micro-caps. The thing in that strip is the
-       selected unit's name, which belongs in the display face at a size a
-       glance can catch — this overrides `.db-hud-panel > header` in
-       src/index.css for that one panel, and keeps the hairline that closes the
-       strip. The doubled class is load-bearing: src/index.css is imported after
-       this file, so a single-class selector at equal specificity would lose. */
-    .db-selpanel.db-hud-panel > header {
-        font-family: var(--display);
-        font-size: 13.5px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        text-transform: none;
-        color: var(--text);
+        border-color: var(--accent);
     }
 }

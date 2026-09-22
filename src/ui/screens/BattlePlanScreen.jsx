@@ -43,7 +43,7 @@ function Toggle({on, onClick, label, hint, accent}) {
             className={cn(
                 "db-notch-sm flex items-center justify-between gap-3 w-full px-3 py-2 rounded-none border font-display text-[12px] font-semibold transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                 on
-                    ? "border-gold-line bg-gold-soft text-gold"
+                    ? "border-accent-line bg-accent-soft text-accent"
                     : "border-line bg-sunk text-dim hover:border-line-soft hover:text-text",
                 accent && on && "border-[rgba(224,87,79,0.5)] bg-[rgba(224,87,79,0.12)] text-[#ffb3bc]",
             )}
@@ -52,12 +52,12 @@ function Toggle({on, onClick, label, hint, accent}) {
             <span
                 className={cn(
                     "relative w-9 h-4 rounded-full transition-colors duration-[var(--dur-fast)] flex-none",
-                    on ? "bg-gold" : "bg-hair",
+                    on ? "bg-accent" : "bg-hair",
                 )}
             >
                 <span
                     className={cn(
-                        "absolute top-[2px] w-3 h-3 rounded-full bg-gold-contrast transition-[left] duration-[var(--dur-fast)] ease-out-db",
+                        "absolute top-[2px] w-3 h-3 rounded-full bg-accent-ink transition-[left] duration-[var(--dur-fast)] ease-out-db",
                         on ? "left-[22px]" : "left-[2px]",
                     )}
                 />
@@ -171,7 +171,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
         >
             {plans.length === 0 ? (
                 <div className="flex flex-col items-center gap-4 py-16 text-center">
-                    <Icon name="battle-plan" size={38} className="text-gold" strokeWidth={1.4} />
+                    <Icon name="battle-plan" size={38} className="text-accent" strokeWidth={1.4} />
                     <p className="text-dim text-sm max-w-[420px]">
                         Draw up a plan of attack: pick which of your platforms fire, choose what they hit, set the
                         reach, and arm it. You never have to hunt for units on the map.
@@ -230,7 +230,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                             className={cn(
                                                 "db-notch-sm px-3 py-2 rounded-none border font-display text-[11px] font-semibold uppercase tracking-[0.12em] transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                                                 active.mode === m
-                                                    ? "border-gold-line bg-gold-soft text-gold"
+                                                    ? "border-accent-line bg-accent-soft text-accent"
                                                     : "border-line bg-sunk text-dim hover:text-text",
                                             )}
                                         >
@@ -304,7 +304,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                     className={cn(
                                                         "db-notch-sm flex items-center gap-2.5 w-full px-2.5 py-2 rounded-none border text-left transition-[border-color,background] duration-[var(--dur-fast)] ease-out-db",
                                                         mine
-                                                            ? "border-gold-line bg-gold-soft"
+                                                            ? "border-accent-line bg-accent-soft"
                                                             : "border-line bg-sunk hover:border-line-soft",
                                                     )}
                                                 >
@@ -312,7 +312,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                         className={cn(
                                                             "w-4 h-4 rounded-[3px] border flex-none grid place-items-center",
                                                             mine
-                                                                ? "bg-gold border-gold text-gold-contrast"
+                                                                ? "bg-accent border-accent text-accent-ink"
                                                                 : "border-line",
                                                         )}
                                                     >
@@ -385,7 +385,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                             className={cn(
                                                                 "flex items-center gap-1.5 px-2 py-1 rounded-sm border text-[12px] font-semibold transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                                                                 on
-                                                                    ? "border-gold-line bg-gold-soft text-text"
+                                                                    ? "border-accent-line bg-accent-soft text-text"
                                                                     : "border-line bg-sunk text-dim hover:border-line-soft hover:text-text",
                                                             )}
                                                         >
@@ -447,7 +447,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                         className={cn(
                                                             "db-notch-sm flex items-center gap-2.5 w-full px-2.5 py-2 rounded-none border text-left transition-[border-color,background] duration-[var(--dur-fast)] ease-out-db",
                                                             on
-                                                                ? "border-gold-line bg-gold-soft"
+                                                                ? "border-accent-line bg-accent-soft"
                                                                 : "border-line bg-sunk hover:border-line-soft",
                                                         )}
                                                     >
@@ -455,7 +455,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                             className={cn(
                                                                 "w-4 h-4 rounded-[3px] border flex-none grid place-items-center",
                                                                 on
-                                                                    ? "bg-gold border-gold text-gold-contrast"
+                                                                    ? "bg-accent border-accent text-accent-ink"
                                                                     : "border-line",
                                                             )}
                                                         >
@@ -511,7 +511,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                         onChange={(e) =>
                                             bp.patchPlan(active.id, {engagementKm: Number(e.target.value)})
                                         }
-                                        className="w-full accent-gold cursor-pointer"
+                                        className="w-full accent-accent cursor-pointer"
                                         aria-label="Engagement range"
                                     />
                                     <p className="text-[10px] text-faint mt-1 leading-[1.4]">
@@ -604,13 +604,13 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) 
                                                   play.
                                               </p>
                                           )
-                                        : reason && <p className="text-[11px] text-gold leading-[1.4]">{reason}</p>}
+                                        : reason && <p className="text-[11px] text-accent leading-[1.4]">{reason}</p>}
                                     {/* Munitions readiness — only meaningful once a warhead-hungry plan is
                                         firing. A shortfall warns unless Auto-build is already topping it up. */}
                                     {munitions &&
                                         munitions.want > 0 &&
                                         (munitions.short > 0 ? (
-                                            <p className="text-[11px] text-gold leading-[1.4]">
+                                            <p className="text-[11px] text-accent leading-[1.4]">
                                                 Munitions: short {munitions.short} of {munitions.want} warheads
                                                 {active.autoBuild
                                                     ? ". Auto-build is topping up."

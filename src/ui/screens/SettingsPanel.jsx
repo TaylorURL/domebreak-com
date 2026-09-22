@@ -70,7 +70,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                                 aria-checked={settings.speed === s}
                                 className={cn(
                                     "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                    settings.speed === s && "active bg-gold-soft text-gold border-gold-line",
+                                    settings.speed === s && "active bg-accent-soft text-accent border-accent-line",
                                 )}
                                 onClick={() => set("speed", s)}
                             >
@@ -85,7 +85,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         <button
                             className={cn(
                                 "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                settings.globe && "active bg-gold-soft text-gold border-gold-line",
+                                settings.globe && "active bg-accent-soft text-accent border-accent-line",
                             )}
                             role="radio"
                             aria-checked={settings.globe}
@@ -96,7 +96,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         <button
                             className={cn(
                                 "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                !settings.globe && "active bg-gold-soft text-gold border-gold-line",
+                                !settings.globe && "active bg-accent-soft text-accent border-accent-line",
                             )}
                             role="radio"
                             aria-checked={!settings.globe}
@@ -114,7 +114,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                             min="0"
                             max="100"
                             aria-label="Music volume"
-                            className="db-range w-[120px] accent-gold"
+                            className="db-range w-[120px] accent-accent"
                             value={Math.round((settings.musicVol ?? 0.5) * 100)}
                             onChange={(e) => set("musicVol", +e.target.value / 100)}
                         />
@@ -129,7 +129,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                             min="0"
                             max="100"
                             aria-label="Effects volume"
-                            className="db-range w-[120px] accent-gold"
+                            className="db-range w-[120px] accent-accent"
                             value={Math.round((settings.sfxVol ?? 0.8) * 100)}
                             onChange={(e) => set("sfxVol", +e.target.value / 100)}
                         />
@@ -141,7 +141,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                     <button
                         className={cn(
                             "db-toggle w-11 h-6 rounded-full border border-line bg-sunk relative transition-colors duration-[var(--dur-fast)]",
-                            settings.reduceMotion && "on bg-gold-soft border-gold-line",
+                            settings.reduceMotion && "on bg-accent-soft border-accent-line",
                         )}
                         aria-pressed={settings.reduceMotion}
                         aria-label="Reduce motion"
@@ -150,7 +150,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         <span
                             className={cn(
                                 "absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-dim transition-[transform,background] duration-150 ease-out-db",
-                                settings.reduceMotion && "translate-x-5 bg-gold",
+                                settings.reduceMotion && "translate-x-5 bg-accent",
                             )}
                         />
                     </button>
@@ -183,7 +183,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                                     <button
                                         className={cn(
                                             "db-key db-notch-sm min-w-[92px] py-1.5 px-2.5 border border-line bg-btn-bg text-text font-mono text-xs text-center transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                            capturing === a.id && "capturing border-gold bg-gold-soft text-gold",
+                                            capturing === a.id && "capturing border-accent bg-accent-soft text-accent",
                                         )}
                                         aria-live={capturing === a.id ? "polite" : undefined}
                                         aria-busy={capturing === a.id ? "true" : undefined}

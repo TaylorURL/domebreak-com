@@ -75,7 +75,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                         <button
                             key={c.iso}
                             type="button"
-                            className="inline-flex items-center gap-1.5 font-display text-[11px] font-semibold tracking-[0.5px] text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line"
+                            className="inline-flex items-center gap-1.5 font-display text-[11px] font-semibold tracking-[0.5px] text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-accent hover:border-accent-line"
                             onClick={() => toggle(c.iso)}
                             aria-label={`Pin ${c.name}`}
                         >

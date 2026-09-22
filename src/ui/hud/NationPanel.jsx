@@ -81,7 +81,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
     // once as the word behind it.
     const pillClass = {
         secure: "text-dim border-line",
-        strained: "text-gold border-gold-line",
+        strained: "text-accent border-accent-line",
         critical: "text-red border-[rgba(224,87,79,0.5)]",
         lost: "text-faint border-line",
     };
@@ -106,7 +106,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                     <span className="text-[9px] tracking-[0.2em]">Your Command</span>
                 </div>
                 <button
-                    className="db-notch-sm w-6 h-6 grid place-items-center border border-line bg-transparent text-dim flex-none transition-[border-color,color] duration-[var(--dur-fast)] ease-out-db hover:text-gold hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                    className="db-notch-sm w-6 h-6 grid place-items-center border border-line bg-transparent text-dim flex-none transition-[border-color,color] duration-[var(--dur-fast)] ease-out-db hover:text-accent hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                     onClick={() => setCollapsed((v) => !v)}
                     title={collapsed ? "Expand" : "Collapse"}
                     aria-label={collapsed ? "Expand nation panel" : "Collapse nation panel"}
@@ -168,7 +168,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                         <Meter
                             frac={indFrac}
                             className="h-[6px] bg-line-soft [--db-seg-gap:var(--sunk)]"
-                            fillClass="bg-gold duration-[400ms]"
+                            fillClass="bg-accent duration-[400ms]"
                             ariaLabel="Industry slots used"
                         />
                     </div>
@@ -182,7 +182,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                                 <button
                                     key={c.id}
                                     className={cn(
-                                        "db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent bg-transparent text-left cursor-pointer transition-[background,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
+                                        "db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent bg-transparent text-left cursor-pointer transition-[background,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
                                         !c.alive && "opacity-55",
                                     )}
                                     onClick={() => onFocus?.(c)}
@@ -194,7 +194,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                                                 <Icon
                                                     name="star"
                                                     size={9}
-                                                    className="text-gold flex-none"
+                                                    className="text-accent flex-none"
                                                     title="Capital"
                                                 />
                                             )}

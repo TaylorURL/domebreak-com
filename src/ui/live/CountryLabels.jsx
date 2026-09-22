@@ -53,7 +53,7 @@ export default function CountryLabels({map, labels}) {
         out.push(
             <div
                 key={L.iso}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 font-display font-bold tracking-[0.5px] whitespace-nowrap [text-shadow:0_0_6px_#060708,0_0_3px_#060708,0_1px_2px_#000] ${L.mine ? "text-gold" : "text-[#f2f4f6]"}`}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 font-display font-bold tracking-[0.5px] whitespace-nowrap [text-shadow:0_0_6px_#060708,0_0_3px_#060708,0_1px_2px_#000] ${L.mine ? "text-accent" : "text-[#f2f4f6]"}`}
                 style={{left: p.x, top: p.y, fontSize: size, opacity: fade * (L.mine ? 1 : 0.85)}}
             >
                 {L.name}

@@ -11,12 +11,12 @@ import {fmtMonthYear, fmtPlaytimeHours, winRatePct} from "../lib/format.js";
 import {useDisclosure} from "../../lib/hooks/useDisclosure.js";
 
 // The commander's identity glyph: their chosen unit icon, or the first letter of
-// their username as a fallback. Gold-on-soft-gold to match the app's accent.
+// their username as a fallback. Gold-on-soft-accent to match the app's accent.
 function AvatarCircle({avatar, initial, size = 30, iconSize = 18, className = ""}) {
     return (
         <span
             className={cn(
-                "grid place-items-center rounded-full bg-gold-soft border border-gold-line text-gold font-display font-bold text-[13px] shrink-0",
+                "grid place-items-center rounded-full bg-accent-soft border border-accent-line text-accent font-display font-bold text-[13px] shrink-0",
                 className,
             )}
             style={{width: size, height: size}}
@@ -54,7 +54,7 @@ function AvatarPicker({avatar, onPick, onClose}) {
                     aria-label="No picture, showing the username initial"
                     className={cn(
                         "db-notch-sm grid place-items-center aspect-square border text-[9px] uppercase transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                        !avatar ? "border-gold-line bg-gold-soft text-gold" : "border-line bg-panel text-faint",
+                        !avatar ? "border-accent-line bg-accent-soft text-accent" : "border-line bg-panel text-faint",
                     )}
                     onClick={() => onPick(null)}
                 >
@@ -70,7 +70,7 @@ function AvatarPicker({avatar, onPick, onClose}) {
                         className={cn(
                             "db-notch-sm grid place-items-center aspect-square border transition-colors duration-[var(--dur-fast)] hover:border-blue",
                             avatar === name
-                                ? "border-gold-line bg-gold-soft text-gold"
+                                ? "border-accent-line bg-accent-soft text-accent"
                                 : "border-line bg-panel text-dim",
                         )}
                         onClick={() => onPick(name)}

@@ -21,8 +21,8 @@ export default function LayerBar({layers, onToggle}) {
                 <button
                     key={l.id}
                     className={cn(
-                        "db-notch-sm relative flex flex-col items-center justify-start gap-1 w-[68px] px-[5px] py-[7px] text-center font-display text-[9px] tracking-[0.06em] border border-transparent text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-hair hover:text-text hover:border-line active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
-                        layers[l.id] && "bg-gold-soft border-gold-line text-gold",
+                        "db-notch-sm relative flex flex-col items-center justify-start gap-1 w-[68px] px-[5px] py-[7px] text-center font-display text-[9px] tracking-[0.06em] border border-transparent text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-hair hover:text-text hover:border-line active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                        layers[l.id] && "bg-accent-soft border-accent-line text-accent",
                     )}
                     aria-pressed={!!layers[l.id]}
                     aria-label={`${l.label} layer, ${layers[l.id] ? "on" : "off"}`}

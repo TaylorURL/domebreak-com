@@ -83,7 +83,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                 <div className="db-hud-panel relative w-[300px] flex flex-col overflow-hidden [--db-tab:82px] motion-safe:animate-[dbPop_120ms_var(--ease-out)]">
                     <button
                         type="button"
-                        className="flex items-center gap-[7px] w-full px-[10px] h-[26px] font-mono text-[10px] tracking-[0.22em] uppercase text-dim border-b border-hair transition-colors duration-[var(--dur-fast)] hover:text-gold"
+                        className="flex items-center gap-[7px] w-full px-[10px] h-[26px] font-mono text-[10px] tracking-[0.22em] uppercase text-dim border-b border-hair transition-colors duration-[var(--dur-fast)] hover:text-accent"
                         onClick={() => setOpen(false)}
                         title="Collapse chat"
                         aria-expanded="true"
@@ -114,7 +114,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                                 </span>
                                 <span
                                     className="font-semibold mr-[6px]"
-                                    style={{color: m.slot === mySlot ? "var(--gold)" : colorForSlot(m.slot)}}
+                                    style={{color: m.slot === mySlot ? "var(--accent)" : colorForSlot(m.slot)}}
                                 >
                                     {m.slot === mySlot ? "You" : m.username || "Commander"}
                                 </span>
@@ -149,7 +149,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                             aria-label="Chat message"
                             autoComplete="off"
                             spellCheck="false"
-                            className="flex-1 min-w-0 bg-transparent px-[10px] py-[7px] text-[12px] text-text placeholder:text-faint outline-none transition-colors duration-[var(--dur-fast)] focus:bg-sunk focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                            className="flex-1 min-w-0 bg-transparent px-[10px] py-[7px] text-[12px] text-text placeholder:text-faint outline-none transition-colors duration-[var(--dur-fast)] focus:bg-sunk focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                         />
                     </form>
                 </div>
@@ -157,8 +157,8 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                 <button
                     type="button"
                     className={cn(
-                        "db-notch-sm db-brackets relative flex items-center gap-2 h-9 px-3 border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
-                        unread > 0 && "text-text border-gold-line",
+                        "db-notch-sm db-brackets relative flex items-center gap-2 h-9 px-3 border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                        unread > 0 && "text-text border-accent-line",
                     )}
                     onClick={() => setOpen(true)}
                     title="Open chat (Enter)"
@@ -169,7 +169,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                     <span className="font-display uppercase tracking-[0.14em] text-[10px] font-semibold">Comms</span>
                     {unread > 0 && (
                         <span
-                            className="db-notch-sm min-w-[15px] h-[15px] px-1 grid place-items-center bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none tabular-nums"
+                            className="db-notch-sm min-w-[15px] h-[15px] px-1 grid place-items-center bg-accent text-accent-ink font-mono text-[9px] font-bold leading-none tabular-nums"
                             aria-label={`${unread} unread`}
                         >
                             {unread}

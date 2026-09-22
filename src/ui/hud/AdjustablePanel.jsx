@@ -213,7 +213,7 @@ export default function AdjustablePanel({
     const eff = live ? {...panel, ...live} : panel;
     const visible = open || !!live;
     const gripBtn =
-        "db-notch-sm w-6 h-6 grid place-items-center text-dim transition-[color,background] duration-[var(--dur-fast)] ease-out-db hover:text-gold hover:bg-gold-soft active:scale-[0.94] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]";
+        "db-notch-sm w-6 h-6 grid place-items-center text-dim transition-[color,background] duration-[var(--dur-fast)] ease-out-db hover:text-accent hover:bg-accent-soft active:scale-[0.94] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]";
     const alignJustify =
         tabAlign === "center" ? "justify-center" : tabAlign === "right" ? "justify-end" : "justify-start";
     // Drop below the panel only when there's no room above; the small offset (pt/pb)
@@ -293,7 +293,7 @@ export default function AdjustablePanel({
                                 max={HUD_OPACITY_MAX}
                                 step={0.05}
                                 value={eff.opacity}
-                                className="w-14 h-[3px] accent-gold cursor-pointer"
+                                className="w-14 h-[3px] accent-accent cursor-pointer"
                                 aria-label={`${label} opacity`}
                                 onInput={(e) => setLive({opacity: Number(e.target.value)})}
                                 onChange={(e) => commit({opacity: Number(e.target.value)})}
@@ -320,7 +320,7 @@ export default function AdjustablePanel({
                         <div className="w-px self-stretch bg-line-soft mx-0.5" aria-hidden="true" />
                         <button
                             type="button"
-                            className={cn(gripBtn, "text-gold hover:text-gold")}
+                            className={cn(gripBtn, "text-accent hover:text-accent")}
                             onClick={() => setOpen(false)}
                             title="Done"
                             aria-label={`Done adjusting ${label}`}
@@ -332,7 +332,7 @@ export default function AdjustablePanel({
                     <button
                         type="button"
                         className={cn(
-                            "db-notch-sm pointer-events-auto flex items-center gap-1 h-[19px] px-[7px] bg-panel-2/95 border border-line backdrop-blur-[10px] text-dim transition-[opacity,color,border-color] duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
+                            "db-notch-sm pointer-events-auto flex items-center gap-1 h-[19px] px-[7px] bg-panel-2/95 border border-line backdrop-blur-[10px] text-dim transition-[opacity,color,border-color] duration-[var(--dur-fast)] hover:text-accent hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
                             hovered ? "opacity-100" : "opacity-0 focus-visible:opacity-100",
                         )}
                         onClick={openToolbar}
