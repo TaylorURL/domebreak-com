@@ -5,7 +5,7 @@ import Footer from "./Footer.jsx";
 import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, panel} from "../lib/variants.js";
 
 // Shown in place of the download page when the visitor isn't signed in. The game
 // is free, so the installers are gated only by a free account — this card sells
@@ -28,13 +28,18 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
 
                     <div className="relative mx-auto max-w-[1100px] px-5 sm:px-8">
                         <Reveal>
-                            <div className="relative db-tick db-seam mx-auto max-w-[560px] overflow-hidden rounded-lg border border-line bg-panel-solid p-8 text-center shadow sm:p-10">
-                                <span className="mx-auto flex h-14 w-14 items-center justify-center rounded border border-gold-line bg-gold-soft text-gold">
+                            <div
+                                className={cn(
+                                    panel({frame: "glass"}),
+                                    "db-seam mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                                )}
+                            >
+                                <span className="db-notch-sm mx-auto flex h-14 w-14 items-center justify-center border border-gold-line bg-gold-soft text-gold">
                                     {checking ? <Loader2 size={26} className="animate-spin" /> : <UserPlus size={26} />}
                                 </span>
 
                                 <div className="mt-6 flex justify-center">
-                                    <Eyebrow>{checking ? "Checking Access" : "Free · Account required"}</Eyebrow>
+                                    <Eyebrow framed>{checking ? "Checking Access" : "Free · Account required"}</Eyebrow>
                                 </div>
 
                                 <h1 className="mt-4 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-bold uppercase leading-[1.05] text-text">
@@ -43,11 +48,11 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                 <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">
                                     {checking
                                         ? "Confirming your session before the download links load."
-                                        : "DomeBreak is free to play — create an account to download the installers for macOS and Windows. It's the same login you'll use in the game."}
+                                        : "DomeBreak is free to play. Create an account to download the installers for macOS and Windows. It's the same login you'll use in the game."}
                                 </p>
 
                                 {!checking && (
-                                    <div className="mt-8 flex flex-col items-center gap-3">
+                                    <div className="mt-8 flex flex-col items-center gap-3 border-t border-hair pt-6">
                                         <button
                                             onClick={() => onSignIn("signup")}
                                             className={cn(button({variant: "primary", size: "lg"}), "w-full max-w-xs")}
@@ -57,7 +62,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                         </button>
                                         <button
                                             onClick={() => onSignIn("signin")}
-                                            className="inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-sm border border-line bg-transparent px-5 py-3 font-display text-[12.5px] font-semibold uppercase tracking-[1.4px] text-dim transition-colors duration-150 ease-out-db hover:border-blue hover:text-text"
+                                            className={cn(button({variant: "default", size: "md"}), "w-full max-w-xs")}
                                         >
                                             <LogIn size={15} />
                                             <span>Sign In</span>

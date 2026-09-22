@@ -28,7 +28,7 @@ export default function TermsPage(props) {
                     body: [
                         "One person, one account. Keep your password to yourself: anything done through " +
                             "your account is treated as done by you.",
-                        "Give an address you can actually receive mail at — it is the only route back into " +
+                        "Give an address you can actually receive mail at. It is the only route back into " +
                             "an account you have lost the password to.",
                     ],
                 },

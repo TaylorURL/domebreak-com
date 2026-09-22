@@ -28,7 +28,8 @@ const STATS = [
 export default function StatBand() {
     return (
         <section className="relative border-y border-line bg-bg-2/60">
-            <div className="relative overflow-hidden border-b border-hair py-3">
+            <div className="relative flex items-center overflow-hidden border-b border-hair py-3">
+                <span aria-hidden className="db-led db-led-sensor ml-5 mr-1 sm:ml-8" />
                 <div className="db-marquee flex w-max whitespace-nowrap will-change-transform">
                     {[0, 1].map((k) => (
                         <div key={k} className="flex shrink-0" aria-hidden={k === 1}>
@@ -49,7 +50,7 @@ export default function StatBand() {
                 {STATS.map((s, i) => (
                     <Reveal key={s.label} delay={0.08 * i} className="bg-bg px-6 py-10 sm:px-8">
                         <div className="font-mono text-[clamp(2rem,4.5vw,3.2rem)] font-semibold leading-none text-text tabular-nums">
-                            <CountUp value={s.value} format={s.format} />
+                            <CountUp value={s.value} format={s.format} meter />
                         </div>
                         <div className="mt-3 font-display text-[10.5px] font-semibold uppercase tracking-[0.22em] text-faint">
                             {s.label}

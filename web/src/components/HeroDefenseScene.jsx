@@ -39,14 +39,18 @@ const LNG_AMP = 2.2,
 const LAT_AMP = 0.9,
     LAT_PERIOD_S = 38;
 
-const DEFENDER = "#7fd4ff"; // US units + cities highlight + defense rings
-const RADAR_TINT = "#4fd3e0"; // radar coverage rings
+// MapLibre paint properties take a literal colour, not a custom property, so
+// the scene carries the theme's own values rather than reading them. Each one
+// is the token it is named after: sensor cyan for everything the defence grid
+// owns, the neutral line and text greys for the rest of the world.
+const DEFENDER = "#7fd4ff"; // --cyan: US units, cities highlight, defense rings
+const RADAR_TINT = "#7fd4ff"; // --cyan: radar coverage, dashed and dimmer than the rings
 const US_TINT = "#2f7fb0"; // homeland wash — light enough that terrain reads through
-const US_LINE = "#63c6ff"; // glowing national border
-const NEUTRAL_TINT = "#6a6f78"; // nations colors.json has no entry for
-const NEUTRAL_LINE = "#3a3f47"; // their borders, one step down from the wash
-const BACKDROP_CITY = "#6a707a"; // every other nation's cities, unlit
-const CITY_HALO = "#ffffff"; // ring around the homeland's own cities
+const US_LINE = "#7fd4ff"; // --cyan: glowing national border
+const NEUTRAL_TINT = "#6b7580"; // --faint: nations colors.json has no entry for
+const NEUTRAL_LINE = "#2b3037"; // --line: their borders, one step down from the wash
+const BACKDROP_CITY = "#6b7580"; // --faint: every other nation's cities, unlit
+const CITY_HALO = "#f2f4f6"; // --text: ring around the homeland's own cities
 // National tint opacity: the US washed a touch stronger than its neighbors. Flat
 // values (not a zoom ramp) because the hero holds a fixed close zoom — and MapLibre
 // forbids a zoom expression nested inside the per-nation match anyway.

@@ -16,6 +16,7 @@ import {cn} from "../lib/cn.js";
 import {clamp} from "../../lib/math.js";
 import AmmoBar from "./AmmoBar.jsx";
 import Icon from "../common/Icon.jsx";
+import Meter from "../common/Meter.jsx";
 import PopTrend from "../common/PopTrend.jsx";
 import {iconButton, popoverCard} from "../lib/variants.js";
 import {vitColor} from "../lib/status.js";
@@ -47,12 +48,62 @@ function stabSub(stab) {
     return "Unrest";
 }
 
+// A vitality percentage → the lamp that annotates it. The healthy band is a
+// steady green, the middle band a steady amber, and only the bottom band blinks:
+// a light that flashes has to mean something is happening right now.
+function vitLed(pct) {
+    if (pct == null) return null;
+    if (pct >= 67) return "db-led-ok";
+    if (pct >= 34) return "db-led-warn";
+    return "db-led-live";
+}
+
 // The command screens the top bar switches between, in display order.
 const NAV = [
     {id: "production", label: "Production", icon: "production"},
     {id: "battle", label: "Battle Plan", icon: "battle-plan"},
     {id: "diplomacy", label: "Diplomacy", icon: "diplomacy"},
 ];
+
+// The instrument type of the telemetry row, shared by every cell so the labels,
+// figures and sub-lines line up across the bar however wide it runs.
+const KICKER = "font-mono text-[9px] uppercase tracking-[0.16em] text-faint leading-[13px]";
+const FIGURE = "font-mono text-[13px] font-semibold tabular-nums leading-[17px]";
+const SUBLINE = "font-mono text-[9.5px] text-dim leading-[13px]";
+
+// A hairline between two telemetry cells. Fixed height rather than self-stretch,
+// so the rule reads as an instrument divider instead of a panel edge.
+function Divider() {
+    return <div className="w-px h-[34px] self-center bg-line-soft" aria-hidden="true" />;
+}
+
+// One right-aligned telemetry cell: a mono kicker with an optional status lamp,
+// the figure beneath it, and then either a sub-line or a segmented meter. The
+// two cells that open a breakdown on hover pass their own handlers and popover
+// through `children`, so every cell is still built the same way.
+function Cell({label, led, value, valueColor, sub, meter, meterColor, className, children, ...rest}) {
+    return (
+        <div className={cn("relative flex flex-col items-end leading-none", className)} {...rest}>
+            <span className={cn(KICKER, "flex items-center gap-[6px]")}>
+                {label}
+                {led && <span className={cn("db-led", led)} aria-hidden="true" />}
+            </span>
+            <span className={cn(FIGURE, "mt-[2px]")} style={valueColor ? {color: valueColor} : undefined}>
+                {value}
+            </span>
+            {sub}
+            {meter != null && (
+                <Meter
+                    frac={meter}
+                    className="mt-[3px] h-[4px] w-[74px] bg-line-soft [--db-seg-gap:var(--sunk)]"
+                    color={meterColor}
+                    ariaLabel={`${label} level`}
+                />
+            )}
+            {children}
+        </div>
+    );
+}
 
 export default function LiveHud({
     world,
@@ -91,19 +142,39 @@ export default function LiveHud({
     // the gutters rather than disappear. transform doesn't affect layout, so scrollWidth
     // stays the true natural width (no measure->scale feedback), and a negative margin
     // pulls the ticker up to the bar's scaled bottom so there's no gap.
+    //
+    // The box is `w-max min-w-full`, which is what makes the scale land: the bar
+    // takes the width its rows actually need and never less than the lane, so the
+    // scale is measured against the same box the panel frame is drawn on and the
+    // whole bar, arsenal and commander badge included, lands inside the lane. A
+    // `w-full` box pins the frame to the lane while the rows spill past its right
+    // edge, and at 1280 that spill runs 16px wider than the page.
     const FIT_FLOOR = 0.82;
     const barRef = useRef(null);
     const [fit, setFit] = useState({scale: 1, mb: 0});
+    // The last geometry a measure acted on. The margin the fit writes lands on a
+    // box the observer watches, so every commit re-enters the callback; without
+    // this the re-entry re-measures, re-commits and React tears the render down
+    // with "Maximum update depth exceeded". Nothing has actually moved on that
+    // second pass, so identical geometry returns before touching state and the
+    // loop has nowhere to go. Height is part of the key because the margin is
+    // derived from it; a panel's own margin never changes its own height, so
+    // keying on it cannot reopen the loop.
+    const lastRef = useRef({avail: 0, natural: 0, h: 0});
     useLayoutEffect(() => {
         const measure = () => {
             const bar = barRef.current,
                 lane = bar?.parentElement;
             if (!bar || !lane) return;
             const avail = lane.clientWidth,
-                natural = bar.scrollWidth;
+                natural = bar.scrollWidth,
+                h = bar.offsetHeight;
             if (!avail || !natural) return;
+            const seen = lastRef.current;
+            if (seen.avail === avail && seen.natural === natural && seen.h === h) return;
+            lastRef.current = {avail, natural, h};
             const scale = clamp(avail / natural, FIT_FLOOR, 1);
-            const mb = scale < 1 ? -Math.round(bar.offsetHeight * (1 - scale)) : 0;
+            const mb = scale < 1 ? -Math.round(h * (1 - scale)) : 0;
             setFit((p) => (Math.abs(p.scale - scale) < 0.004 && p.mb === mb ? p : {scale, mb}));
         };
         measure();
@@ -115,6 +186,11 @@ export default function LiveHud({
         return () => ro.disconnect();
     }, []);
 
+    // A speed / nav control that is currently the active one. The amber wash plus
+    // its hairline is the whole active vocabulary in the HUD: the solid amber fill
+    // stays reserved for the one primary action a modal offers.
+    const ACTIVE = "bg-gold-soft border-gold-line text-gold";
+
     return (
         <div
             ref={barRef}
@@ -123,185 +199,237 @@ export default function LiveHud({
                     ? {transform: `scale(${fit.scale})`, transformOrigin: "top center", marginBottom: fit.mb}
                     : undefined
             }
-            className="db-livehud relative z-5 w-full flex flex-col bg-panel-2 border border-line rounded shadow-[var(--shadow),inset_0_1px_0_var(--hair)] backdrop-blur-[14px] pointer-events-auto motion-safe:animate-[dbDropInY_300ms_var(--ease-drawer)]"
+            className="db-livehud relative z-5 w-max min-w-full flex flex-col pointer-events-auto motion-safe:animate-[dbDropInY_300ms_var(--ease-drawer)]"
         >
+            {/* The panel frame rides on its own layer rather than on the bar. A
+                clip-path cuts every descendant along with the box, and three things
+                open downward out of this bar — the two telemetry breakdowns and the
+                commander badge's menu — so a clip on the bar itself would take them
+                with it. This layer paints the identical surface, hairline, notch,
+                tab and scanlines, and has nothing inside it to lose. */}
+            <i
+                className="db-hud-panel absolute inset-0 -z-10 pointer-events-none [--db-tab:135px]"
+                aria-hidden="true"
+            />
             {/* Row 1 — telemetry: date + points on the left, national stats pushed right. */}
-            <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap px-4 py-[7px] border-b border-hair">
-                <div className="flex flex-col items-start leading-[1.15]">
-                    <span className="text-[9px] tracking-[1px] uppercase text-faint">Date</span>
-                    <span className="text-sm font-bold font-mono">{date}</span>
-                    <span className="text-[10px] text-dim">{time}</span>
+            <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap px-4 py-2 border-b border-hair">
+                <div className="flex flex-col items-start leading-none">
+                    <span className={KICKER}>Date</span>
+                    <span className={cn(FIGURE, "mt-[2px]")}>{date}</span>
+                    <span className={SUBLINE}>{time}</span>
                 </div>
-                <div className="w-px self-stretch bg-line-soft" />
-                <div className="flex flex-col items-start leading-[1.05]">
-                    <span className="font-display text-2xl text-gold font-bold [text-shadow:var(--glow-gold)]">
+                <Divider />
+                <div className="flex flex-col items-start leading-none">
+                    <span className="font-display text-[26px] font-bold text-gold leading-[28px] [text-shadow:var(--glow-gold)]">
                         {Math.floor(myNation?.points ?? 0)}
                     </span>
-                    <span
-                        className={cn(
-                            "font-mono text-[10px] text-dim uppercase tracking-[1px]",
-                            net < 0 && "text-danger",
-                        )}
-                    >
-                        PTS · {fmtNet(net)}/s
-                    </span>
+                    <span className={cn(KICKER, "mt-[1px]", net < 0 && "text-danger")}>PTS · {fmtNet(net)}/s</span>
                     {net < 0 && (
-                        <span className="mt-[3px] font-mono text-[9px] font-bold tracking-[1.5px] leading-none text-red border border-red rounded-sm px-[5px] py-[2px]">
+                        <span className="db-notch-sm mt-[3px] flex items-center gap-[5px] font-mono text-[9px] font-bold tracking-[0.12em] leading-none text-red bg-[rgba(224,87,79,0.12)] border border-danger px-[6px] py-[3px]">
+                            <span className="db-led db-led-live" aria-hidden="true" />
                             DEFICIT
                         </span>
                     )}
                 </div>
                 <div className="flex flex-nowrap items-center gap-3 ml-auto">
-                    <div className="w-px self-stretch bg-line-soft" />
-                    <div className="flex flex-col items-end leading-[1.15]">
-                        <span className="text-[9px] tracking-[1px] uppercase text-faint">GDP</span>
-                        <span className="text-sm font-bold font-mono">{fmtGdp(gdp)}</span>
-                        <span className="text-[10px] text-dim">Industry +{ind.toFixed(1)}/s</span>
-                    </div>
-                    <div className="w-px self-stretch bg-line-soft" />
-                    <div className="flex flex-col items-end leading-[1.15]">
-                        <span className="text-[9px] tracking-[1px] uppercase text-faint">Population</span>
-                        <span className="text-sm font-bold font-mono">{fmtPop(pop)}</span>
-                        {popRate > 0 && pop > 0 ? (
-                            <PopTrend rate={popRate} base={pop} label className="text-[10px]" />
-                        ) : (
-                            <span className="text-[10px] text-dim">Living citizens</span>
-                        )}
-                    </div>
-                    <div className="w-px self-stretch bg-line-soft" />
-                    <div className="flex flex-col items-end leading-[1.15]">
-                        <span className="text-[9px] tracking-[1px] uppercase text-faint">Powers</span>
-                        <span className="text-sm font-bold font-mono" aria-live="polite">
-                            {rivals}
-                        </span>
-                        <span className="text-[10px] text-dim">Still in the war</span>
-                    </div>
+                    <Divider />
+                    <Cell
+                        label="GDP"
+                        value={fmtGdp(gdp)}
+                        sub={<span className={SUBLINE}>Industry +{ind.toFixed(1)}/s</span>}
+                    />
+                    <Divider />
+                    <Cell
+                        label="Population"
+                        led={popRate > 0 && pop > 0 ? "db-led-ok" : null}
+                        value={fmtPop(pop)}
+                        sub={
+                            popRate > 0 && pop > 0 ? (
+                                <PopTrend rate={popRate} base={pop} label className="text-[9.5px]" />
+                            ) : (
+                                <span className={SUBLINE}>Living citizens</span>
+                            )
+                        }
+                    />
+                    <Divider />
+                    <Cell
+                        label="Powers"
+                        value={
+                            <span aria-live="polite" className="tabular-nums">
+                                {rivals}
+                            </span>
+                        }
+                        sub={<span className={SUBLINE}>Still in the war</span>}
+                    />
                     {lead && (
                         <>
-                            <div className="w-px self-stretch bg-line-soft" />
-                            <div
-                                className="relative flex flex-col items-end leading-[1.15] cursor-help"
+                            <Divider />
+                            <Cell
+                                label="Leadership"
+                                led={vitLed(lead.pct)}
+                                value={`${lead.pct}%`}
+                                valueColor={vitColor(lead.pct)}
+                                sub={
+                                    <span className={SUBLINE} aria-live="polite">
+                                        {leadSub(lead)}
+                                    </span>
+                                }
+                                meter={lead.pct / 100}
+                                meterColor={vitColor(lead.pct)}
+                                className="cursor-help"
                                 onMouseEnter={() => setInfo("lead")}
                                 onMouseLeave={() => setInfo(null)}
                             >
-                                <span className="text-[9px] tracking-[1px] uppercase text-faint">Leadership</span>
-                                <span className="text-sm font-bold font-mono" style={{color: vitColor(lead.pct)}}>
-                                    {lead.pct}%
-                                </span>
-                                <span className="text-[10px] text-dim" aria-live="polite">
-                                    {leadSub(lead)}
-                                </span>
                                 {info === "lead" && (
                                     <div
                                         className={cn(
                                             popoverCard(),
-                                            "absolute top-full right-0 mt-2 w-[240px] py-[11px] px-[13px] z-20 text-left cursor-default",
+                                            "absolute top-full right-0 mt-2 w-[240px] z-20 text-left cursor-default [--db-tab:96px]",
                                         )}
                                     >
-                                        <div className="flex items-center justify-between font-display font-bold text-[13px]">
+                                        <header className="flex items-center justify-between gap-3 px-[13px] py-[7px]">
                                             <span>National Leadership</span>
-                                            <span className="font-mono" style={{color: vitColor(lead.pct)}}>
+                                            <span
+                                                className="font-mono text-[11px] tracking-normal tabular-nums"
+                                                style={{color: vitColor(lead.pct)}}
+                                            >
                                                 {lead.pct}%
                                             </span>
-                                        </div>
-                                        <div className="mt-1 text-[10px] uppercase tracking-[0.5px] text-faint">
-                                            {lead.total - lead.lost} of {lead.total} tokens intact
-                                        </div>
-                                        <div className="mt-[9px] flex flex-col gap-[5px] text-[11.5px]">
-                                            {lead.atCities.map((c) => (
-                                                <div key={c.name} className="flex items-center justify-between gap-3">
-                                                    <span className="text-dim truncate flex items-center gap-1">
-                                                        {!!c.cap && <Icon name="star" size={9} className="text-gold" />}
-                                                        {c.name}
-                                                    </span>
-                                                    <b className="font-mono text-text flex-none">{c.n}</b>
-                                                </div>
-                                            ))}
-                                            {lead.sheltered > 0 && (
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="text-dim">In bunker</span>
-                                                    <b className="font-mono text-text flex-none">{lead.sheltered}</b>
-                                                </div>
-                                            )}
-                                            {lead.inTransit > 0 && (
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="text-dim">In transit (evac)</span>
-                                                    <b className="font-mono text-text flex-none">{lead.inTransit}</b>
-                                                </div>
-                                            )}
-                                            {lead.lost > 0 && (
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="text-danger">Killed</span>
-                                                    <b className="font-mono text-danger flex-none">{lead.lost}</b>
-                                                </div>
-                                            )}
-                                            {!lead.atCities.length &&
-                                                !lead.sheltered &&
-                                                !lead.inTransit &&
-                                                !lead.lost && <div className="text-faint">No leaders located.</div>}
+                                        </header>
+                                        <div className="px-[13px] pt-[9px] pb-[11px]">
+                                            <div className={KICKER}>
+                                                {lead.total - lead.lost} of {lead.total} tokens intact
+                                            </div>
+                                            <div className="mt-[9px] flex flex-col gap-[5px] text-[11.5px]">
+                                                {lead.atCities.map((c) => (
+                                                    <div
+                                                        key={c.name}
+                                                        className="flex items-center justify-between gap-3"
+                                                    >
+                                                        <span className="text-dim truncate flex items-center gap-1">
+                                                            {!!c.cap && (
+                                                                <Icon name="star" size={9} className="text-gold" />
+                                                            )}
+                                                            {c.name}
+                                                        </span>
+                                                        <b className="font-mono text-text tabular-nums flex-none">
+                                                            {c.n}
+                                                        </b>
+                                                    </div>
+                                                ))}
+                                                {lead.sheltered > 0 && (
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="text-dim">In bunker</span>
+                                                        <b className="font-mono text-text tabular-nums flex-none">
+                                                            {lead.sheltered}
+                                                        </b>
+                                                    </div>
+                                                )}
+                                                {lead.inTransit > 0 && (
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="text-dim">In transit (evac)</span>
+                                                        <b className="font-mono text-text tabular-nums flex-none">
+                                                            {lead.inTransit}
+                                                        </b>
+                                                    </div>
+                                                )}
+                                                {lead.lost > 0 && (
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="text-danger">Killed</span>
+                                                        <b className="font-mono text-danger tabular-nums flex-none">
+                                                            {lead.lost}
+                                                        </b>
+                                                    </div>
+                                                )}
+                                                {!lead.atCities.length &&
+                                                    !lead.sheltered &&
+                                                    !lead.inTransit &&
+                                                    !lead.lost && <div className="text-faint">No leaders located.</div>}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
-                            </div>
+                            </Cell>
                         </>
                     )}
                     {stab && (
                         <>
-                            <div className="w-px self-stretch bg-line-soft" />
-                            <div
-                                className="relative flex flex-col items-end leading-[1.15] cursor-help"
+                            <Divider />
+                            <Cell
+                                label="Stability"
+                                led={vitLed(stab.pct)}
+                                value={`${stab.pct}%`}
+                                valueColor={vitColor(stab.pct)}
+                                sub={
+                                    <span className={SUBLINE} aria-live="polite">
+                                        {stabSub(stab)}
+                                    </span>
+                                }
+                                meter={stab.pct / 100}
+                                meterColor={vitColor(stab.pct)}
+                                className="cursor-help"
                                 onMouseEnter={() => setInfo("stab")}
                                 onMouseLeave={() => setInfo(null)}
                             >
-                                <span className="text-[9px] tracking-[1px] uppercase text-faint">Stability</span>
-                                <span className="text-sm font-bold font-mono" style={{color: vitColor(stab.pct)}}>
-                                    {stab.pct}%
-                                </span>
-                                <span className="text-[10px] text-dim" aria-live="polite">
-                                    {stabSub(stab)}
-                                </span>
                                 {info === "stab" && stabInfo && (
                                     <div
                                         className={cn(
                                             popoverCard(),
-                                            "absolute top-full right-0 mt-2 w-[250px] py-[11px] px-[13px] z-20 text-left cursor-default",
+                                            "absolute top-full right-0 mt-2 w-[250px] z-20 text-left cursor-default [--db-tab:92px]",
                                         )}
                                     >
-                                        <div className="flex items-center justify-between font-display font-bold text-[13px]">
+                                        <header className="flex items-center justify-between gap-3 px-[13px] py-[7px]">
                                             <span>National Stability</span>
-                                            <span className="font-mono" style={{color: vitColor(stabInfo.pct)}}>
+                                            <span
+                                                className="font-mono text-[11px] tracking-normal tabular-nums"
+                                                style={{color: vitColor(stabInfo.pct)}}
+                                            >
                                                 {stabInfo.pct}%
                                             </span>
-                                        </div>
-                                        <div className="mt-[9px] flex flex-col gap-[6px] text-[11.5px]">
-                                            {stabInfo.factors.length ? (
-                                                stabInfo.factors.map((f) => (
-                                                    <div key={f.key} className="flex items-start justify-between gap-3">
-                                                        <span className="flex flex-col">
-                                                            <span className="text-dim">{f.label}</span>
-                                                            <span className="text-faint text-[10px]">{f.detail}</span>
-                                                        </span>
-                                                        <b className="font-mono text-danger flex-none">
-                                                            &minus;{f.penalty}
-                                                        </b>
+                                        </header>
+                                        <div className="px-[13px] pt-[9px] pb-[11px]">
+                                            <div className="flex flex-col gap-[6px] text-[11.5px]">
+                                                {stabInfo.factors.length ? (
+                                                    stabInfo.factors.map((f) => (
+                                                        <div
+                                                            key={f.key}
+                                                            className="flex items-start justify-between gap-3"
+                                                        >
+                                                            <span className="flex flex-col">
+                                                                <span className="text-dim">{f.label}</span>
+                                                                <span className="text-faint text-[10px]">
+                                                                    {f.detail}
+                                                                </span>
+                                                            </span>
+                                                            <b className="font-mono text-danger tabular-nums flex-none">
+                                                                &minus;{f.penalty}
+                                                            </b>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-faint">
+                                                        No active pressures. Holding steady.
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="text-faint">No active pressures — holding steady.</div>
-                                            )}
-                                        </div>
-                                        <div className="mt-[9px] pt-[8px] border-t border-hair flex items-center justify-between text-[10px] uppercase tracking-[0.5px] text-faint">
-                                            <span>Trending toward</span>
-                                            <b
-                                                className="font-mono text-[11.5px]"
-                                                style={{color: vitColor(stabInfo.target)}}
+                                                )}
+                                            </div>
+                                            <div
+                                                className={cn(
+                                                    KICKER,
+                                                    "mt-[9px] pt-[8px] border-t border-hair flex items-center justify-between",
+                                                )}
                                             >
-                                                {stabInfo.target}%
-                                            </b>
+                                                <span>Trending toward</span>
+                                                <b
+                                                    className="font-mono text-[11.5px] tabular-nums"
+                                                    style={{color: vitColor(stabInfo.target)}}
+                                                >
+                                                    {stabInfo.target}%
+                                                </b>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
-                            </div>
+                            </Cell>
                         </>
                     )}
                 </div>
@@ -310,16 +438,17 @@ export default function LiveHud({
             <div className="flex flex-nowrap items-center gap-3 whitespace-nowrap px-3 py-[7px]">
                 {online ? (
                     <div
-                        className="flex items-center pr-3 border-r border-line-soft"
-                        title="Online matches run locked at 1× — no pausing"
+                        className="flex items-center gap-[7px] pr-3 border-r border-line-soft"
+                        title="Online matches run locked at 1× and cannot be paused"
                         aria-live="polite"
                     >
+                        <span className="db-led db-led-live" aria-hidden="true" />
                         {world.startsIn > 0 ? (
                             <span className="font-mono text-xs font-bold text-gold [text-shadow:var(--glow-gold)] tabular-nums">
                                 Battle begins in {world.startsIn}s
                             </span>
                         ) : (
-                            <span className="font-mono text-[11px] font-semibold tracking-[1px] uppercase text-dim">
+                            <span className="font-mono text-[10px] font-semibold tracking-[0.16em] uppercase text-dim">
                                 Live · 1×
                             </span>
                         )}
@@ -327,13 +456,12 @@ export default function LiveHud({
                 ) : (
                     <div
                         className="flex gap-[3px] pr-[3px] border-r border-line-soft"
-                        title={`${keyLabel(K.pause)} — Pause · ${keyLabel(K.speedDown)}/${keyLabel(K.speedUp)} — Speed · 1–5 — Speed Level`}
+                        title={`${keyLabel(K.pause)}: Pause · ${keyLabel(K.speedDown)}/${keyLabel(K.speedUp)}: Speed · 1-5: Speed Level`}
                     >
                         <button
                             className={cn(
-                                "min-w-[30px] h-7 border border-transparent bg-transparent text-dim rounded text-xs font-mono font-semibold hover:text-text hover:bg-[rgba(160,168,178,0.1)]",
-                                world.paused &&
-                                    "bg-linear-to-b from-gold-hi to-gold text-gold-contrast border-transparent shadow-[var(--glow-gold)]",
+                                "min-w-[30px] h-7 rounded-sm border border-transparent bg-transparent text-dim font-mono text-xs font-semibold transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-hair active:scale-[0.98]",
+                                world.paused && ACTIVE,
                             )}
                             onClick={api.pause}
                             aria-pressed={world.paused}
@@ -343,7 +471,7 @@ export default function LiveHud({
                             <Icon name="pause" size={13} className="mx-auto" />
                         </button>
                         <button
-                            className="min-w-[30px] h-7 border border-transparent bg-transparent text-dim rounded text-xs font-mono font-semibold hover:text-text hover:bg-[rgba(160,168,178,0.1)]"
+                            className="min-w-[30px] h-7 rounded-sm border border-transparent bg-transparent text-dim font-mono text-xs font-semibold transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-hair active:scale-[0.98]"
                             onClick={api.play}
                             aria-pressed={!world.paused}
                             aria-label="Resume"
@@ -355,10 +483,8 @@ export default function LiveHud({
                             <button
                                 key={s}
                                 className={cn(
-                                    "min-w-[30px] h-7 border border-transparent bg-transparent text-dim rounded text-xs font-mono font-semibold hover:text-text hover:bg-[rgba(160,168,178,0.1)]",
-                                    !world.paused &&
-                                        world.speed === s &&
-                                        "bg-linear-to-b from-gold-hi to-gold text-gold-contrast border-transparent shadow-[var(--glow-gold)]",
+                                    "min-w-[30px] h-7 rounded-sm border border-transparent bg-transparent text-dim font-mono text-xs font-semibold tabular-nums transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-hair active:scale-[0.98]",
+                                    !world.paused && world.speed === s && ACTIVE,
                                 )}
                                 aria-pressed={!world.paused && world.speed === s}
                                 onClick={() => api.setSpeed(s)}
@@ -375,14 +501,15 @@ export default function LiveHud({
                             <button
                                 key={n.id}
                                 className={cn(
-                                    "flex items-center gap-[6px] px-[11px] py-[6px] font-display font-semibold text-[10.5px] tracking-[0.6px] uppercase whitespace-nowrap text-dim bg-sunk border border-line rounded-sm cursor-pointer transition-[border-color,color,background] duration-150 ease-out-db hover:text-text hover:border-gold-line",
-                                    panel === n.id && "text-gold-contrast bg-gold border-gold",
+                                    "db-brackets relative flex items-center gap-[6px] px-[11px] py-[7px] font-display font-semibold text-[10.5px] tracking-[0.12em] uppercase whitespace-nowrap text-dim bg-sunk border border-line rounded-sm cursor-pointer transition-[border-color,color,background] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-gold-line active:scale-[0.98]",
+                                    panel === n.id && ACTIVE,
                                 )}
                                 onClick={() => onPanel(n.id)}
                                 title={K[n.id] ? `${n.label} (${keyLabel(K[n.id])})` : n.label}
                                 aria-label={n.label}
+                                aria-pressed={panel === n.id}
                             >
-                                <Icon name={n.icon} size={15} />
+                                <Icon name={n.icon} size={14} />
                                 <span>{n.label}</span>
                             </button>
                         ))}

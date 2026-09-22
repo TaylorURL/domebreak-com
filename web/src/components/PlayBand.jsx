@@ -3,9 +3,11 @@ import Reveal from "./Reveal.jsx";
 import GameIcon from "./GameIcon.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow} from "./Primitives.jsx";
+import {button, panel} from "../lib/variants.js";
+import {cn} from "../lib/cn.js";
 
 const PERKS = [
-    "Free to play — no purchase, no paywall",
+    "Free to play, with no purchase and no paywall",
     "Online multiplayer on the real world map",
     "Cross-play across macOS and Windows",
 ];
@@ -37,7 +39,7 @@ export default function PlayBand({onSignIn}) {
                         <ul className="mt-8 flex flex-col gap-3 border-t border-hair pt-6">
                             {PERKS.map((p) => (
                                 <li key={p} className="flex items-start gap-3 text-[14px] leading-relaxed text-dim">
-                                    <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-gold-line bg-gold-soft text-gold">
+                                    <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft text-gold">
                                         <Check size={11} strokeWidth={3} />
                                     </span>
                                     {p}
@@ -53,7 +55,7 @@ export default function PlayBand({onSignIn}) {
                                 Desktop · macOS + Windows
                             </span>
                             <span className="flex items-center gap-2">
-                                <span className="h-[6px] w-[6px] rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
+                                <span className="db-led db-led-live" />
                                 Servers live
                             </span>
                         </div>
@@ -61,7 +63,7 @@ export default function PlayBand({onSignIn}) {
                 </div>
 
                 <Reveal delay={0.1}>
-                    <div className="relative db-tick db-seam overflow-hidden rounded-lg border border-line bg-panel-solid p-7 shadow sm:p-8">
+                    <div className={cn(panel(), "db-seam p-7 sm:p-8")}>
                         <div className="flex items-center gap-2 text-gold">
                             <GameIcon name="dome" size={22} />
                             <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
@@ -72,8 +74,8 @@ export default function PlayBand({onSignIn}) {
                             Create your free account
                         </h3>
                         <p className="mt-2 text-[13px] leading-relaxed text-dim">
-                            One account for the game and this site — sign up in seconds, then grab the installer for
-                            your platform.
+                            One account for the game and this site. Sign up in seconds, then grab the installer for your
+                            platform.
                         </p>
 
                         <div className="mt-7 flex flex-col gap-3">
@@ -81,7 +83,7 @@ export default function PlayBand({onSignIn}) {
                             <button
                                 type="button"
                                 onClick={() => onSignIn?.("signup")}
-                                className="w-full rounded-sm border border-line bg-transparent px-5 py-3 font-display text-[11.5px] font-semibold uppercase tracking-[1.4px] text-dim transition-colors duration-150 ease-out-db hover:border-blue hover:text-text"
+                                className={cn(button({variant: "default"}), "w-full")}
                             >
                                 Create a Free Account
                             </button>

@@ -3,33 +3,41 @@ import Flag from "../common/Flag.jsx";
 import Icon from "../common/Icon.jsx";
 import {cn} from "../lib/cn.js";
 
-// One labelled standing readout — a header chip (icon + tone-colored label) and
-// the ringed flags of every nation in that standing. Shared by the war and ally
+// One labelled standing readout — a header chip (icon + lamp + tone-colored label)
+// and the ringed flags of every nation in that standing. Shared by the war and ally
 // groups so both read identically apart from color and copy. Each flag is a
 // button that opens the country's dossier (declare war / manage alliance).
+//
+// The war group's hairline pulses to danger and back for as long as a war is open,
+// which is the one standing alarm in the HUD; the ally group sits quiet.
 function StandingGroup({icon, label, tone, verb, nations, onOpenCountry}) {
-    const ring = tone === "war" ? "shadow-[0_0_0_1.5px_var(--red)]" : "shadow-[0_0_0_1.5px_var(--ally)]";
+    const war = tone === "war";
+    const ring = war ? "shadow-[0_0_0_1.5px_var(--red)]" : "shadow-[0_0_0_1.5px_var(--ally)]";
     return (
         <div
-            className="flex flex-row flex-wrap items-center justify-end gap-[7px] max-w-[440px] rounded-lg bg-panel border border-line px-[10px] py-[6px] shadow backdrop-blur-[12px]"
+            className={cn(
+                "db-hud-panel relative flex flex-row flex-wrap items-center justify-end gap-[7px] max-w-[440px] px-[10px] py-[7px] [--db-tab:0px]",
+                war && "db-war-pulse",
+            )}
             role="group"
-            aria-label={`${label} — ${nations.length} ${nations.length === 1 ? "nation" : "nations"}`}
+            aria-label={`${label}, ${nations.length} ${nations.length === 1 ? "nation" : "nations"}`}
         >
             <span
                 className={cn(
-                    "flex items-center gap-[5px] pr-[8px] border-r border-line-soft",
-                    tone === "war" ? "text-red" : "text-[color:var(--ally)]",
+                    "flex items-center gap-[6px] pr-[8px] border-r border-line-soft",
+                    war ? "text-red" : "text-[color:var(--ally)]",
                 )}
             >
                 <Icon name={icon} size={14} />
-                <span className="font-mono text-[9px] font-semibold tracking-[1.2px] uppercase">{label}</span>
+                <span className="db-led" style={{color: war ? "var(--red)" : "var(--ally)"}} aria-hidden="true" />
+                <span className="font-mono text-[9px] font-semibold tracking-[0.2em] uppercase">{label}</span>
             </span>
             {nations.map((n) => (
                 <button
                     key={n.slot}
                     type="button"
-                    className="grid place-items-center text-[18px] leading-none rounded-[2px] transition-transform duration-100 ease-out-db hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--gold)]"
-                    title={`${verb} ${n.name} — open dossier`}
+                    className="grid place-items-center text-[18px] leading-none rounded-[2px] transition-transform duration-[var(--dur-fast)] ease-out-db hover:scale-110 active:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--gold)]"
+                    title={`${verb} ${n.name}, open dossier`}
                     aria-label={`Open ${n.name} dossier`}
                     onClick={() => onOpenCountry?.(n.slot)}
                 >

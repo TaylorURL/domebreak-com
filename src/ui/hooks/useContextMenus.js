@@ -221,7 +221,7 @@ export function useContextMenus({
                         setMoving(null);
                         setPlacing(null);
                         setSelUnit(u.id);
-                        flash("Landing — click a coastal point in your territory.", "info");
+                        flash("Landing: click a coastal point in your territory.", "info");
                     },
                 });
         }

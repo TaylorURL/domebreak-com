@@ -27,8 +27,9 @@ export default function Manifesto() {
                 </div>
                 <Reveal delay={0.3}>
                     <p className="mx-auto mt-10 max-w-2xl text-[clamp(1rem,1.4vw,1.15rem)] leading-relaxed text-dim">
-                        You run a nation in real time — its economy, its defenses, its arsenal — while rival powers do
-                        the same. There is no script. There is only the world, the clock, and the dome you can hold.
+                        You run a nation in real time: its economy, its defenses, its arsenal. Rival powers do the same.
+                        Nothing is scripted, so all you have to work with is the world, the clock, and the dome you can
+                        hold.
                     </p>
                 </Reveal>
             </div>

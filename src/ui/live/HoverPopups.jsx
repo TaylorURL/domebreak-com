@@ -158,10 +158,7 @@ export default function HoverPopups({
                             ]);
                         header = (
                             <>
-                                <span
-                                    className="w-2.5 h-2.5 rounded-full flex-none"
-                                    style={{background: teamColor(hoverEnt.slot)}}
-                                />
+                                <i className="db-led" style={{color: teamColor(hoverEnt.slot)}} aria-hidden="true" />
                                 <span className="inline-flex items-center gap-1">
                                     {hoverEnt.name}
                                     {!!hoverEnt.cap && <Icon name="star" size={9} className="text-gold" />}
@@ -200,20 +197,21 @@ function NeutralReadout({x, y, header, wiped}) {
     const top = Math.min(Math.max(60, y - 14), window.innerHeight - 170);
     return (
         <div
-            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] py-[11px] px-[13px] pb-3")}
-            style={{left, top}}
+            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] pt-0 px-[13px] pb-3")}
+            style={{left, top, "--db-tab": "86px"}}
             aria-hidden="true"
         >
-            <div className="flex items-center gap-2 font-display font-bold text-[13.5px] tracking-[0.2px]">
+            <div className="flex items-center gap-2 -mx-[13px] px-[13px] py-[9px] border-b border-hair font-display font-bold text-[13.5px] tracking-[0.02em]">
                 {header}
             </div>
-            <div className="mt-[10px] inline-flex items-center gap-[6px] px-[8px] py-[3px] rounded-full border border-line-soft text-[10px] tracking-[0.8px] uppercase text-dim">
+            <div className="db-notch-sm mt-[11px] inline-flex items-center gap-[7px] px-[8px] py-[3px] rounded-none border border-line-soft font-mono text-[9px] tracking-[0.18em] uppercase text-dim">
+                <i className="db-led text-faint shadow-none" aria-hidden="true" />
                 <span>{wiped ? "Wiped Out" : "Neutral Territory"}</span>
             </div>
             <p className="mt-[9px] text-[11.5px] leading-[1.45] text-dim">
                 {wiped
-                    ? "Beaten below the surrender line and knocked out of the war — its remnant land now lies open."
-                    : "Sitting the war out — neutral from first shot to last."}
+                    ? "Beaten below the surrender line and knocked out of the war. Its remnant land now lies open."
+                    : "Sitting the war out, neutral from first shot to last."}
             </p>
         </div>
     );

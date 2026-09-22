@@ -17,8 +17,8 @@ export default function PrivacyPage(props) {
                     heading: "What is collected",
                     body: [
                         "An account holds the email address you sign up with and the display name you " +
-                            "choose. Signing in is handled by Supabase Auth, which stores a password hash — " +
-                            "the password itself is never held in a readable form and is never visible here.",
+                            "choose. Signing in is handled by Supabase Auth, which stores a password hash. The " +
+                            "password itself is never held in a readable form and is never visible here.",
                         "Playing online stores what a match needs to run and to be rejoined: the lobby you " +
                             "are seated in, the nation you took, and the state of the match while it lasts. " +
                             "Finished matches keep a result row so standings survive a restart.",
@@ -44,7 +44,7 @@ export default function PrivacyPage(props) {
                             "progress. Each of those sees only what it needs to do that job.",
                         "Browser errors on this site are reported to a private collector so faults get " +
                             "fixed. A report carries the error, the page it happened on, and the browser " +
-                            "string — never the contents of a form or anything identifying you.",
+                            "string. It never carries the contents of a form or anything identifying you.",
                         "Nothing is shared with anybody else except where the law requires it.",
                     ],
                 },

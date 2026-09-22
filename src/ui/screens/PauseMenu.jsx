@@ -1,5 +1,5 @@
 import {useModal} from "../hooks/useModal.js";
-import {card, menuButton, overlay} from "../lib/variants.js";
+import {card, menuButton, menuTitle, overlay} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 
 export default function PauseMenu({onResume, onSave, onLoad, onSettings, onQuit, over}) {
@@ -19,11 +19,10 @@ export default function PauseMenu({onResume, onSave, onLoad, onSettings, onQuit,
                 aria-modal="true"
                 aria-labelledby="db-pausemenu-title"
             >
-                <div
-                    className="text-[26px] tracking-[3px] mb-4 font-bold uppercase m-0 text-dim"
-                    id="db-pausemenu-title"
-                >
-                    {over ? "Game Over" : "Paused"}
+                <div className="db-card-head justify-center">
+                    <div className={menuTitle({sm: true})} id="db-pausemenu-title">
+                        {over ? "Game Over" : "Paused"}
+                    </div>
                 </div>
                 <div className="flex flex-col gap-2.5 w-full mx-auto">
                     {!over && (
@@ -48,8 +47,7 @@ export default function PauseMenu({onResume, onSave, onLoad, onSettings, onQuit,
                 </div>
                 {!over && (
                     <div className="mt-3.5 font-mono text-[11px] text-dim tracking-[0.02em]">
-                        E — Production · R — Diplomacy · Space — Pause · ? — Controls · Esc — Menu · Rebind all in
-                        Settings
+                        E: Production · R: Diplomacy · Space: Pause · ?: Controls · Esc: Menu · Rebind all in Settings
                     </div>
                 )}
             </div>

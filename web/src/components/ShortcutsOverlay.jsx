@@ -3,6 +3,8 @@ import {AnimatePresence, motion, useReducedMotion} from "motion/react";
 import {X} from "lucide-react";
 import {SHORTCUTS} from "../lib/nav.js";
 import {Eyebrow} from "./Primitives.jsx";
+import {cn} from "../lib/cn.js";
+import {panel} from "../lib/variants.js";
 
 const EXTRA = [
     {hint: "S", label: "Sign In / Account"},
@@ -12,7 +14,7 @@ const EXTRA = [
 
 function Kbd({children}) {
     return (
-        <kbd className="inline-flex min-w-[26px] items-center justify-center rounded-sm border border-line bg-sunk px-2 py-1 font-mono text-[11px] font-semibold uppercase text-text">
+        <kbd className="db-notch-sm inline-flex min-w-[28px] items-center justify-center border border-line bg-sunk px-2 py-1 font-mono text-[11px] font-semibold uppercase text-text">
             {children}
         </kbd>
     );
@@ -46,24 +48,28 @@ export default function ShortcutsOverlay({open, onClose}) {
                         animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(8px) scale(0.98)"}}
                         transition={{duration: 0.2, ease: [0.23, 1, 0.32, 1]}}
-                        className="relative db-tick db-seam w-[min(400px,94vw)] rounded-lg border border-line bg-panel-solid p-7 shadow"
+                        className={cn(panel({frame: "glass"}), "db-seam w-[min(520px,94vw)] p-[26px]")}
                     >
                         <button
                             onClick={onClose}
                             aria-label="Close"
-                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-sm border border-line text-dim transition-[color,border-color,transform] duration-150 ease-out-db hover:border-blue hover:text-text active:scale-95"
+                            className="db-notch-sm absolute right-[18px] top-[18px] flex h-[34px] w-[34px] items-center justify-center border border-line text-dim transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue hover:text-text active:scale-95"
                         >
                             <X size={15} />
                         </button>
-                        <Eyebrow>Command</Eyebrow>
-                        <h2 className="mt-4 font-display text-[20px] font-bold uppercase tracking-[0.04em] text-text">
-                            Keyboard shortcuts
-                        </h2>
-                        <div className="mt-6 space-y-1">
+
+                        <header className="border-b border-hair pb-5">
+                            <Eyebrow>Command</Eyebrow>
+                            <h2 className="mt-4 font-display text-[28px] font-semibold uppercase leading-[32px] tracking-[0.04em] text-text">
+                                Keyboard shortcuts
+                            </h2>
+                        </header>
+
+                        <div className="mt-2">
                             {[...SHORTCUTS, ...EXTRA].map((s) => (
                                 <div
                                     key={s.hint}
-                                    className="flex items-center justify-between border-t border-hair py-3 first:border-t-0"
+                                    className="flex items-center justify-between gap-4 border-t border-hair py-3 first:border-t-0"
                                 >
                                     <span className="text-[13.5px] text-dim">{s.label}</span>
                                     <Kbd>{s.hint}</Kbd>

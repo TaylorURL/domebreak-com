@@ -18,49 +18,54 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
     return (
         <div className="absolute bottom-4 left-4 z-6 pointer-events-auto">
             {open && (
-                <div
-                    className="absolute bottom-full left-0 mb-2 w-[224px] bg-panel-2 border border-line rounded-lg shadow backdrop-blur-[14px] p-2 motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
-                    role="menu"
-                    aria-label="HUD layout"
-                >
-                    <div className="px-1.5 py-1 text-[9.5px] tracking-[1.2px] uppercase text-faint">HUD Panels</div>
-                    {panels.map((p) => {
-                        const hidden = !!layout[p.id]?.hidden;
-                        return (
-                            <button
-                                key={p.id}
-                                type="button"
-                                role="menuitemcheckbox"
-                                aria-checked={!hidden}
-                                className="flex items-center justify-between gap-2 w-full px-2 py-[7px] rounded-sm text-left text-[12px] text-dim hover:bg-hair hover:text-text transition-colors"
-                                onClick={() => onToggle(p.id, {hidden: !hidden})}
-                                title={hidden ? `Show ${p.label}` : `Hide ${p.label}`}
-                            >
-                                <span className={cn("truncate", hidden && "text-faint")}>{p.label}</span>
-                                {hidden ? (
-                                    <Icon name="eye-off" size={14} className="flex-none text-faint" />
-                                ) : (
-                                    <Icon name="eye" size={14} className="flex-none text-gold" />
-                                )}
-                            </button>
-                        );
-                    })}
-                    <button
-                        type="button"
-                        className="flex items-center gap-2 w-full mt-1 px-2 py-[7px] rounded-sm text-left text-[12px] text-dim border-t border-hair hover:bg-hair hover:text-text transition-colors"
-                        onClick={() => onResetAll()}
-                        title="Reset all HUD panels to default"
+                /* The panel is clipped to its notch, so the lift comes off this wrapper. */
+                <div className="db-hud-lift absolute bottom-full left-0 mb-2">
+                    <div
+                        className="db-hud-panel db-hud-solid relative w-[224px] [--db-tab:88px] motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
+                        role="menu"
+                        aria-label="HUD layout"
                     >
-                        <Icon name="reset" size={13} className="flex-none" />
-                        Reset Layout
-                    </button>
+                        <header className="flex items-center px-3 h-[26px]">HUD Panels</header>
+                        <div className="p-2">
+                            {panels.map((p) => {
+                                const hidden = !!layout[p.id]?.hidden;
+                                return (
+                                    <button
+                                        key={p.id}
+                                        type="button"
+                                        role="menuitemcheckbox"
+                                        aria-checked={!hidden}
+                                        className="db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                        onClick={() => onToggle(p.id, {hidden: !hidden})}
+                                        title={hidden ? `Show ${p.label}` : `Hide ${p.label}`}
+                                    >
+                                        <span className={cn("truncate", hidden && "text-faint")}>{p.label}</span>
+                                        {hidden ? (
+                                            <Icon name="eye-off" size={14} className="flex-none text-faint" />
+                                        ) : (
+                                            <Icon name="eye" size={14} className="flex-none text-gold" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                type="button"
+                                className="db-notch-sm flex items-center gap-2 w-full mt-2 pt-[9px] px-2 py-[7px] border border-transparent border-t-hair text-left text-[12px] text-dim transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line hover:text-gold focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
+                                onClick={() => onResetAll()}
+                                title="Reset all HUD panels to default"
+                            >
+                                <Icon name="reset" size={13} className="flex-none" />
+                                Reset Layout
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
             <button
                 type="button"
                 className={cn(
-                    "relative w-9 h-9 grid place-items-center rounded border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-150 ease-out-db hover:text-text hover:border-blue",
-                    open && "text-text border-blue",
+                    "db-notch-sm db-brackets relative w-9 h-9 grid place-items-center border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-blue active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
+                    open && "text-gold border-gold-line",
                 )}
                 onClick={toggle}
                 aria-expanded={open}
@@ -71,7 +76,7 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
                 <Icon name="sliders" size={16} />
                 {hiddenCount > 0 && !open && (
                     <span
-                        className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 grid place-items-center rounded-full bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none"
+                        className="db-notch-sm absolute top-0 right-0 min-w-[14px] h-[14px] px-1 grid place-items-center bg-gold text-gold-contrast font-mono text-[9px] font-bold leading-none tabular-nums"
                         aria-label={`${hiddenCount} hidden`}
                     >
                         {hiddenCount}

@@ -2,6 +2,7 @@ import {useEffect, useId, useRef, useState} from "react";
 import {AnimatePresence, motion, useReducedMotion} from "motion/react";
 import {ChevronDown} from "lucide-react";
 import {cn} from "../lib/cn.js";
+import {panel} from "../lib/variants.js";
 import NavMenuItem from "./NavMenuItem.jsx";
 
 const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
@@ -87,14 +88,21 @@ export default function NavDropdown({label, items}) {
                 aria-expanded={open}
                 aria-controls={id}
                 className={cn(
-                    "inline-flex items-center gap-2 px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-150 cursor-pointer",
-                    open ? "text-text" : "text-dim hover:text-text",
+                    "relative inline-flex items-center gap-2 px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-[var(--dur-fast)] ease-out-db cursor-pointer",
+                    // Open is an active state, so it takes the accent and the
+                    // 2px rule the tab strips use; resting labels stay dim.
+                    open
+                        ? "text-gold after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-gold after:content-['']"
+                        : "text-dim hover:text-text",
                 )}
             >
                 {label}
                 <ChevronDown
                     size={13}
-                    className={cn("text-faint transition-transform duration-200", open && "rotate-180 text-dim")}
+                    className={cn(
+                        "text-faint transition-transform duration-[var(--dur)]",
+                        open && "rotate-180 text-gold",
+                    )}
                 />
             </button>
 
@@ -109,7 +117,10 @@ export default function NavDropdown({label, items}) {
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         transition={{duration: 0.16, ease: [0.23, 1, 0.32, 1]}}
                         style={{transformOrigin: "top left"}}
-                        className="db-seam absolute left-0 top-[calc(100%+12px)] w-[300px] overflow-hidden rounded-lg border border-line bg-panel-2 p-2 shadow backdrop-blur-[14px]"
+                        className={cn(
+                            panel({frame: "glass"}),
+                            "db-seam absolute left-0 top-[calc(100%+12px)] w-[300px] p-2",
+                        )}
                     >
                         {items.map((it) => (
                             <NavMenuItem key={it.label} item={it} onDone={() => setOpen(false)} />

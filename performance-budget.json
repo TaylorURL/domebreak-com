@@ -1,10 +1,10 @@
 {
-  "recorded": "2026-08-29 07:12:00Z",
+  "recorded": "2026-09-22 05:20:00Z",
   "url": "https://domebreak.com",
   "measured_from": "web/dist",
-  "javascript_kb": 2005.4,
-  "css_kb": 137.1,
-  "images_kb": 1689.9,
-  "chunks": 9,
-  "note": "Measured over web/dist, which is what domebreak.com serves. perf-pass.py budget --write resolves the build directory from the git root and finds the Electron game's dist/ instead, so it recorded zeroes for a site it never read; these are the real weights of the same build the after capture was taken on."
+  "javascript_kb": 2020.5,
+  "css_kb": 138.4,
+  "images_kb": 2125.8,
+  "chunks": 15,
+  "note": "Measured over web/dist, which is what domebreak.com serves; perf-pass.py budget --write resolves the build directory from the git root and finds the Electron game's dist/ instead, so the figures are taken by hand off the same build a capture is read from. CSS covers both the emitted stylesheets and the one the prerender inlines into index.html. The three Chakra Petch latin weights in web/dist/fonts add 36 KB, self-hosted so the page fetches no font from another origin."
 }

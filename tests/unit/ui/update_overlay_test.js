@@ -23,7 +23,7 @@ describe("UpdateOverlay", () => {
         globalThis.window = {dbLocal: {}, dbUpdater: {start: async () => {}, onProgress: () => () => {}}};
         const html = render();
         expect(html).toContain("Update Now");
-        expect(html).toContain("or download the update manually");
+        expect(html).toContain("Or download the update manually");
         expect(html).toContain("https://domebreak.com/#/download");
         expect(html).toContain("Not Now");
         expect(html).not.toContain("Get the Update");

@@ -16,14 +16,14 @@ export default function HoverReadout({x, y, clampBottom, header, rows, footer}) 
     const top = clamp(y - 14, 60, window.innerHeight - clampBottom);
     return (
         <div
-            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] py-[11px] px-[13px] pb-3")}
-            style={{left, top}}
+            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] pt-0 px-[13px] pb-3")}
+            style={{left, top, "--db-tab": "86px"}}
             aria-hidden="true"
         >
-            <div className="flex items-center gap-2 font-display font-bold text-[13.5px] tracking-[0.2px]">
+            <div className="flex items-center gap-2 -mx-[13px] px-[13px] py-[9px] border-b border-hair font-display font-bold text-[13.5px] tracking-[0.02em]">
                 {header}
             </div>
-            <StatGrid rows={rows} className="mt-[10px]" />
+            <StatGrid rows={rows} className="mt-[11px]" />
             {footer}
         </div>
     );

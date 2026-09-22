@@ -130,6 +130,14 @@ export default function App() {
     const reduceMotion =
         settings.reduceMotion ||
         (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    // The CSS-driven sprites stand down on `prefers-reduced-motion`, which the
+    // in-game toggle cannot reach. Mirroring the resolved preference onto the
+    // document root gives those rules a second gate the setting can flip.
+    useEffect(() => {
+        const root = document.documentElement;
+        if (reduceMotion) root.dataset.reduceMotion = "true";
+        else delete root.dataset.reduceMotion;
+    }, [reduceMotion]);
     // Resolved control bindings (saved overrides filled in with defaults). Memoized
     // by settings.keys so it stays referentially stable across game-tick re-renders,
     // and LiveGame's key listeners only re-subscribe when a binding actually changes.

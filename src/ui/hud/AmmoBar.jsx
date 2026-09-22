@@ -8,19 +8,23 @@ import {cn} from "../lib/cn.js";
 export default function AmmoBar({nation}) {
     if (!nation) return null;
     return (
-        <div className="flex items-center gap-3 h-[38px] px-[13px] rounded border border-line bg-panel backdrop-blur-[8px]">
+        <div
+            className="db-notch-sm relative flex items-center gap-3 h-[38px] px-[13px] border border-line bg-sunk"
+            role="group"
+            aria-label="Warhead stockpile"
+        >
             {WARHEAD_ORDER.map((t) => {
                 const n = nation.ammo?.[t] ?? 0;
                 return (
                     <span
                         key={t}
-                        className={cn("flex items-center gap-[5px] cursor-default", n === 0 && "opacity-40")}
+                        className={cn("flex items-center gap-[5px] cursor-default", n === 0 && "opacity-35")}
                         role="img"
                         aria-label={`${WARHEADS[t].name} warheads: ${n}`}
                         title={`${WARHEADS[t].name} warheads in stockpile: ${n}`}
                     >
                         <UnitIcon name={WARHEAD_ICON[t]} color={WARHEADS[t].flame} size={13} />
-                        <b className="text-text text-[12.5px] tabular-nums" aria-hidden="true">
+                        <b className="font-mono text-text text-[12px] font-semibold tabular-nums" aria-hidden="true">
                             {n}
                         </b>
                     </span>

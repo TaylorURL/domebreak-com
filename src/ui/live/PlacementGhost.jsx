@@ -6,13 +6,17 @@
 // as placement lag. LiveGame drives it imperatively through the ref: update() on
 // each (rAF-coalesced) mousemove, clear() when placement ends.
 //
-// The paint below is a verbatim copy of the selection-ring layers in MapLayers
-// (the "ranges" source) so a being-placed unit's ring reads identically to a
-// selected one; only its own source keeps it off LiveGame's render path.
+// The ring is a dashed accent boundary turning slowly on its own axis, with a
+// second dashed ring inside it and a bracketed crosshair mark on the exact point
+// under the cursor, so the reach being previewed and the spot being committed to
+// read as two different pieces of information. Validity is carried in the colour:
+// the accent when the spot takes the unit, danger when it does not.
 import {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
-import {Layer, Source} from "react-map-gl/maplibre";
+import {Layer, Marker, Source} from "react-map-gl/maplibre";
 import {COAST_KM, radarRangeOf, UNITS} from "../../game/engine.js";
 import {circle, geoCircle, GEODESIC_MAX_KM} from "../../game/geo/geo.js";
+import {prefersReducedMotion} from "../../lib/raf.js";
+import {loadSettings} from "../../game/platform/settings.js";
 
 // Every ghost update regenerates the ring polygon and pushes it through the
 // GeoJSON source (worker re-tessellation + buffer upload), so the refresh is
@@ -24,12 +28,61 @@ const GHOST_MS = 33;
 // size (to 360) — smoothness a translucent aiming aid doesn't need at the price
 // of per-mousemove tessellation, exactly for the big radar-range previews.
 const GHOST_MAX_STEPS = 112;
+// One turn of the range ring every twenty seconds. Slow enough that it reads as
+// a scope holding station rather than a spinner, fast enough that the dashes are
+// visibly travelling while the cursor is still.
+const GHOST_TURNS_PER_S = 0.05;
+// Rotation refresh. The ring only re-tessellates this often, which is the same
+// budget a moving cursor already spends on it.
+const SPIN_MS = 50;
+// Inner ring, as a fraction of the reach being previewed.
+const GHOST_INNER_FRAC = 0.45;
+// Accent for a spot that takes the unit, danger for one that does not. Literal
+// hex rather than the tokens: these go into MapLibre paint expressions, which
+// are evaluated in the map's own worker and never see a CSS variable.
+const GHOST_OK = "#f2b544";
+const GHOST_BAD = "#e0574f";
 
 // Match the coverage-ring behavior in useLiveLayers: a true geodesic cap on the
 // globe, the Mercator disc on the flat map (and for rings too wide to read as a
 // cap), so the being-placed ring looks the same as a selected unit's ring.
 const coverageRing = (globe, lng, lat, km, steps, innerKm = 0) =>
     (globe && km <= GEODESIC_MAX_KM ? geoCircle : circle)(lng, lat, km, steps, innerKm, GHOST_MAX_STEPS);
+
+// Turn a ring's boundary about its own centre by `turn` (0..1 of a revolution).
+//
+// Neither ring generator takes a start bearing, and the two use different
+// projections, so the rotation is done on the vertices they return: a ring is a
+// closed loop sampled at even parameter steps, and resampling it at a shifted
+// parameter is the same loop rotated. The shift is fractional, so neighbouring
+// vertices are interpolated — an inscribed-polygon error well under a pixel at
+// these vertex counts, and the dash pattern travels with the geometry, which is
+// the whole point.
+//
+// A cap reaching over a pole is not a simple loop (geoCircle traces those in
+// longitude order and closes them across the pole), so those are handed back
+// unturned rather than resampled into nonsense.
+function spinRing(feature, lat, km, turn) {
+    const t = ((turn % 1) + 1) % 1;
+    if (!t) return feature;
+    if (Math.abs(lat) + km / 111.19 >= 89) return feature;
+    const rings = feature.geometry.coordinates.map((coords) => {
+        const n = coords.length - 1; // the last vertex repeats the first
+        if (n < 8) return coords;
+        const s = t * n;
+        const i0 = Math.floor(s);
+        const f = s - i0;
+        const out = [];
+        for (let i = 0; i < n; i++) {
+            const a = coords[(i + i0) % n];
+            const b = coords[(i + i0 + 1) % n];
+            out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]);
+        }
+        out.push(out[0]);
+        return out;
+    });
+    return {...feature, geometry: {...feature.geometry, coordinates: rings}};
+}
 
 const PlacementGhost = forwardRef(function PlacementGhost({placing, moving, w, globe}, ref) {
     // { lng, lat, valid } | null — the live cursor probe pushed in from LiveGame.
@@ -104,9 +157,23 @@ const PlacementGhost = forwardRef(function PlacementGhost({placing, moving, w, g
         }
     }, [placing, moving]);
 
+    const active = !!(placing || moving);
+
+    // Rotation clock for the range ring. It runs only while a unit is being sited
+    // and stands down for a viewer who asked for less motion, in which case the
+    // ring simply holds still — nothing about the placement read depends on it.
+    const [turn, setTurn] = useState(0);
+    useEffect(() => {
+        if (!active) return undefined;
+        if (prefersReducedMotion() || loadSettings().reduceMotion) return undefined;
+        const t0 = performance.now();
+        const id = setInterval(() => setTurn((((performance.now() - t0) / 1000) * GHOST_TURNS_PER_S) % 1), SPIN_MS);
+        return () => clearInterval(id);
+    }, [active]);
+
     const data = useMemo(() => {
         const f = [];
-        if ((placing || moving) && cur) {
+        if (active && cur) {
             const type = placing || w.units.find((u) => u.id === moving)?.type;
             const t = type ? UNITS[type] : null;
             const rad = t?.coastal
@@ -120,59 +187,80 @@ const PlacementGhost = forwardRef(function PlacementGhost({placing, moving, w, g
                       : t && t.range <= 4000
                         ? t.range
                         : 160;
-            const c = coverageRing(globe, cur.lng, cur.lat, rad, 56, t && t.kind === "defense" ? t.minRange || 0 : 0);
-            c.properties = {
-                color: cur.valid ? "#46d38a" : "#ff5d5d",
-                sel: 1,
-                radar: t && t.kind === "support" ? 1 : 0,
-            };
-            f.push(c);
+            const color = cur.valid ? GHOST_OK : GHOST_BAD;
+            const min = t && t.kind === "defense" ? t.minRange || 0 : 0;
+            const outer = spinRing(coverageRing(globe, cur.lng, cur.lat, rad, 56, min), cur.lat, rad, turn);
+            outer.properties = {color, edge: 1};
+            f.push(outer);
+            // Inner ring: a second, fainter graticule inside the reach, turning
+            // against the outer one so the pair reads as a scope rather than a
+            // single boundary. Skipped when a minimum range already draws one.
+            if (!min) {
+                const innerKm = rad * GHOST_INNER_FRAC;
+                const inner = spinRing(
+                    coverageRing(globe, cur.lng, cur.lat, innerKm, 40),
+                    cur.lat,
+                    innerKm,
+                    -turn * 0.6,
+                );
+                inner.properties = {color, edge: 0};
+                f.push(inner);
+            }
         }
         return {type: "FeatureCollection", features: f};
-    }, [placing, moving, w, cur, globe]);
+    }, [active, placing, moving, w, cur, globe, turn]);
 
     return (
-        <Source id="ranges-ghost" type="geojson" data={data}>
-            <Layer
-                id="ghost-range-fill"
-                type="fill"
-                filter={["!=", ["get", "radar"], 1]}
-                paint={{
-                    "fill-color": ["get", "color"],
-                    "fill-opacity": ["case", ["==", ["get", "sel"], 1], 0.14, 0.05],
-                }}
-            />
-            <Layer
-                id="ghost-range-line"
-                type="line"
-                filter={["!=", ["get", "radar"], 1]}
-                paint={{
-                    "line-color": ["get", "color"],
-                    "line-width": ["case", ["==", ["get", "sel"], 1], 1.6, 0.7],
-                    "line-opacity": 0.6,
-                }}
-            />
-            <Layer
-                id="ghost-radar-sel-fill"
-                type="fill"
-                filter={["==", ["get", "radar"], 1]}
-                paint={{
-                    "fill-color": ["get", "color"],
-                    "fill-opacity": 0.07,
-                }}
-            />
-            <Layer
-                id="ghost-radar-ring"
-                type="line"
-                filter={["==", ["get", "radar"], 1]}
-                paint={{
-                    "line-color": ["get", "color"],
-                    "line-width": 0.9,
-                    "line-opacity": 0.5,
-                    "line-dasharray": [3, 3],
-                }}
-            />
-        </Source>
+        <>
+            <Source id="ranges-ghost" type="geojson" data={data}>
+                {/* Reach wash, inside the outer boundary only. */}
+                <Layer
+                    id="ghost-range-fill"
+                    type="fill"
+                    filter={["==", ["get", "edge"], 1]}
+                    paint={{"fill-color": ["get", "color"], "fill-opacity": 0.06}}
+                />
+                <Layer
+                    id="ghost-range-line"
+                    type="line"
+                    filter={["==", ["get", "edge"], 1]}
+                    paint={{
+                        "line-color": ["get", "color"],
+                        "line-width": 1,
+                        "line-opacity": 0.85,
+                        "line-dasharray": [7, 7],
+                    }}
+                />
+                <Layer
+                    id="ghost-range-inner"
+                    type="line"
+                    filter={["==", ["get", "edge"], 0]}
+                    paint={{
+                        "line-color": ["get", "color"],
+                        "line-width": 1,
+                        "line-opacity": 0.22,
+                        "line-dasharray": [4, 6],
+                    }}
+                />
+            </Source>
+            {/* The point itself: a bracket box over a crosshair, in the same
+                validity colour as the ring. A Marker rather than a layer, so the
+                mark keeps a constant pixel size at every zoom and costs no
+                tessellation when the cursor moves. */}
+            {active && cur && (
+                <Marker longitude={cur.lng} latitude={cur.lat} anchor="center">
+                    <div
+                        className="db-ghost-mark"
+                        style={{"--mark": cur.valid ? GHOST_OK : GHOST_BAD}}
+                        aria-hidden="true"
+                    >
+                        <i className="tr" />
+                        <i className="bl" />
+                        <span className="db-ghost-cross" />
+                    </div>
+                </Marker>
+            )}
+        </>
     );
 });
 

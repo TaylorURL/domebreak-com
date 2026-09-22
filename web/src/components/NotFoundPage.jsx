@@ -1,4 +1,4 @@
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {ArrowLeft} from "lucide-react";
 import Nav from "./Nav.jsx";
 import Footer from "./Footer.jsx";
@@ -12,6 +12,10 @@ import {button} from "../lib/variants.js";
 // rendered the landing page under the landing page's title and canonical, so a
 // mistyped or retired link looked like the home page rather than a dead one.
 export default function NotFoundPage({onSignIn, onShowShortcuts}) {
+    // The address that missed, read on mount rather than at module scope so the
+    // component stays safe to import from the prerender.
+    const [asked] = useState(() => (typeof window === "undefined" ? "" : window.location.hash));
+
     useEffect(() => {
         window.scrollTo({top: 0, behavior: "auto"});
     }, []);
@@ -27,10 +31,16 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
 
                     <div className="relative mx-auto max-w-[820px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow>No Such Route</Eyebrow>
+                            <Eyebrow framed>No Such Route</Eyebrow>
                             <h1 className="mt-5 font-display text-[clamp(2rem,5vw,3.2rem)] font-bold uppercase leading-[1.04] text-text">
                                 Off the map
                             </h1>
+                            {asked && (
+                                <p className="db-notch-sm mt-5 inline-flex max-w-full items-center gap-2 overflow-hidden border border-line bg-bg-2 px-3 py-[7px] font-mono text-[12px] text-dim">
+                                    <span className="db-led db-led-live" />
+                                    <span className="truncate">{asked}</span>
+                                </p>
+                            )}
                             <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-dim">
                                 Nothing is served at this address. The pages that exist are the home page, the unit
                                 wiki, and the download page.
@@ -38,9 +48,9 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
 
                             <div className="mt-9 flex flex-wrap items-center gap-3">
                                 <PlayCta />
-                                <a href="#/" className={cn(button({variant: "ghost", size: "lg"}), "gap-2")}>
+                                <a href="#/" className={cn(button({variant: "default", size: "lg"}), "gap-2")}>
                                     <ArrowLeft size={15} />
-                                    Back to the home page
+                                    Back to the Home Page
                                 </a>
                                 <a href="#/wiki" className={cn(button({variant: "ghost", size: "lg"}))}>
                                     Unit Wiki

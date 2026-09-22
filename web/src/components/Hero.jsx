@@ -2,15 +2,19 @@ import {useRef} from "react";
 import {motion, useReducedMotion, useScroll, useTransform} from "motion/react";
 import {ChevronDown} from "lucide-react";
 import HeroMap from "./HeroMap.jsx";
-import GameIcon from "./GameIcon.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow, Wordmark} from "./Primitives.jsx";
+import {button} from "../lib/variants.js";
 import {scrollToId} from "../lib/nav.js";
 
+// The stat strip under the rule. Each line is a lamp and a reading: the tone
+// says which instrument it came off — sensor for what the map counts, ok for
+// what is built, warn for the clock, live for the platforms it runs on.
 const SPECS = [
-    {icon: "reconsat", label: "222 nations"},
-    {icon: "silo", label: "Defense & offense"},
-    {icon: "dome", label: "Real-time strategy"},
+    {tone: "sensor", label: "222 nations"},
+    {tone: "ok", label: "Defense & offense"},
+    {tone: "warn", label: "Real-time strategy"},
+    {tone: "live", label: "Desktop · macOS + Windows"},
 ];
 
 const fadeUp = (reduce, delay) => ({
@@ -34,32 +38,43 @@ export default function Hero({onSignIn}) {
             {/* Instrument overlays. */}
             <div aria-hidden className="pointer-events-none absolute inset-0 z-0 db-grid" />
             <div aria-hidden className="pointer-events-none absolute inset-0 z-0 db-vignette" />
+            {/* The copy sits on the board itself, and the board is bright wherever
+                the coast and the sensor rings are. So the ground under the copy is
+                held at the page colour for exactly the width of the column — 36rem
+                plus the container's gutter, which is what the calc adds up — and
+                released over the 10rem after it. That release lands in the gap
+                between the column and the framed scene, so the half the scene is
+                on keeps the map at full strength. */}
             <div
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-0 z-0 w-full bg-[linear-gradient(90deg,var(--bg)_0%,var(--chrome-soft)_34%,transparent_62%)] md:w-[68%]"
+                className="pointer-events-none absolute inset-y-0 left-0 z-0 w-full bg-[linear-gradient(90deg,var(--bg)_0%,var(--bg)_calc(100%-4rem),var(--chrome-soft)_calc(100%-1.5rem),transparent_100%)] md:w-[calc(608px+max(0px,(100vw-1400px)/2)+12rem)] md:bg-[linear-gradient(90deg,var(--bg)_0%,var(--bg)_calc(100%-12rem),var(--chrome-strong)_calc(100%-9rem),var(--chrome-soft)_calc(100%-6rem),transparent_100%)]"
             />
 
-            {/* Corner telemetry — decorative, Anduril-style. */}
+            {/* The frame around the live scene: corner brackets on the open half
+                of the board, and the theatre it is showing read out beneath them
+                in mono. Decorative — the map itself is scenery, not a control. */}
             <motion.div
                 aria-hidden
                 {...fadeUp(reduce, 0.5)}
-                className="pointer-events-none absolute right-8 top-24 z-10 hidden text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.22em] text-faint lg:block"
+                className="pointer-events-none absolute right-8 top-[17%] z-10 hidden w-[42%] max-w-[620px] lg:block"
             >
-                <div className="flex items-center justify-end gap-2">
-                    <span className="h-[6px] w-[6px] rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
-                    Threat board · Live
+                <div className="relative db-brackets db-notch aspect-[620/470] border border-line [--db-bracket:14px]" />
+                <div className="mt-2 flex items-center justify-between gap-4 border border-line bg-panel px-3 py-[7px] font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+                    <span className="flex items-center gap-2">
+                        <span className="db-led db-led-live" />
+                        Threat board · Live
+                    </span>
+                    <span className="hidden text-dim/80 xl:inline">Homeland defense · CONUS · Intercept grid</span>
                 </div>
-                <div className="mt-1 text-dim/80">Homeland defense · CONUS</div>
-                <div className="mt-1">Real-time · intercept grid</div>
             </motion.div>
 
             <motion.div
                 style={reduce ? undefined : {y: contentY, opacity: contentOpacity}}
                 className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1400px] flex-col justify-center px-5 pt-24 pb-16 sm:px-8"
             >
-                <div className="relative max-w-xl db-tick pl-1">
+                <div className="relative max-w-xl">
                     <motion.div {...fadeUp(reduce, 0)}>
-                        <Eyebrow>Out now · Free to play</Eyebrow>
+                        <Eyebrow framed>Out now · Free to play</Eyebrow>
                         <h1 className="mt-6">
                             <Wordmark stacked glow className="text-[clamp(3.25rem,8vw,6rem)]" />
                         </h1>
@@ -82,7 +97,7 @@ export default function Hero({onSignIn}) {
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn("signup")}
-                                className="db-btn font-display inline-flex items-center rounded-sm border border-line bg-transparent px-6 py-4 text-[12px] font-semibold uppercase tracking-[1.4px] text-dim transition-colors duration-150 ease-out-db hover:border-blue hover:text-text"
+                                className={button({variant: "default", size: "lg"})}
                             >
                                 Create a Free Account
                             </button>
@@ -93,7 +108,7 @@ export default function Hero({onSignIn}) {
                                 onClick={() => scrollToId("play")}
                                 className="group inline-flex items-center gap-2 text-text transition-colors hover:text-gold-hi"
                             >
-                                <span className="h-[6px] w-[6px] rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
+                                <span className="db-led db-led-live" />
                                 Free · Online Multiplayer
                                 <ChevronDown
                                     size={13}
@@ -118,13 +133,10 @@ export default function Hero({onSignIn}) {
                                 key={s.label}
                                 className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-faint"
                             >
-                                <GameIcon name={s.icon} size={15} className="text-dim" />
+                                <span className={`db-led db-led-${s.tone}`} />
                                 {s.label}
                             </span>
                         ))}
-                        <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
-                            Desktop · macOS + Windows
-                        </span>
                     </motion.div>
                 </div>
             </motion.div>

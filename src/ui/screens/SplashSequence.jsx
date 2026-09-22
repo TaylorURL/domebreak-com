@@ -1,4 +1,6 @@
-// Boot splash: TaylorURL publisher card, then the solo-developer credit.
+// Boot splash: TaylorURL publisher card, then the solo-developer credit over
+// the boot scan. The publisher plate keeps its light ground because the mark is
+// blue-on-white artwork; the credit beat is the dark tactical one.
 // Skippable at any moment (click or any key) and honors reduced motion with
 // instant cuts instead of fades.
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -51,8 +53,14 @@ export default function SplashSequence({reduceMotion, onDone}) {
             ) : (
                 <div className={cardCls} key="credit">
                     <div className="font-display text-xs font-semibold tracking-[6px] text-dim">MADE SOLO BY</div>
-                    <div className="mt-2.5 font-display text-[34px] font-bold tracking-[10px] text-text [text-shadow:var(--glow-gold)]">
+                    <div className="db-title-glow mt-2.5 font-display text-[34px] font-bold tracking-[10px] text-text">
                         TRENTON TAYLOR
+                    </div>
+                    <div
+                        className="db-boot-bar w-[190px] h-[3px] mt-[26px] mx-auto bg-[rgba(255,255,255,0.08)] overflow-hidden"
+                        aria-hidden="true"
+                    >
+                        <i />
                     </div>
                 </div>
             )}
@@ -69,7 +77,7 @@ export default function SplashSequence({reduceMotion, onDone}) {
                     }
                 }}
             >
-                press any key to skip
+                Press any key to skip
             </div>
         </div>
     );

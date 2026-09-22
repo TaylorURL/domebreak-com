@@ -1,10 +1,17 @@
 @import "tailwindcss";
+
+/* One file per region of the site. Each reads the tokens, chrome utilities and
+   keyframes below, so a rule is only ever in one place. */
+@import "./styles/landing.css";
+@import "./styles/pages.css";
+
 @plugin "tailwindcss-animate";
 
-/* DomeBreak landing page — shares the in-game design language: stark neutral
-  blacks, hairline borders, squared corners, zero glow, grotesk uppercase
-  micro-labels, mono data. Tokens match the game's src/index.css so the
-  marketing surface reads as the same product. */
+/* DomeBreak landing page — shares the in-game design language: a tactical
+  command console in dark neutral surfaces, an amber accent, notched corners,
+  hairline corner brackets, a squared display face for labels and mono data.
+  Tokens match the game's src/index.css so the marketing surface reads as the
+  same product. */
 
 :root,
 [data-theme="dark"] {
@@ -20,14 +27,22 @@
     --text: #f2f4f6;
     --dim: #9aa4af;
     --faint: #6b7580;
-    --gold: #f4f6f8;
-    --gold-hi: #ffffff;
-    --gold-contrast: #0b0d10;
-    --gold-soft: rgba(255, 255, 255, 0.09);
-    --gold-line: rgba(255, 255, 255, 0.32);
-    --blue: #d3d8de;
+    /* The amber accent: primary buttons, active tabs, selection, progress and
+       kickers. --gold-contrast is the ink that clears contrast on an amber fill. */
+    --gold: #f2b544;
+    --gold-hi: #ffd27a;
+    --gold-contrast: #14110a;
+    --gold-soft: rgba(242, 181, 68, 0.12);
+    --gold-line: rgba(242, 181, 68, 0.45);
+    --glow-gold: 0 0 18px rgba(242, 181, 68, 0.35);
+    /* Steel carries hover borders on neutral controls and secondary emphasis.
+       Cyan is the sensor colour — radar, interceptors, links — and is kept
+       apart from --ally, which states a nation's relationship, not a readout. */
+    --blue: #9fb4c8;
+    --cyan: #7fd4ff;
     --red: #e0574f;
     --ally: #5fa8ff;
+    --good: #5fe39a;
     --danger: #e0574f;
 
     /* Translucent chrome that floats over content: the sticky nav bar and the
@@ -54,6 +69,11 @@
     --btn-bg: #17191d;
     --btn-bg-2: #101215;
 
+    /* Three speeds, so a hover, a state change and an entrance are not timed by
+       hand at each call site. --dur-fast is the one a pointer feels. */
+    --dur-fast: 120ms;
+    --dur: 200ms;
+    --dur-slow: 360ms;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
     --ease-io: cubic-bezier(0.77, 0, 0.175, 1);
@@ -62,7 +82,7 @@
        line set before the real face arrives occupies the space it will end up in. */
     --sans: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
-    --display: var(--sans);
+    --display: "Chakra Petch", "Chakra Petch Fallback", var(--sans);
 
     /* Ink for the procedural chrome below: text selection, the vignette and
        rail fades, and the tactical scrollbars. */
@@ -73,7 +93,6 @@
     --rail-fade-near: rgba(7, 9, 13, 0.92);
     --rail-fade-mid: rgba(7, 9, 13, 0.72);
     --rail-fade-far: rgba(7, 9, 13, 0);
-    --paper-grid-ink: rgba(0, 0, 0, 0.5);
     --scrollbar-track: rgba(255, 255, 255, 0.035);
     --scrollbar-thumb: #575f6a;
     --scrollbar-thumb-hover: #78818d;
@@ -167,12 +186,12 @@
     --text: #eef0f3;
     --dim: #b3bac2;
     --faint: #868e97;
-    --gold: #eef0f3;
-    --gold-hi: #ffffff;
-    --gold-contrast: #24262a;
-    --gold-soft: rgba(255, 255, 255, 0.1);
-    --gold-line: rgba(255, 255, 255, 0.3);
-    --blue: #cfd5dc;
+    --gold: #f2b544;
+    --gold-hi: #ffd27a;
+    --gold-contrast: #14110a;
+    --gold-soft: rgba(242, 181, 68, 0.14);
+    --gold-line: rgba(242, 181, 68, 0.45);
+    --blue: #9fb4c8;
     --red: #e0574f;
     --ally: #5fa8ff;
     --danger: #e0574f;
@@ -222,6 +241,8 @@
     --color-gold-soft: var(--gold-soft);
     --color-gold-line: var(--gold-line);
     --color-blue: var(--blue);
+    --color-cyan: var(--cyan);
+    --color-good: var(--good);
     --color-red: var(--red);
     --color-ally: var(--ally);
     --color-danger: var(--danger);
@@ -252,11 +273,6 @@
     --ease-out-db: var(--ease-out);
     --ease-drawer: var(--ease-drawer);
     --ease-io: var(--ease-io);
-
-    /* react-bits StarBorder — sweeping edge "stars". Duration is set inline on
-       the sprites by the component; the utility just names the keyframes. */
-    --animate-star-movement-bottom: star-movement-bottom linear infinite alternate;
-    --animate-star-movement-top: star-movement-top linear infinite alternate;
 }
 
 html {
@@ -283,6 +299,14 @@ body {
 ::selection {
     background: var(--select-bg);
     color: var(--ink-white);
+}
+
+/* A single on-theme focus ring for keyboard navigation. The UA ring follows the
+   OS accent, so it arrives in whatever colour the machine happens to be set to;
+   this one is the same amber on every machine. Mouse focus stays quiet. */
+:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
 }
 
 /* Irreducible marketing VFX / procedural chrome (Tailwind can't express) */
@@ -379,23 +403,6 @@ body {
         }
     }
 
-    .db-title-glow {
-        animation: dbTitleGlow 5.5s ease-in-out infinite;
-    }
-
-    @keyframes dbScan {
-        0% {
-            transform: translateX(-100%);
-        }
-        100% {
-            transform: translateX(100%);
-        }
-    }
-
-    .db-scan {
-        animation: dbScan 3.2s var(--ease-io) infinite;
-    }
-
     @keyframes dbMarquee {
         from {
             transform: translateX(0);
@@ -411,8 +418,6 @@ body {
 
     @media (prefers-reduced-motion: reduce) {
         .db-blink,
-        .db-title-glow,
-        .db-scan,
         .db-marquee {
             animation: none !important;
         }
@@ -425,11 +430,225 @@ body {
     }
 }
 
-/* In-game combat/globe VFX (missiles, interceptors, explosions, units,
-   scan bars) — mirrors the game's src/index.css @layer vfx so the reused
-   AttractSim renders identically. Unlayered so it reliably applies over
-   Tailwind utilities. */
+/* Shared chrome — the vocabulary both surfaces are assembled from. Identical to
+   the block in the game's src/index.css, so a component that moves between them
+   keeps its frame. In @layer vfx, which is declared after Tailwind's utilities,
+   so these sit above them. */
+@layer vfx {
+    /* Notched corners. The clip cuts a 45 degree chamfer off the top-left and
+       bottom-right of the box, which is the silhouette every framed surface in
+       the UI shares: primary buttons, HUD panels, cards and image frames.
+       .db-notch-sm is the 5px cut for controls, .db-notch the 8px cut for
+       panels. A clip path hides everything outside itself, so a notched element
+       cannot paint a box-shadow, outline or ring beyond its own edge — put a
+       glow on a wrapper, or leave it off. */
+    .db-notch {
+        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    }
 
+    .db-notch-sm {
+        clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+    }
+
+    /* The clip also swallows the focus ring :focus-visible draws in @layer base,
+       so a notched control redraws it on the inside at the same weight. --db-ring
+       is the ink: the accent by default, and whatever reads against the fill on a
+       control that is already amber. */
+    .db-notch:focus-visible,
+    .db-notch-sm:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 2px var(--db-ring, var(--gold));
+    }
+
+    /* Four corner brackets, the targeting motif, drawn without a wrapper
+       element: each pseudo-element lays a full 1px frame over the box and masks
+       it down to two opposite corners, so the pair renders four L's and nothing
+       in between. --db-bracket is the arm length, and growing it on hover is
+       what makes the brackets close in; mask-size interpolates, so the growth
+       and the brightening run together over --dur-fast.
+
+       The element needs its own positioning context (relative, absolute or
+       fixed) for the overlays to land on it. */
+    .db-brackets {
+        --db-bracket: 10px;
+    }
+
+    .db-brackets::before,
+    .db-brackets::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border: 1px solid var(--gold-line);
+        mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
+        mask-repeat: no-repeat;
+        mask-size: var(--db-bracket) var(--db-bracket);
+        transition:
+            border-color var(--dur-fast) var(--ease-out),
+            mask-size var(--dur-fast) var(--ease-out);
+    }
+
+    .db-brackets::before {
+        mask-position:
+            0 0,
+            100% 0;
+    }
+
+    .db-brackets::after {
+        mask-position:
+            0 100%,
+            100% 100%;
+    }
+
+    .db-brackets:hover,
+    .db-brackets:focus-visible {
+        --db-bracket: 14px;
+    }
+
+    .db-brackets:hover::before,
+    .db-brackets:hover::after,
+    .db-brackets:focus-visible::before,
+    .db-brackets:focus-visible::after {
+        border-color: var(--gold);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-brackets::before,
+        .db-brackets::after {
+            transition: none;
+        }
+    }
+
+    /* Scanlines: a static CRT tint for panels and cards, one bright row every
+       three pixels, blended so it darkens and lightens what is under it rather
+       than greying it. Nothing moves, so there is nothing to stand down under
+       reduced motion. The element needs its own positioning context. */
+    .db-scan::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+        background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+    }
+
+    /* Status LED. The tone classes set nothing but the colour; the lamp and its
+       bloom both read currentColor, so one tone swaps both. Live is the only
+       one that blinks, because a blinking light means something is happening
+       and four of them blinking means nothing does. */
+    .db-led {
+        width: 6px;
+        height: 6px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 7px currentColor;
+    }
+
+    .db-led-live {
+        color: var(--red);
+        animation: dbBlink 2.4s var(--ease-io) infinite;
+    }
+
+    .db-led-ok {
+        color: var(--good);
+    }
+
+    .db-led-warn {
+        color: var(--gold);
+    }
+
+    .db-led-sensor {
+        color: var(--cyan);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-led-live {
+            animation: none;
+        }
+    }
+
+    /* Segmented meter. Laid over a filled track, it punches a 2px gap every 8px
+       so the fill reads as a row of lit ticks rather than a smooth bar — a
+       quantity a glance can count. The gaps are painted in the track colour,
+       which --db-seg-gap overrides where the track is not --sunk. The track
+       carries the positioning context so the ticks can never paint past it. */
+    .db-seg {
+        position: relative;
+    }
+
+    .db-seg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(90deg, transparent 0 6px, var(--db-seg-gap, var(--sunk)) 6px 8px);
+    }
+
+    /* The HUD panel frame — every docked panel, popover and context menu. Glass
+       over the map, a hairline edge, the small corner cut, scanlines, and a
+       short amber rule on the top edge that reads as the tab of a labelled
+       instrument. The tab starts where the corner cut lets the top edge begin
+       and runs --db-tab wide.
+
+       Like every clipped surface it cannot paint outside its own edge, so a
+       panel that needs a drop shadow gets it from a wrapper. The element needs
+       its own positioning context, which a docked panel already has. */
+    .db-hud-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+        backdrop-filter: blur(10px) saturate(1.15);
+    }
+
+    .db-hud-panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 5px;
+        width: var(--db-tab, 72px);
+        height: 2px;
+        background: var(--gold);
+        pointer-events: none;
+    }
+
+    .db-hud-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        mix-blend-mode: overlay;
+        background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+    }
+
+    /* The panel's header strip: mono micro-caps, the same measure on every
+       panel, over a hairline that separates it from the readout below. */
+    .db-hud-panel > header {
+        font-family: var(--mono);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--dim);
+        border-bottom: 1px solid var(--hair);
+    }
+
+    /* The wordmark's bloom. A text-shadow rather than a filter, so it lights the
+       letterforms and leaves everything around them alone. */
+    .db-title-glow {
+        text-shadow: var(--glow-gold);
+        animation: dbTitleGlow 6s var(--ease-io) infinite alternate;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-title-glow {
+            animation: none;
+        }
+    }
+}
+
+/* The sheen a primary button sweeps on hover, and the keyframes more than one
+   surface animates with. Unlayered so they reliably apply over Tailwind's
+   utilities. */
 /* Custom tactical scrollbars */
 /* .db-scroll is the reusable dark-panel scrollbar; .db-savelist is an alias
        kept for the existing save list. Apply db-scroll to any dark overflow region
@@ -473,649 +692,6 @@ body {
     background-clip: padding-box;
 }
 
-.db-card .db-country-list,
-.db-card .db-savelist,
-.db-newgame {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb-paper) transparent;
-}
-
-.db-card .db-country-list::-webkit-scrollbar,
-.db-card .db-savelist::-webkit-scrollbar,
-.db-newgame::-webkit-scrollbar {
-    width: 11px;
-    height: 11px;
-}
-
-.db-card .db-country-list::-webkit-scrollbar-thumb,
-.db-card .db-savelist::-webkit-scrollbar-thumb,
-.db-newgame::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-paper);
-    border-radius: 999px;
-    border: 3px solid transparent;
-    background-clip: padding-box;
-}
-
-.db-card .db-country-list::-webkit-scrollbar-thumb:hover,
-.db-card .db-savelist::-webkit-scrollbar-thumb:hover,
-.db-newgame::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-paper-hover);
-    background-clip: padding-box;
-}
-
-/* missile sprite */
-.db-missile {
-    position: relative;
-    width: 10px;
-    height: 28px;
-    will-change: transform;
-}
-
-.db-missile-body {
-    position: absolute;
-    left: 3px;
-    top: 4px;
-    width: 4px;
-    height: 15px;
-    border-radius: 2px 2px 1px 1px;
-    background: linear-gradient(180deg, var(--missile-hull-hi), var(--missile-hull-mid) 55%, var(--missile-hull-low));
-    box-shadow: 0 0 4px var(--missile-hull-glow);
-}
-
-.db-missile-body::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: -5px;
-    width: 0;
-    height: 0;
-    border-left: 2px solid transparent;
-    border-right: 2px solid transparent;
-    border-bottom: 6px solid var(--missile-nose);
-}
-
-.db-missile-body::after {
-    content: "";
-    position: absolute;
-    left: -2px;
-    bottom: 0;
-    width: 8px;
-    height: 3px;
-    background: var(--missile-fin);
-    clip-path: polygon(0 100%, 28% 0, 72% 0, 100% 100%);
-}
-
-/* Exhaust + glow are tinted per warhead via the --flame custom property that
-       SkyLayer sets on each sprite wrapper (orange STD, cyan CLU, violet HGV,
-       red THR). The white-hot core stays white; the plume and halo take the
-       warhead hue so the four ammo types read apart in flight. */
-.db-missile-flame {
-    position: absolute;
-    left: 3px;
-    top: 18px;
-    width: 4px;
-    height: 12px;
-    border-radius: 0 0 50% 50%;
-    background: radial-gradient(
-        ellipse 60% 100% at 50% 0%,
-        var(--ink-white) 0%,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 45%, var(--ink-white)) 24%,
-        var(--flame, var(--flame-default)) 56%,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 60%, var(--ink-black)) 82%,
-        transparent 100%
-    );
-    box-shadow: 0 0 12px 4px color-mix(in srgb, var(--flame, var(--flame-default)) 80%, transparent);
-    animation: dbFlame 0.1s infinite alternate;
-}
-
-.db-missile-glow {
-    position: absolute;
-    left: -7px;
-    top: 7px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 34%, transparent),
-        transparent 70%
-    );
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .db-missile-flame {
-        animation: none;
-    }
-}
-
-/* per-warhead silhouettes
-       standard = the baseline slim ballistic body above. The three below reshape
-       the sprite to match what each munition actually is. */
-
-/* Cluster: a bulkier MIRV bus, banded to hint at the payload stack it carries
-       before it splits into sub-munitions on reentry. */
-.db-missile.cluster .db-missile-body {
-    left: 2.5px;
-    width: 5px;
-    height: 14px;
-    background:
-        repeating-linear-gradient(180deg, transparent 0 2.5px, var(--missile-cluster-band) 2.5px 3.5px),
-        linear-gradient(
-            180deg,
-            var(--missile-cluster-hi),
-            var(--missile-cluster-mid) 42%,
-            var(--missile-cluster-low) 72%,
-            var(--missile-cluster-base)
-        );
-}
-
-.db-missile.cluster .db-missile-body::before {
-    left: 0.5px;
-}
-
-.db-missile.cluster .db-missile-body::after {
-    left: -2.5px;
-    width: 10px;
-}
-
-/* HGV: a maneuvering waverider glide body — a slender white-hot dart with a
-       plasma bow-shock flaring off its nose and a thin, bright ionization streak in
-       place of a rocket plume. Reads as the fastest, hottest thing in the sky. */
-.db-missile.hgv {
-    width: 14px;
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--flame) 70%, transparent));
-}
-
-.db-missile.hgv .db-missile-body {
-    left: 2.5px;
-    top: 2px;
-    width: 5px;
-    height: 17px;
-    border-radius: 1px;
-    /* slim arrowhead waverider — sharp nose, swept shoulders, flat aft */
-    clip-path: polygon(50% 0, 88% 58%, 100% 100%, 0 100%, 12% 58%);
-    background: linear-gradient(
-        180deg,
-        var(--ink-white) 0%,
-        var(--ink-white) 16%,
-        color-mix(in srgb, var(--flame) 55%, var(--ink-white)) 46%,
-        var(--flame) 100%
-    );
-    box-shadow: 0 0 10px 2px color-mix(in srgb, var(--flame) 90%, transparent);
-}
-
-/* Plasma bow-shock: a hot crescent of compression heat flaring off the nose. */
-.db-missile.hgv .db-missile-body::before {
-    content: "";
-    display: block;
-    position: absolute;
-    left: -1.5px;
-    top: -4px;
-    width: 8px;
-    height: 7px;
-    border: 0;
-    background: radial-gradient(
-        ellipse 100% 72% at 50% 100%,
-        var(--ink-white) 0%,
-        color-mix(in srgb, var(--flame) 60%, var(--ink-white)) 30%,
-        color-mix(in srgb, var(--flame) 82%, transparent) 62%,
-        transparent 78%
-    );
-    clip-path: polygon(50% 100%, 0 34%, 22% 6%, 50% 0, 78% 6%, 100% 34%);
-    opacity: 0.92;
-}
-
-.db-missile.hgv .db-missile-body::after {
-    display: none;
-}
-
-/* Ionization streak: thin, bright, and longer than a plume — a hypersonic trail. */
-.db-missile.hgv .db-missile-flame {
-    left: 3px;
-    top: 17px;
-    width: 4px;
-    height: 14px;
-    border-radius: 0 0 60% 60%;
-}
-
-.db-missile.hgv .db-missile-glow {
-    left: -5px;
-    top: 4px;
-    width: 20px;
-    height: 20px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--flame) 44%, transparent), transparent 66%);
-}
-
-/* Thermonuclear: the heaviest missile — a bigger booster, a blunt reentry-vehicle
-       cone, a dense plume, and a wide ominous halo. */
-.db-missile.thermo,
-.db-missile.thermomirv {
-    width: 12px;
-    height: 32px;
-}
-
-.db-missile.thermo .db-missile-body,
-.db-missile.thermomirv .db-missile-body {
-    left: 3px;
-    top: 5px;
-    width: 6px;
-    height: 17px;
-    background: linear-gradient(180deg, var(--missile-mirv-hi), var(--missile-mirv-mid) 52%, var(--missile-mirv-low));
-}
-
-.db-missile.thermo .db-missile-body::before,
-.db-missile.thermomirv .db-missile-body::before {
-    left: -0.5px;
-    top: -6px;
-    border-left-width: 3.5px;
-    border-right-width: 3.5px;
-    border-bottom-width: 7px;
-}
-
-.db-missile.thermo .db-missile-body::after,
-.db-missile.thermomirv .db-missile-body::after {
-    left: -2.5px;
-    width: 11px;
-    height: 3.5px;
-}
-
-.db-missile.thermo .db-missile-flame,
-.db-missile.thermomirv .db-missile-flame {
-    left: 3px;
-    top: 21px;
-    width: 6px;
-    height: 15px;
-}
-
-.db-missile.thermo .db-missile-glow,
-.db-missile.thermomirv .db-missile-glow {
-    left: -10px;
-    top: 6px;
-    width: 32px;
-    height: 32px;
-}
-
-/* homing interceptor sprite */
-.db-interceptor {
-    position: relative;
-    width: 7px;
-    height: 16px;
-    will-change: transform;
-}
-
-.db-int-body {
-    position: absolute;
-    left: 2px;
-    top: 2px;
-    width: 3px;
-    height: 9px;
-    border-radius: 2px 2px 1px 1px;
-    background: linear-gradient(180deg, var(--int-hull-hi), var(--int-hull-mid) 60%, var(--int-hull-low));
-    box-shadow: 0 0 5px var(--int-hull-glow);
-}
-
-.db-int-body::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: -3px;
-    width: 0;
-    height: 0;
-    border-left: 1.5px solid transparent;
-    border-right: 1.5px solid transparent;
-    border-bottom: 4px solid var(--int-hull-hi);
-}
-
-.db-int-flame {
-    position: absolute;
-    left: 2px;
-    top: 10px;
-    width: 3px;
-    height: 7px;
-    border-radius: 0 0 50% 50%;
-    background: radial-gradient(
-        ellipse 60% 100% at 50% 0%,
-        var(--ink-white),
-        var(--int-flame-mid) 40%,
-        var(--int-flame-low) 75%,
-        transparent
-    );
-    box-shadow: 0 0 8px 2px var(--int-flame-glow);
-    animation: dbFlame 0.09s infinite alternate;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .db-int-flame {
-        animation: none;
-    }
-}
-
-/* THAAD hit-to-kill interceptor: a colder cyan/white exo-atmospheric dart
-       with a pulsing energy core and a bright divert-thruster flare — reads
-       apart from the green area-defense interceptors. */
-.db-interceptor.thaad {
-    width: 8px;
-    height: 18px;
-}
-
-.db-interceptor.thaad .db-int-body {
-    left: 2.5px;
-    width: 3px;
-    height: 10px;
-    background: linear-gradient(180deg, var(--ink-white), var(--thaad-hull-mid) 55%, var(--thaad-hull-low));
-    box-shadow: 0 0 6px var(--thaad-hull-glow);
-    animation: dbThaadCore 0.5s infinite alternate;
-}
-
-.db-interceptor.thaad .db-int-body::before {
-    left: -0.25px;
-    top: -4px;
-    border-left-width: 1.75px;
-    border-right-width: 1.75px;
-    border-bottom: 5px solid var(--ink-white);
-}
-
-.db-interceptor.thaad .db-int-flame {
-    left: 2.5px;
-    top: 11px;
-    width: 3px;
-    height: 8px;
-    background: radial-gradient(
-        ellipse 60% 100% at 50% 0%,
-        var(--ink-white),
-        var(--thaad-flame-mid) 35%,
-        var(--thaad-flame-low) 75%,
-        transparent
-    );
-    box-shadow: 0 0 9px 2px var(--thaad-flame-glow);
-    animation: dbFlame 0.07s infinite alternate;
-}
-
-/* Kinetic-kill spark: a bright shimmering point of light riding the nose,
-       the signature "brilliant pebble" glint. */
-.db-int-spark {
-    position: absolute;
-    left: 50%;
-    top: 1px;
-    width: 3px;
-    height: 3px;
-    margin-left: -1.5px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--ink-white) 0%, var(--int-spark-mid) 45%, transparent 75%);
-    box-shadow: 0 0 7px 2px var(--int-spark-glow);
-    animation: dbThaadSpark 0.32s infinite alternate;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .db-interceptor.thaad .db-int-body,
-    .db-interceptor.thaad .db-int-flame,
-    .db-int-spark {
-        animation: none;
-    }
-}
-
-/* fireball detonation (Explosion.jsx)
-       A layered fire burst: white flash + shock ring + three billowing flame
-       blobs + a white-hot core + a short smoke wisp + flung embers. Every
-       kind is FIRE; kinds only change scale and a small ring accent. Pure
-       transform/opacity so dozens can play at once. */
-.db-boom {
-    position: relative;
-    width: 15px;
-    height: 15px;
-    pointer-events: none;
-}
-
-.db-boom.destroy {
-    width: 22px;
-    height: 22px;
-}
-
-.db-boom.intercept {
-    width: 12px;
-    height: 12px;
-}
-
-.db-boom.mirv {
-    width: 12px;
-    height: 12px;
-}
-
-.db-boom.miss {
-    width: 9px;
-    height: 9px;
-}
-
-.db-boom span {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    transform-origin: 50% 50%;
-    will-change: transform, opacity;
-}
-
-/* white-hot detonation flash */
-.db-boom-flash {
-    background: radial-gradient(circle, var(--ink-white) 0%, var(--boom-flash-mid) 34%, var(--boom-flash-out) 66%);
-    animation: dbBoomFlash 0.17s ease-out forwards;
-}
-
-/* expanding shock ring */
-.db-boom-ring {
-    background: none;
-    border: 1.5px solid var(--boom-ring);
-    box-shadow: 0 0 4px var(--boom-ring-glow);
-    opacity: 0;
-    animation: dbBoomRing 0.42s ease-out forwards;
-}
-
-/* billowing flame — hot white center falling to deep red/black edge */
-.db-boom-fire {
-    background: radial-gradient(
-        circle at 50% 55%,
-        var(--ink-white) 0%,
-        var(--boom-fire-hi) 13%,
-        var(--boom-fire-mid) 30%,
-        var(--flame-default) 52%,
-        var(--boom-fire-low) 72%,
-        var(--boom-fire-out) 87%
-    );
-    mix-blend-mode: screen;
-    filter: blur(0.4px);
-    opacity: 0;
-}
-
-.db-boom-fire.f1 {
-    animation: dbBoomFireA 0.58s ease-out forwards;
-}
-
-.db-boom-fire.f2 {
-    animation: dbBoomFireB 0.52s ease-out 0.04s forwards;
-}
-
-.db-boom-fire.f3 {
-    animation: dbBoomFireC 0.5s ease-out 0.06s forwards;
-}
-
-/* persistent white-hot core */
-.db-boom-core {
-    background: radial-gradient(circle, var(--ink-white) 0%, var(--boom-core-mid) 40%, var(--boom-core-out) 72%);
-    animation: dbBoomCore 0.3s ease-out forwards;
-}
-
-/* short, faint smoke wisp rising off the burn — fire stays the star */
-.db-boom-smoke {
-    opacity: 0;
-    background: radial-gradient(
-        circle,
-        var(--boom-smoke-near) 0%,
-        var(--boom-smoke-mid) 46%,
-        var(--boom-smoke-out) 74%
-    );
-    animation: dbBoomSmoke 0.6s ease-out 0.16s forwards;
-}
-
-/* flung embers — fly outward along --a to --dist, shrinking */
-.db-boom-spark {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: var(--sz, 2px);
-    height: var(--sz, 2px);
-    margin: calc(var(--sz, 2px) / -2) 0 0 calc(var(--sz, 2px) / -2);
-    border-radius: 50%;
-    background: var(--boom-spark);
-    box-shadow: 0 0 4px 1px var(--flame-default);
-    animation: dbBoomSpark 0.5s ease-out var(--delay, 0ms) forwards;
-}
-
-/* interception accent: keep the fire, but tint the shock ring + embers
-       cool so a missile-vs-missile kill still reads apart from a ground
-       impact — no green. */
-.db-boom.intercept .db-boom-ring {
-    border-color: var(--intercept-ring);
-    box-shadow: 0 0 4px var(--intercept-ring-glow);
-}
-
-.db-boom.destroy .db-boom-spark {
-    animation-duration: 0.62s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .db-boom span,
-    .db-boom-spark {
-        animation-duration: 0.22s !important;
-        animation-delay: 0s !important;
-    }
-
-    .db-boom-fire.f2,
-    .db-boom-fire.f3,
-    .db-boom-smoke {
-        display: none;
-    }
-}
-
-/* radioactive fallout: animated cloud epicenter */
-/* --i (0..1) is the live cloud intensity from the sim: it fades the
-       whole epicenter in as the cloud ramps and out as it decays. */
-.db-fallout {
-    position: relative;
-    width: 34px;
-    height: 34px;
-    pointer-events: none;
-    opacity: calc(0.25 + 0.75 * var(--i, 1));
-}
-
-.db-fallout span {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-}
-
-.db-fallout-glow {
-    background: radial-gradient(
-        circle,
-        var(--fallout-glow-near) 0%,
-        var(--fallout-glow-mid) 42%,
-        var(--fallout-glow-out) 72%
-    );
-    animation: dbFalloutGlow 2.4s ease-in-out infinite;
-}
-
-.db-fallout-ring {
-    border: 1px solid var(--fallout-ring);
-    box-shadow: 0 0 6px var(--fallout-ring-glow);
-    animation: dbFalloutRing 2.8s ease-out infinite;
-}
-
-.db-fallout-ring.two {
-    animation-delay: 1.4s;
-}
-
-.db-fallout-core {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    line-height: 1;
-    color: var(--fallout-text);
-    text-shadow:
-        0 0 5px var(--fallout-text-glow),
-        0 0 2px var(--fallout-text-shadow);
-    animation: dbFalloutCore 2.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .db-fallout-glow,
-    .db-fallout-ring,
-    .db-fallout-ring.two,
-    .db-fallout-core {
-        animation: none;
-    }
-    .db-fallout-ring {
-        opacity: 0.4;
-    }
-}
-
-/* Targeting brackets: two gold corner L's that snap in on hover/focus. */
-.db-menu-btn::before,
-.db-menu-btn::after {
-    content: "";
-    position: absolute;
-    width: 9px;
-    height: 9px;
-    opacity: 0;
-    transition:
-        opacity 150ms var(--ease-out),
-        transform 150ms var(--ease-out);
-}
-
-.db-menu-btn::before {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid var(--gold);
-    border-left: 2px solid var(--gold);
-    transform: translate(3px, 3px);
-}
-
-.db-menu-btn::after {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 2px solid var(--gold);
-    border-right: 2px solid var(--gold);
-    transform: translate(-3px, -3px);
-}
-
-.db-menu-btn:hover::before,
-.db-menu-btn:hover::after,
-.db-menu-btn:focus-visible::before,
-.db-menu-btn:focus-visible::after {
-    opacity: 1;
-    transform: translate(0, 0);
-}
-
-/* gold top seam reads like an instrument-panel header */
-.db-card::before {
-    content: "";
-    position: absolute;
-    left: 18px;
-    right: 18px;
-    top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold-line), transparent);
-    border-radius: 2px;
-}
-
-.db-selpanel::before {
-    content: "";
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    top: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--gold-line), transparent);
-}
-
 /* single sheen sweep on hover — a rare, deliberate flourish, not per-frame */
 .db-btn.primary::after {
     content: "";
@@ -1130,188 +706,11 @@ body {
     transition: transform 620ms var(--ease-out);
 }
 
-/* boot-scan bar */
-.db-boot-bar i {
-    background: linear-gradient(90deg, transparent, var(--text), transparent);
-    animation: dbBootScan 1.15s ease-in-out infinite;
-}
-
 /* all @keyframes */
 @keyframes dbRowIn {
     from {
         opacity: 0;
         transform: translateY(7px);
-    }
-}
-
-@keyframes dbFlame {
-    from {
-        transform: scaleY(0.8) scaleX(0.9);
-        opacity: 0.8;
-    }
-    to {
-        transform: scaleY(1.2) scaleX(1.05);
-        opacity: 1;
-    }
-}
-
-@keyframes dbThaadCore {
-    from {
-        box-shadow: 0 0 5px var(--wire-glow-from);
-    }
-    to {
-        box-shadow: 0 0 10px 1px var(--wire-glow-to);
-    }
-}
-
-@keyframes dbThaadSpark {
-    from {
-        opacity: 0.55;
-        transform: scale(0.7);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1.25);
-    }
-}
-
-@keyframes dbBoomFlash {
-    from {
-        transform: scale(0.3);
-        opacity: 1;
-    }
-    to {
-        transform: scale(2.4);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomRing {
-    0% {
-        transform: scale(0.2);
-        opacity: 0.9;
-    }
-    100% {
-        transform: scale(2.8);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomCore {
-    0% {
-        transform: scale(0.4);
-        opacity: 1;
-    }
-    35% {
-        transform: scale(1.35);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(0.7);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomFireA {
-    0% {
-        transform: scale(0.3);
-        opacity: 0.95;
-    }
-    30% {
-        transform: scale(1.15);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1.9) translateY(-2px);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomFireB {
-    0% {
-        transform: translate(-6%, -4%) scale(0.2);
-        opacity: 0;
-    }
-    28% {
-        opacity: 0.95;
-    }
-    100% {
-        transform: translate(-30%, -34%) scale(1.5);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomFireC {
-    0% {
-        transform: translate(6%, 4%) scale(0.2);
-        opacity: 0;
-    }
-    28% {
-        opacity: 0.9;
-    }
-    100% {
-        transform: translate(30%, 30%) scale(1.45);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomSmoke {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-    35% {
-        opacity: 0.3;
-    }
-    100% {
-        transform: scale(1.8) translateY(-7px);
-        opacity: 0;
-    }
-}
-
-@keyframes dbBoomSpark {
-    0% {
-        transform: rotate(var(--a)) translateY(0) scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: rotate(var(--a)) translateY(calc(-1 * var(--dist, 10px))) scale(0.2);
-        opacity: 0;
-    }
-}
-
-@keyframes dbFalloutGlow {
-    0%,
-    100% {
-        transform: scale(0.9);
-        opacity: 0.7;
-    }
-    50% {
-        transform: scale(1.12);
-        opacity: 1;
-    }
-}
-
-@keyframes dbFalloutRing {
-    0% {
-        transform: scale(0.35);
-        opacity: 0.85;
-    }
-    100% {
-        transform: scale(1.5);
-        opacity: 0;
-    }
-}
-
-@keyframes dbFalloutCore {
-    0%,
-    100% {
-        transform: scale(0.95);
-        opacity: 0.85;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 1;
     }
 }
 
@@ -1332,108 +731,4 @@ body {
     50% {
         opacity: 0.28;
     }
-}
-
-@keyframes dbBootScan {
-    from {
-        transform: translateX(-130%);
-    }
-    to {
-        transform: translateX(330%);
-    }
-}
-
-/* react-bits StarBorder edge sprites. */
-@keyframes star-movement-bottom {
-    0% {
-        transform: translate(0%, 0%);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-100%, 0%);
-        opacity: 0;
-    }
-}
-
-@keyframes star-movement-top {
-    0% {
-        transform: translate(0%, 0%);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(100%, 0%);
-        opacity: 0;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .animate-star-movement-bottom,
-    .animate-star-movement-top {
-        animation: none !important;
-        opacity: 0 !important;
-    }
-}
-
-/* Light: the paper surface. It carries the whole theme when it is set on the
-   document, and one editorial band when .db-paper is set on a section, so the
-   page can alternate dark and light down its length. Unlayered so it overrides
-   the Tailwind utilities used inside. */
-[data-theme="light"],
-.db-paper {
-    --bg: #f3f3f0;
-    --bg-2: #eceae4;
-    --panel: rgba(255, 255, 255, 0.7);
-    --panel-2: rgba(255, 255, 255, 0.86);
-    --panel-solid: #ffffff;
-    --sunk: #e8e7e2;
-    --line: #d7d6cf;
-    --line-soft: rgba(0, 0, 0, 0.1);
-    --hair: rgba(0, 0, 0, 0.06);
-    --text: #14171b;
-    --dim: #4c555e;
-    --faint: #838a91;
-    --gold: #14171b;
-    --gold-hi: #000000;
-    --gold-contrast: #f3f3f0;
-    --gold-soft: rgba(0, 0, 0, 0.055);
-    --gold-line: rgba(0, 0, 0, 0.16);
-    --blue: #3a4048;
-    --danger: #c0483f;
-
-    --chrome: rgba(243, 243, 240, 0.78);
-    --chrome-strong: rgba(243, 243, 240, 0.9);
-    --chrome-soft: rgba(243, 243, 240, 0.55);
-    --chrome-veil: rgba(243, 243, 240, 0.7);
-    --chrome-deep: rgba(243, 243, 240, 0.94);
-    --scrim: rgba(24, 26, 30, 0.5);
-    --scrim-thin: rgba(24, 26, 30, 0.06);
-    --field: rgba(255, 255, 255, 0.8);
-    --control: #14171b;
-    --control-hover: #22262c;
-    --shine: #4c555e;
-    --shine-hi: #14171b;
-
-    --btn-bg: #ffffff;
-    --btn-bg-2: #eceae4;
-    --select-bg: rgba(0, 0, 0, 0.14);
-    --vignette-ink: rgba(120, 128, 140, 0.22);
-    --rail-fade-near: rgba(243, 243, 240, 0.92);
-    --rail-fade-mid: rgba(243, 243, 240, 0.72);
-    --rail-fade-far: rgba(243, 243, 240, 0);
-    --scrollbar-track: rgba(0, 0, 0, 0.04);
-    --scrollbar-thumb: #b6b5ae;
-    --scrollbar-thumb-hover: #9d9c95;
-    --scrollbar-thumb-active: #85847e;
-
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* On paper, the faint white instrument grid would vanish — use a dark-on-light one. */
-[data-theme="light"] .db-grid,
-.db-paper .db-grid {
-    background-image:
-        linear-gradient(var(--paper-grid-ink) 1px, transparent 1px),
-        linear-gradient(90deg, var(--paper-grid-ink) 1px, transparent 1px);
-    opacity: 0.04;
 }

@@ -36,8 +36,10 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
             )
             .slice(0, 30);
     }, [data, q, excludeIso, picked]);
+    // A row on the dark card: the hover wash lifts off the surface rather than
+    // sinking into it, and a hairline appears where the pointer rests.
     const pickRow =
-        "flex items-center gap-2.5 px-2.5 py-2 rounded border border-transparent bg-transparent hover:bg-black/[0.06] text-left text-text";
+        "flex items-center gap-2.5 px-2.5 py-2 rounded-sm border border-transparent bg-transparent transition-colors duration-[var(--dur-fast)] hover:border-line-soft hover:bg-[rgba(255,255,255,0.045)] text-left text-text";
     return (
         <div className="flex flex-col gap-2.5">
             {selected.length > 0 ? (
@@ -64,7 +66,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                 </div>
             ) : (
                 <p className="m-0 text-[12px] text-dim leading-snug">
-                    No nations pinned — the AI roster is filled at random.
+                    No nations pinned, so the AI roster is filled at random.
                 </p>
             )}
             {quickPicks.length > 0 && (
@@ -73,7 +75,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                         <button
                             key={c.iso}
                             type="button"
-                            className="inline-flex items-center gap-1.5 font-display text-[11px] font-semibold tracking-[0.5px] text-dim border border-line-soft rounded-sm px-2 py-1 hover:text-text hover:border-line"
+                            className="inline-flex items-center gap-1.5 font-display text-[11px] font-semibold tracking-[0.5px] text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line"
                             onClick={() => toggle(c.iso)}
                             aria-label={`Pin ${c.name}`}
                         >
@@ -95,7 +97,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
             />
             {searchList.length > 0 && (
                 <div
-                    className="db-country-list flex flex-col gap-1 overflow-auto border border-line-soft rounded p-1.5 bg-sunk"
+                    className="db-country-list flex flex-col gap-1 overflow-auto border border-line-soft rounded-sm p-1.5 bg-sunk"
                     role="list"
                     style={{maxHeight: "20vh"}}
                 >

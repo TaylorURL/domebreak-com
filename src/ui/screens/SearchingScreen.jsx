@@ -98,42 +98,18 @@ export default function SearchingScreen({onMatched, onCancel, reduceMotion, preQ
                 <h1 className={menuTitle({sm: true})}>War Room</h1>
                 {!timedOut ? (
                     <>
-                        <div
-                            className={cn(
-                                "db-searching-pulse flex justify-center gap-2.5 my-2.5 mb-[18px]",
-                                reduceMotion && "still",
-                            )}
-                            aria-hidden="true"
-                        >
-                            <span
-                                className={cn(
-                                    "w-2.5 h-2.5 rounded-full bg-gold",
-                                    reduceMotion
-                                        ? "opacity-70"
-                                        : "[animation:dbPulse_1.2s_var(--ease-in-out)_infinite]",
-                                )}
-                            />
-                            <span
-                                className={cn(
-                                    "w-2.5 h-2.5 rounded-full bg-gold [animation-delay:0.2s]",
-                                    reduceMotion
-                                        ? "opacity-70"
-                                        : "[animation:dbPulse_1.2s_var(--ease-in-out)_infinite]",
-                                )}
-                            />
-                            <span
-                                className={cn(
-                                    "w-2.5 h-2.5 rounded-full bg-gold [animation-delay:0.4s]",
-                                    reduceMotion
-                                        ? "opacity-70"
-                                        : "[animation:dbPulse_1.2s_var(--ease-in-out)_infinite]",
-                                )}
-                            />
+                        {/* Radar sweep: one turn every four seconds, transform-only,
+                            standing down under the in-game reduce-motion setting as
+                            well as the OS one. */}
+                        <div className="grid place-items-center my-5" aria-hidden="true">
+                            <span className={cn("db-radar", reduceMotion && "still")}>
+                                <i className="db-radar-spoke" />
+                            </span>
                         </div>
                         <div role="status" aria-live="polite">
                             <p className="db-searching-label text-sm text-text m-0">Searching for commanders…</p>
                             <p
-                                className="db-searching-elapsed font-mono text-xl text-dim mt-2 tracking-[2px]"
+                                className="db-searching-elapsed font-mono text-xl text-gold mt-2 tracking-[2px]"
                                 aria-label={`Elapsed time ${mm} minutes ${ss} seconds`}
                             >
                                 {mm}:{ss}
@@ -141,9 +117,20 @@ export default function SearchingScreen({onMatched, onCancel, reduceMotion, preQ
                         </div>
                         <div aria-live="assertive">
                             {err && (
-                                <p className="db-friends-err text-danger bg-[rgba(224,87,79,0.1)] border border-danger rounded-sm py-2 px-3 text-[12.5px] mt-2.5">
-                                    {err}
-                                </p>
+                                <div className="db-friends-err db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 text-left">
+                                    <p className="m-0">Matchmaking is unavailable right now. Try again in a moment.</p>
+                                    {/* The server's own words are what a bug report needs and what
+                                        nobody reading the screen does, so they sit one click down,
+                                        the way the net-error dialog keeps its dump. */}
+                                    <details className="mt-1.5">
+                                        <summary className="cursor-pointer font-display text-[10px] uppercase tracking-[0.18em] text-dim">
+                                            Details
+                                        </summary>
+                                        <pre className="db-card-scroll m-0 mt-1.5 max-h-[96px] overflow-auto whitespace-pre-wrap font-mono text-[10.5px] leading-[1.5] text-faint select-text">
+                                            {err}
+                                        </pre>
+                                    </details>
+                                </div>
                             )}
                         </div>
                         <button
