@@ -115,7 +115,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                         <p className="mt-2 text-[13px] leading-relaxed text-dim">
                             {signup
                                 ? "Your DomeBreak account keeps your profile and match history in sync across the game and this site."
-                                : "Use your DomeBreak game account. It is the same login everywhere."}
+                                : "Use your DomeBreak game account. It's the same login everywhere."}
                         </p>
 
                         <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>

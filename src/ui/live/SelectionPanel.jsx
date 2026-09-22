@@ -520,7 +520,7 @@ export default function SelectionPanel({
                                 {annex ? (
                                     <p className="text-[11px] leading-[1.45] text-dim m-0">
                                         Hold this neutral city to annex its state, and its land becomes yours to build
-                                        on. No assault needed; neutrals don't resist.
+                                        on. You don't need to assault it; neutrals don't resist.
                                     </p>
                                 ) : (
                                     <button

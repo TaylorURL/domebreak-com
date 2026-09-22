@@ -37,21 +37,21 @@ export const ROUTES = {
     },
     privacy: {
         path: "/#/privacy",
-        title: "Privacy Policy | DomeBreak",
+        title: "Privacy Policy: What DomeBreak Stores and for How Long",
         description:
             "What DomeBreak stores when you create an account, join a match, or apply for the beta, how long it is kept, who it reaches, and how to have it deleted.",
         trail: [{name: "Privacy", path: "/#/privacy"}],
     },
     terms: {
         path: "/#/terms",
-        title: "Terms of Use | DomeBreak",
+        title: "Terms of Use: The DomeBreak Licence, Account and Conduct",
         description:
             "The terms you accept by downloading DomeBreak or creating an account: the licence, conduct in multiplayer, account suspension, and the limits of the warranty.",
         trail: [{name: "Terms", path: "/#/terms"}],
     },
     contact: {
         path: "/#/contact",
-        title: "Contact | DomeBreak",
+        title: "Contact DomeBreak: Crash Reports, Data Requests and Press",
         description:
             "Where to send a crash report, an account or data request, or a press and streaming enquiry about DomeBreak, and what to put in the message.",
         trail: [{name: "Contact", path: "/#/contact"}],

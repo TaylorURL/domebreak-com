@@ -32,7 +32,7 @@ const FEATURES = [
     {
         icon: "awacs",
         title: "Play online",
-        body: "Take on other commanders in real time. Server-authoritative online matches with a live lobby, parties, and friends, in the same world and with the same arsenal, against human opponents.",
+        body: "Take on other commanders in real time. Server-authoritative online matches with a live lobby, parties, and friends: the same world and arsenal, against human opponents.",
     },
 ];
 

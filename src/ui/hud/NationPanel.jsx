@@ -214,7 +214,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                                             {c.alive && view.standing && (c.pop || 0) > 0 && c.hp < c.maxHp && (
                                                 <PopTrend
                                                     up
-                                                    title="Rebuilding, population recovering as the city heals"
+                                                    title="Rebuilding: population recovers as the city heals"
                                                     className="text-[9px]"
                                                 />
                                             )}

@@ -117,7 +117,7 @@ function Landing({onSignIn, onShowShortcuts}) {
                     icon="factory"
                     kicker="Run the nation"
                     title="Every silo is paid for"
-                    body="You run the whole country, the army included. Balance GDP, industry, and stability while rival nations pressure your borders. Overreach and the home front cracks."
+                    body="You run the whole country. The army is one part of it. Balance GDP, industry, and stability while rival nations pressure your borders. Overreach and the home front cracks."
                     points={[
                         "GDP, industry, leadership, and stability all in play",
                         "Real-time clock: pause, or run from 0.5× to 10×",
