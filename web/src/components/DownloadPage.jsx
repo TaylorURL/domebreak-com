@@ -136,7 +136,7 @@ function PlatformCard({platform, version, mine}) {
                     aria-label={`Download DomeBreak for ${platform.os} on ${platform.arch}: ${platform.sub}`}
                     className={cn(button({variant: "primary", size: "lg"}), "w-full")}
                 >
-                    Download for {platform.arch}
+                    Get {platform.arch}
                 </a>
             </div>
         </article>
