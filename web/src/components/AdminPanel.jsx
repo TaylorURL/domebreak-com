@@ -5,7 +5,7 @@ import Footer from "./Footer.jsx";
 import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, chip, panel} from "../lib/variants.js";
 import {useAccount} from "../lib/accountStore.js";
 import {BETA_PLATFORMS} from "../lib/beta.js";
 import {fmtDate} from "../lib/dates.js";
@@ -18,20 +18,25 @@ function GateCard({icon, eyebrow, title, body, action}) {
         <section className="relative overflow-hidden pt-28 pb-24 sm:pt-32 sm:pb-28">
             <div aria-hidden className="pointer-events-none absolute inset-0 db-grid" />
             <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
-            <div className="relative mx-auto max-w-[560px] px-5 sm:px-8">
+            <div className="relative mx-auto max-w-[1100px] px-5 sm:px-8">
                 <Reveal>
-                    <div className="relative db-tick db-seam overflow-hidden rounded-lg border border-line bg-panel-solid p-8 text-center shadow sm:p-10">
-                        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded border border-gold-line bg-gold-soft text-gold">
+                    <div
+                        className={cn(
+                            panel({frame: "glass"}),
+                            "db-seam mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                        )}
+                    >
+                        <span className="db-notch-sm mx-auto flex h-14 w-14 items-center justify-center border border-gold-line bg-gold-soft text-gold">
                             {icon}
                         </span>
                         <div className="mt-6 flex justify-center">
-                            <Eyebrow>{eyebrow}</Eyebrow>
+                            <Eyebrow framed>{eyebrow}</Eyebrow>
                         </div>
                         <h1 className="mt-4 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-bold uppercase leading-[1.05] text-text">
                             {title}
                         </h1>
                         <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">{body}</p>
-                        {action && <div className="mt-8 flex justify-center">{action}</div>}
+                        {action && <div className="mt-8 flex justify-center border-t border-hair pt-6">{action}</div>}
                     </div>
                 </Reveal>
             </div>
@@ -44,7 +49,9 @@ function GateCard({icon, eyebrow, title, body, action}) {
 // db-beta function). Everyone else gets a gated card.
 export default function AdminPanel({onSignIn, onShowShortcuts}) {
     const {loading, signedIn, isAdmin, listBeta} = useAccount();
-    const [state, setState] = useState("idle"); // idle | loading | done | error
+    // The panel is only ever mounted for a visit that will fetch, so it opens on
+    // its own spinner rather than on an idle state no reader is shown.
+    const [state, setState] = useState("loading"); // loading | done | error
     const [rows, setRows] = useState([]);
     const [error, setError] = useState("");
 
@@ -52,23 +59,36 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
         window.scrollTo({top: 0, behavior: "auto"});
     }, []);
 
-    const load = useCallback(async () => {
-        setState("loading");
-        setError("");
-        const res = await listBeta();
+    // One listBeta() result applied to the panel. Both callers below settle
+    // through here so the list and its failure read the same either way.
+    const apply = useCallback((res) => {
         if (res.ok) {
             setRows(res.applications);
+            setError("");
             setState("done");
         } else {
             setError(res.error || "Failed to load applications.");
             setState("error");
         }
-    }, [listBeta]);
+    }, []);
 
-    // Fetch once the account has resolved to a signed-in admin.
+    // Fetch once the account has resolved to a signed-in admin. The request is
+    // what the effect starts; the state it settles moves when the answer lands,
+    // not while the effect is still running.
     useEffect(() => {
-        if (!loading && signedIn && isAdmin) load();
-    }, [loading, signedIn, isAdmin, load]);
+        if (loading || !signedIn || !isAdmin) return undefined;
+        let live = true;
+        listBeta().then((res) => live && apply(res));
+        return () => {
+            live = false;
+        };
+    }, [loading, signedIn, isAdmin, listBeta, apply]);
+
+    const reload = useCallback(async () => {
+        setState("loading");
+        setError("");
+        apply(await listBeta());
+    }, [apply, listBeta]);
 
     let content;
     if (loading) {
@@ -104,7 +124,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                 icon={<ShieldAlert size={26} />}
                 eyebrow="Forbidden"
                 title="Not authorized"
-                body="Your account doesn't have admin access. If you think that's a mistake, contact the team."
+                body="Your account doesn't have admin access. If you think that's a mistake, get in touch through the contact page."
             />
         );
     } else {
@@ -114,7 +134,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                     <Reveal>
                         <div className="flex flex-wrap items-end justify-between gap-4">
                             <div>
-                                <Eyebrow>Admin · Closed beta</Eyebrow>
+                                <Eyebrow framed>Admin · Closed beta</Eyebrow>
                                 <h1 className="mt-4 font-display text-[clamp(1.8rem,4vw,2.8rem)] font-bold uppercase leading-[1.02] text-text">
                                     Beta applications
                                 </h1>
@@ -125,7 +145,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                 </p>
                             </div>
                             <button
-                                onClick={load}
+                                onClick={reload}
                                 disabled={state === "loading"}
                                 className={cn(button({variant: "default", size: "sm"}))}
                             >
@@ -136,7 +156,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                     </Reveal>
 
                     <Reveal delay={0.08}>
-                        <div className="mt-8 overflow-hidden rounded-lg border border-line bg-panel-solid">
+                        <div className={cn(panel(), "db-tab-rule mt-8")} style={{"--db-tab": "108px"}}>
                             {state === "loading" ? (
                                 <div className="flex items-center justify-center gap-3 py-20 text-dim">
                                     <Loader2 size={18} className="animate-spin" />
@@ -148,7 +168,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                 <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
                                     <ShieldAlert size={26} className="text-danger" />
                                     <p className="max-w-sm text-[14px] text-dim">{error}</p>
-                                    <button onClick={load} className={cn(button({variant: "default", size: "sm"}))}>
+                                    <button onClick={reload} className={cn(button({variant: "default", size: "sm"}))}>
                                         <RotateCw size={13} />
                                         <span>Try Again</span>
                                     </button>
@@ -179,7 +199,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                             {rows.map((r, i) => (
                                                 <tr
                                                     key={r.id}
-                                                    className="border-b border-hair align-top last:border-0 hover:bg-bg-2/60"
+                                                    className="border-b border-hair align-top transition-colors duration-[var(--dur-fast)] last:border-0 hover:bg-bg-2"
                                                 >
                                                     <td className="px-4 py-3 text-right font-mono text-[12px] text-faint tabular-nums">
                                                         {i + 1}
@@ -187,13 +207,18 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                                     <td className="px-4 py-3">
                                                         <a
                                                             href={`mailto:${r.email}`}
-                                                            className="font-mono text-[13px] text-text underline decoration-hair underline-offset-4 transition-colors hover:decoration-text"
+                                                            className="font-mono text-[13px] text-text underline decoration-hair underline-offset-4 transition-colors hover:decoration-gold hover:text-gold"
                                                         >
                                                             {r.email}
                                                         </a>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <span className="inline-flex rounded-sm border border-line px-2 py-1 font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-dim">
+                                                        <span
+                                                            className={cn(
+                                                                chip({tone: "subtle", shape: "notch"}),
+                                                                "text-[10px] tracking-[0.14em]",
+                                                            )}
+                                                        >
                                                             {PLATFORM_LABEL[r.platform] || r.platform || "—"}
                                                         </span>
                                                     </td>

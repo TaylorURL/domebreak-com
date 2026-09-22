@@ -32,7 +32,7 @@ function AvatarPicker({avatar, onPick, onClose}) {
     return (
         <div className="mt-[10px] pt-[10px] border-t border-line-soft">
             <div className="flex items-baseline justify-between mb-1.5">
-                <span className="font-display text-[10px] tracking-[1.2px] uppercase text-faint" id="db-avatar-h">
+                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint" id="db-avatar-h">
                     Profile Picture
                 </span>
                 <button
@@ -51,9 +51,9 @@ function AvatarPicker({avatar, onPick, onClose}) {
                     type="button"
                     role="option"
                     aria-selected={!avatar}
-                    aria-label="No picture — use username initial"
+                    aria-label="No picture, showing the username initial"
                     className={cn(
-                        "grid place-items-center aspect-square rounded border text-[9px] uppercase transition-colors hover:border-blue",
+                        "db-notch-sm grid place-items-center aspect-square border text-[9px] uppercase transition-colors duration-[var(--dur-fast)] hover:border-blue",
                         !avatar ? "border-gold-line bg-gold-soft text-gold" : "border-line bg-panel text-faint",
                     )}
                     onClick={() => onPick(null)}
@@ -68,7 +68,7 @@ function AvatarPicker({avatar, onPick, onClose}) {
                         aria-selected={avatar === name}
                         aria-label={`Set picture to ${name}`}
                         className={cn(
-                            "grid place-items-center aspect-square rounded border transition-colors hover:border-blue",
+                            "db-notch-sm grid place-items-center aspect-square border transition-colors duration-[var(--dur-fast)] hover:border-blue",
                             avatar === name
                                 ? "border-gold-line bg-gold-soft text-gold"
                                 : "border-line bg-panel text-dim",
@@ -108,7 +108,7 @@ function MeBadgePopover({
     const avatar = profile?.avatar ?? null;
     return (
         <div
-            className="db-mebadge-pop absolute top-[calc(100%+8px)] right-0 w-[260px] px-4 py-[14px] border border-line rounded bg-panel-2 backdrop-blur-[14px] shadow animate-[dbPop_150ms_var(--ease-out)]"
+            className="db-mebadge-pop db-hud-panel [--db-tab:96px] absolute top-[calc(100%+8px)] right-0 w-[260px] px-4 py-[14px] motion-safe:animate-[dbPop_150ms_var(--ease-out)]"
             ref={ref}
             tabIndex={-1}
             role="dialog"
@@ -137,7 +137,9 @@ function MeBadgePopover({
                         <span className="font-display font-bold text-sm text-text truncate" id={titleId}>
                             {profile?.username || "—"}
                         </span>
-                        <span className="text-[10px] tracking-[1px] uppercase text-faint shrink-0">Commander</span>
+                        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint shrink-0">
+                            Commander
+                        </span>
                     </div>
                     <div className="text-faint text-[11px] mt-[2px]">{profile ? `Since ${since || "—"}` : "—"}</div>
                 </div>
@@ -150,24 +152,24 @@ function MeBadgePopover({
                 role="group"
                 aria-label="Career record"
             >
-                <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins — unavailable"}>
+                <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins unavailable"}>
                     {stats ? `${stats.wins}W` : "—"}
                 </span>
-                <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses — unavailable"}>
+                <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses unavailable"}>
                     {stats ? `${stats.losses}L` : "—"}
                 </span>
                 <span
                     title="Total matches played"
-                    aria-label={stats ? `${total} matches played` : "Matches — unavailable"}
+                    aria-label={stats ? `${total} matches played` : "Matches unavailable"}
                 >
                     {stats ? `${total} Matches` : "—"}
                 </span>
-                <span title="Win rate" aria-label={stats ? `${winRate} percent win rate` : "Win rate — unavailable"}>
+                <span title="Win rate" aria-label={stats ? `${winRate} percent win rate` : "Win rate unavailable"}>
                     {stats ? `${winRate}% Win Rate` : "—"}
                 </span>
                 <span
                     title="Total time in command"
-                    aria-label={hours != null ? `${hours} hours playtime` : "Playtime — unavailable"}
+                    aria-label={hours != null ? `${hours} hours playtime` : "Playtime unavailable"}
                 >
                     {hours != null ? `${hours}h Playtime` : "—"}
                 </span>
@@ -175,7 +177,7 @@ function MeBadgePopover({
             {inGame && players?.length > 0 && (
                 <div className="mt-[10px] pt-[10px] border-t border-line-soft">
                     <div
-                        className="font-display text-[10px] tracking-[1.2px] uppercase text-faint mb-1.5"
+                        className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint mb-1.5"
                         id="db-mebadge-roster-h"
                     >
                         In This War
@@ -186,7 +188,7 @@ function MeBadgePopover({
                                 key={p.slot}
                                 className="flex items-center gap-2 py-[3px] text-xs text-text"
                                 role="listitem"
-                                aria-label={`${p.username || "Commander"} — ${p.iso || "no nation"}`}
+                                aria-label={`${p.username || "Commander"}, ${p.iso || "no nation"}`}
                             >
                                 <Flag iso={p.iso} />
                                 <span>{p.username || "Commander"}</span>
@@ -245,7 +247,7 @@ export default function MeBadge({profile, stats, onSignOut, inGame, players, onS
         <div ref={rootRef} className={cn("z-20", inGame ? "static" : "fixed top-[42px] right-4")}>
             <button
                 className={cn(
-                    "flex items-center gap-2 h-[38px] rounded border border-line bg-panel text-text backdrop-blur-[8px] transition-[border-color,transform] duration-150 ease-out-db hover:border-blue active:scale-[0.96]",
+                    "db-notch-sm relative flex items-center gap-2 h-[38px] border border-line bg-panel text-text backdrop-blur-[8px] transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue active:scale-[0.96]",
                     inGame ? "w-[38px] p-0 justify-center" : "p-0 pr-3",
                 )}
                 onClick={popover.toggle}

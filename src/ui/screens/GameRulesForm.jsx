@@ -43,7 +43,7 @@ export default function GameRulesForm({mode, rules, onChange, readOnly = false, 
                 <button
                     type="button"
                     onClick={reset}
-                    className="self-start font-display text-[10px] font-semibold tracking-[2px] uppercase text-dim border border-line-soft rounded-sm px-2 py-1 hover:text-text hover:border-line"
+                    className="self-start font-display text-[10px] font-semibold tracking-[2px] uppercase text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line"
                 >
                     Reset to Defaults
                 </button>
@@ -69,7 +69,7 @@ function RangeRow({meta, value, readOnly, onChange}) {
                 value={value}
                 disabled={readOnly}
                 onChange={(e) => onChange(Number(e.target.value))}
-                className="db-rules-range w-full accent-gold disabled:opacity-40 disabled:cursor-not-allowed"
+                className="db-range db-rules-range w-full accent-gold disabled:opacity-40 disabled:cursor-not-allowed"
             />
             <span className="text-[11px] leading-snug text-dim">{meta.help}</span>
         </label>
@@ -90,14 +90,14 @@ function ToggleRow({meta, value, readOnly, onChange}) {
                     disabled={readOnly}
                     onClick={() => onChange(!value)}
                     className={cn(
-                        "relative w-10 h-5 rounded-full border transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-                        value ? "bg-gold border-gold-line" : "bg-[rgba(255,255,255,0.08)] border-line-soft",
+                        "relative w-10 h-5 rounded-full border transition-colors duration-[var(--dur-fast)] disabled:opacity-40 disabled:cursor-not-allowed",
+                        value ? "bg-gold border-gold-line" : "bg-sunk border-line",
                     )}
                 >
                     <span
                         className={cn(
-                            "absolute top-[2px] w-3.5 h-3.5 rounded-full bg-white shadow transition-[left] duration-150 ease-out",
-                            value ? "left-[22px]" : "left-[2px]",
+                            "absolute top-[2px] w-3.5 h-3.5 rounded-full transition-[left,background] duration-150 ease-out motion-reduce:transition-none",
+                            value ? "left-[22px] bg-gold-contrast" : "left-[2px] bg-dim",
                         )}
                     />
                 </button>

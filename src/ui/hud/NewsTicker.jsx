@@ -103,29 +103,34 @@ export default function NewsTicker({world, mySlot}) {
         return () => cancelAnimationFrame(raf);
     }, [hasNews]);
 
+    // One lamp per headline, in the shared LED vocabulary: a routine report is a
+    // dim mark, a gain green, a warning amber, an attack red. None of them blink —
+    // the strip's own live lamp is the one blinking light, and forty more competing
+    // with it would say nothing at all.
     const toneClass = {
-        info: "",
+        info: "text-dim",
         good: "text-text",
-        alert: "",
+        alert: "text-text",
         danger: "text-[#f0a39d]",
     };
     const dotToneClass = {
-        info: "bg-faint",
-        good: "bg-text",
-        alert: "bg-[#d79a3f]",
-        danger: "bg-red shadow-[0_0_5px_rgba(224,87,79,0.8)]",
+        info: "text-faint",
+        good: "db-led-ok",
+        alert: "db-led-warn",
+        danger: "text-danger",
     };
 
     return (
         <div
-            className="db-ticker z-4 flex items-stretch w-[min(720px,100%)] h-7 bg-panel-2 border border-line rounded shadow overflow-hidden pointer-events-auto motion-safe:animate-[dbDropInY_340ms_var(--ease-drawer)] max-[900px]:hidden"
+            className="db-ticker db-hud-panel relative z-4 flex items-stretch w-[min(720px,100%)] h-[30px] overflow-hidden pointer-events-auto [--db-tab:0px] motion-safe:animate-[dbDropInY_340ms_var(--ease-drawer)] max-[900px]:hidden"
             aria-label="News feed"
             aria-live="polite"
         >
-            <span className="db-ticker-tag flex items-center gap-[6px] px-[11px] text-[9.5px] tracking-[1px] uppercase text-faint bg-panel border-r border-line flex-none">
+            <span className="db-ticker-tag flex items-center gap-[7px] px-[11px] font-mono text-[9px] tracking-[0.2em] uppercase text-faint bg-sunk border-r border-line flex-none">
+                <span className="db-led db-led-live" aria-hidden="true" />
                 Live Wire
             </span>
-            <div className="relative flex-1 overflow-hidden flex items-center">
+            <div className="db-ticker-track relative flex-1 overflow-hidden flex items-center">
                 {hasNews ? (
                     <div className="inline-flex flex-nowrap whitespace-nowrap will-change-transform" ref={trackRef}>
                         {[0, 1].map((copy) => (
@@ -138,17 +143,12 @@ export default function NewsTicker({world, mySlot}) {
                                 {items.map((it, i) => (
                                     <span
                                         className={cn(
-                                            "inline-flex items-center gap-2 px-[22px] text-xs text-text whitespace-nowrap",
+                                            "inline-flex items-center gap-[9px] px-[22px] font-mono text-[11px] text-text whitespace-nowrap",
                                             toneClass[it.tone],
                                         )}
                                         key={`${copy}-${it.id}-${i}`}
                                     >
-                                        <span
-                                            className={cn(
-                                                "w-[5px] h-[5px] rounded-full bg-faint flex-none",
-                                                dotToneClass[it.tone],
-                                            )}
-                                        />
+                                        <span className={cn("db-led", dotToneClass[it.tone])} aria-hidden="true" />
                                         {it.text}
                                     </span>
                                 ))}
@@ -156,7 +156,7 @@ export default function NewsTicker({world, mySlot}) {
                         ))}
                     </div>
                 ) : (
-                    <span className="px-4 text-xs text-faint">Monitoring global activity…</span>
+                    <span className="px-4 font-mono text-[11px] text-faint">Monitoring global activity…</span>
                 )}
             </div>
         </div>

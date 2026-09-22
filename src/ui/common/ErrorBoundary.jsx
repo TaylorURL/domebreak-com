@@ -23,14 +23,15 @@ export default class ErrorBoundary extends Component {
         if (!this.state.error) return this.props.children;
         return (
             <div className="fixed inset-0 z-[100] grid place-items-center bg-[#0a0b0d] text-center p-8">
-                <div className="max-w-[460px]">
-                    <div className="font-display text-danger text-2xl font-bold tracking-[2px] uppercase mb-3">
+                <div className="db-notch db-scan relative max-w-[460px] border border-danger bg-[rgba(20,10,10,0.96)] p-7 text-left">
+                    <div className="font-display text-danger text-2xl font-bold tracking-[2px] uppercase mb-3 flex items-center gap-2.5">
+                        <span className="db-led db-led-live" />
                         Match Error
                     </div>
                     <p className="text-dim text-[13px] mb-4">
-                        The match view hit a render error — full details are in the console.
+                        The match view hit a render error. Full details are in the console.
                     </p>
-                    <pre className="text-left text-[11px] text-faint bg-[rgba(255,255,255,0.04)] border border-line rounded p-3 overflow-auto max-h-[220px] whitespace-pre-wrap">
+                    <pre className="db-notch-sm text-left text-[11px] text-faint bg-sunk border border-line p-3 overflow-auto max-h-[220px] whitespace-pre-wrap font-mono">
                         {String(this.state.error?.stack || this.state.error?.message || this.state.error)}
                     </pre>
                     {this.props.onReset && (

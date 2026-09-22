@@ -16,14 +16,14 @@ export const abs = (path) => new URL(path, SITE_URL).href;
 export const ROUTES = {
     home: {
         path: "/",
-        title: "DomeBreak — Real-Time Missile Defense on the World Map",
+        title: "DomeBreak: Real-Time Missile Defense on the World Map",
         description:
             "Build a missile dome over real geography, plan strikes on rival nations, and run the economy paying for it. Free real-time strategy for macOS and Windows.",
         trail: [],
     },
     wiki: {
         path: "/#/wiki",
-        title: "Unit Wiki — Every DomeBreak Unit and Building",
+        title: "Unit Wiki: Every DomeBreak Unit and Building",
         description:
             "Cost, upkeep, build time, hit points, reach and payload for every unit and building in DomeBreak, read straight from the simulation the game runs.",
         trail: [{name: "Unit Wiki", path: "/#/wiki"}],
@@ -32,33 +32,33 @@ export const ROUTES = {
         path: "/#/download",
         title: "Download DomeBreak for macOS and Windows",
         description:
-            "Installers for Apple Silicon and Intel Macs, and for 64-bit and ARM Windows. DomeBreak is free to play — create an account and take command of a nation.",
+            "Installers for Apple Silicon and Intel Macs, and for 64-bit and ARM Windows. DomeBreak is free to play. Create an account and take command of a nation.",
         trail: [{name: "Download", path: "/#/download"}],
     },
     privacy: {
         path: "/#/privacy",
-        title: "Privacy Policy — DomeBreak",
+        title: "Privacy Policy: What DomeBreak Stores and for How Long",
         description:
             "What DomeBreak stores when you create an account, join a match, or apply for the beta, how long it is kept, who it reaches, and how to have it deleted.",
         trail: [{name: "Privacy", path: "/#/privacy"}],
     },
     terms: {
         path: "/#/terms",
-        title: "Terms of Use — DomeBreak",
+        title: "Terms of Use: The DomeBreak Licence, Account and Conduct",
         description:
             "The terms you accept by downloading DomeBreak or creating an account: the licence, conduct in multiplayer, account suspension, and the limits of the warranty.",
         trail: [{name: "Terms", path: "/#/terms"}],
     },
     contact: {
         path: "/#/contact",
-        title: "Contact — DomeBreak",
+        title: "Contact DomeBreak: Crash Reports, Data Requests and Press",
         description:
             "Where to send a crash report, an account or data request, or a press and streaming enquiry about DomeBreak, and what to put in the message.",
         trail: [{name: "Contact", path: "/#/contact"}],
     },
     admin: {
         path: "/#/admin",
-        title: "Beta Review — DomeBreak Admin",
+        title: "Beta Review | DomeBreak Admin",
         description:
             "The closed-beta application queue, open to DomeBreak admins. Every application with the platform it named and the date it arrived, newest first.",
         trail: [{name: "Admin", path: "/#/admin"}],
@@ -68,7 +68,7 @@ export const ROUTES = {
     // against the home page's canonical, which is how one address becomes many.
     notFound: {
         path: "/#/404",
-        title: "Page Not Found — DomeBreak",
+        title: "Page Not Found | DomeBreak",
         description:
             "Nothing is served at this address. DomeBreak's pages are the home page, the unit wiki, and the download page for macOS and Windows.",
         trail: [],

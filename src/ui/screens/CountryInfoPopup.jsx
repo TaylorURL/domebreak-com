@@ -56,10 +56,10 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
           : eliminated
             ? {label: "Eliminated", tone: "text-dim"}
             : rel === "war"
-              ? {label: "At War", tone: "text-red"}
+              ? {label: "At War", tone: "text-red", led: "db-led-live"}
               : rel === "ally"
-                ? {label: "Allied", tone: "text-[#5fa8ff]"}
-                : {label: "At Peace", tone: "text-[#46d38a]"};
+                ? {label: "Allied", tone: "text-[#5fa8ff]", led: "db-led-sensor"}
+                : {label: "At Peace", tone: "text-good", led: "db-led-ok"};
 
     const call = (fn, ok) => {
         const r = fn();
@@ -75,31 +75,34 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
     return (
         <ScreenFrame
-            title={n.name.toUpperCase()}
+            title={n.name}
             subtitle={`${seatLabel}${commander && !isMe ? ` · ${commander}` : ""}`}
             onClose={onClose}
         >
             <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-4 p-4 bg-sunk border border-line rounded">
+                <div className="db-notch db-brackets relative flex items-center gap-4 p-4 bg-sunk border border-line rounded-none">
                     <span
-                        className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border-2 rounded-[4px] [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
+                        className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border-2 rounded-none [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
                         style={{borderColor}}
                     >
                         <Flag iso={n.iso} />
                     </span>
                     <div className="flex flex-col gap-[6px] min-w-0">
-                        <b className="font-display font-semibold text-[18px] tracking-[0.5px]">{n.name}</b>
+                        <b className="font-display font-semibold text-[18px] tracking-[0.02em]">{n.name}</b>
                         <div className="flex items-center gap-[8px] flex-wrap">
                             <span
                                 className={cn(
-                                    "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-full text-dim whitespace-nowrap",
+                                    "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-sm text-dim whitespace-nowrap",
                                     seatCls,
                                 )}
                             >
                                 {seatLabel}
                             </span>
                             {commander && !isMe && <span className="text-[12px] text-dim">{commander}</span>}
-                            <span className={cn("font-mono text-[11px]", standing.tone)}>{standing.label}</span>
+                            <span className={cn("inline-flex items-center gap-2 font-mono text-[11px]", standing.tone)}>
+                                {standing.led && <i className={cn("db-led", standing.led)} aria-hidden="true" />}
+                                {standing.label}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -112,13 +115,15 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                 </div>
 
                 <div className="flex flex-col gap-[8px]">
-                    <span className="font-mono text-[9px] tracking-[1.2px] uppercase text-faint">Diplomacy</span>
+                    <span className="pb-1.5 border-b border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
+                        Diplomacy
+                    </span>
                     {!canAct ? (
                         <p className="font-mono text-[11.5px] text-dim">
                             {isMe
-                                ? "This is your own power — nothing to negotiate."
+                                ? "This is your own power, so there is nothing to negotiate."
                                 : neutral
-                                  ? "A neutral power — it sits out the war, start to finish."
+                                  ? "A neutral power that sits out the war, start to finish."
                                   : "Eliminated. Only the dossier remains."}
                         </p>
                     ) : rel === "war" ? (
@@ -160,7 +165,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                                 className={miniButton({danger: true})}
                                 aria-label={`Declare war on ${n.name}`}
                                 disabled={graceActive}
-                                title={graceActive ? "Opening grace — no wars can be declared yet." : undefined}
+                                title={graceActive ? "Opening grace holds. No war can be declared yet." : undefined}
                                 onClick={() => call(() => api.declareWar(n.slot))}
                             >
                                 Declare War
@@ -181,8 +186,8 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
 function StatCell({label, value}) {
     return (
-        <div className="flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-            <span className="text-[9px] tracking-[1.2px] uppercase text-faint">{label}</span>
+        <div className="db-notch-sm flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded-none">
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-faint">{label}</span>
             <b className="font-mono text-lg">{value}</b>
         </div>
     );

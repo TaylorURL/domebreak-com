@@ -29,7 +29,7 @@ export const UNITS = {
     // coarse to cue interceptors — warnOnly keeps it out of radarLinked.
     oth: {
         label: "Over-the-Horizon Radar",
-        desc: "Ionospheric backscatter array. Spots launch plumes far over the horizon — strategic warning only, no fire control.",
+        desc: "Ionospheric backscatter array. Spots launch plumes far over the horizon. It gives strategic warning only and cannot control fire.",
         kind: "support",
         cost: 500,
         buildTime: 24,
@@ -38,7 +38,7 @@ export const UNITS = {
         warnOnly: true,
         hp: 35,
         upkeep: 2.5,
-        hint: "Skywave array — detects launches far over the horizon. Warning only; can't guide interceptors.",
+        hint: "Skywave array that detects launches far over the horizon. Warning only; it cannot guide interceptors.",
     },
     // Launch platforms — the missile they fire is armament (see armamentOf), not the
     // unit's own name.
@@ -47,7 +47,7 @@ export const UNITS = {
         warheads: true, // fires the selectable strategic arsenal
         ammo: ["sicbm"], // single-round mobile platform — no warhead picker
         signature: "sicbm",
-        desc: "Road-mobile transporter-erector-launcher. Shoot-and-scoot SICBM strikes — reposition to dodge counter-battery; halts to fire. Shorter reach than a silo.",
+        desc: "Road-mobile transporter-erector-launcher. Shoot-and-scoot SICBM strikes: reposition to dodge counter-battery, and it halts to fire. Shorter reach than a silo.",
         ballistic: true,
         kind: "offense",
         cost: 200,
@@ -95,7 +95,7 @@ export const UNITS = {
     // strategic SLBMs.
     cruiser: {
         label: "Missile Cruiser",
-        desc: "Fleet air-defense flagship — the longest interceptor reach afloat.",
+        desc: "Fleet air-defense flagship with the longest interceptor reach afloat.",
         kind: "defense",
         domain: "sea",
         cost: 300,
@@ -114,7 +114,7 @@ export const UNITS = {
     },
     destroyer: {
         label: "Destroyer",
-        desc: "Fast escort screen. Area air defense and the fleet's sub-hunter — its sonar finds boats that hide from radar.",
+        desc: "Fast escort screen. Area air defense and the fleet's sub-hunter: its sonar finds boats that hide from radar.",
         kind: "defense",
         domain: "sea",
         cost: 220,
@@ -137,7 +137,7 @@ export const UNITS = {
     },
     battleship: {
         label: "Battleship",
-        desc: "Standoff bombardment hull — conventional strike weight from open water.",
+        desc: "Standoff bombardment hull. Conventional strike weight from open water.",
         kind: "offense",
         domain: "sea",
         cost: 360,
@@ -211,7 +211,7 @@ export const UNITS = {
     // still be seized by enemy infantry.
     bunker: {
         label: "Leadership Bunker",
-        desc: "Hardened national command. Shrugs off everything but a direct Thermonuclear strike — but enemy infantry that capture it decapitate you. Only one may ever be built.",
+        desc: "Hardened national command. Shrugs off everything but a direct Thermonuclear strike, though enemy infantry that capture it decapitate you. Only one may ever be built.",
         kind: "support",
         maxCount: 1,
         cost: 650,
@@ -221,7 +221,7 @@ export const UNITS = {
     },
     infantry: {
         label: "Infantry",
-        desc: "Rifle divisions — cheap, tough, and slow. Close-range assault on land targets only. Holds a cleared city to capture its state.",
+        desc: "Rifle divisions: cheap, tough, and slow. Close-range assault on land targets only. Holds a cleared city to capture its state.",
         kind: "offense",
         domain: "land",
         targets: "land",
@@ -240,7 +240,7 @@ export const UNITS = {
     },
     artillery: {
         label: "Artillery",
-        desc: "Towed gun batteries — the longest ground reach, fragile up close.",
+        desc: "Towed gun batteries with the longest ground reach. Fragile up close.",
         kind: "offense",
         domain: "land",
         targets: "land",
@@ -258,7 +258,7 @@ export const UNITS = {
     },
     tank: {
         label: "Tank Battalion",
-        desc: "Armored maneuver force — the fastest thing on the ground. Can seize and hold enemy cities.",
+        desc: "Armored maneuver force, the fastest thing on the ground. Can seize and hold enemy cities.",
         kind: "offense",
         domain: "land",
         targets: "land",
@@ -282,7 +282,7 @@ export const UNITS = {
     // here with its ground-force siblings since it builds, stages, and marches as one.
     mshorad: {
         label: "Mobile SHORAD",
-        desc: "Tracked short-range air defense. Marches with the ground forces and fires on the move — shorter reach than a fixed battery, but it never gets left behind.",
+        desc: "Tracked short-range air defense. Marches with the ground forces and fires on the move. Shorter reach than a fixed battery, but it never gets left behind.",
         kind: "defense",
         domain: "land",
         requires: "armybase",
@@ -299,7 +299,7 @@ export const UNITS = {
     },
     cram: {
         label: "C-RAM",
-        desc: "Radar-cued 20mm Gatling gun — the last-ditch terminal layer. Almost no reach, but it hoses down whatever rockets, artillery, or mortars slip past everything else.",
+        desc: "Radar-cued 20mm Gatling gun, the last-ditch terminal layer. Almost no reach, but it hoses down whatever rockets, artillery, or mortars slip past everything else.",
         kind: "defense",
         requiresTech: "def4",
         cost: 130,
@@ -328,7 +328,7 @@ export const UNITS = {
         warheads: true,
         ammo: ["hgv"], // single fixed round, no picker
         signature: "hgv",
-        desc: "Boost-glide launcher fielding maneuvering hypersonic weapons — fast, low, and hard to intercept at regional reach.",
+        desc: "Boost-glide launcher fielding maneuvering hypersonic weapons: fast, low, and hard to intercept at regional reach.",
         kind: "offense",
         requiresTech: "off8",
         cost: 340,
@@ -343,7 +343,7 @@ export const UNITS = {
     },
     patriot: {
         label: "Patriot Battery",
-        desc: "Modern terminal SAM — hit-to-kill interceptors that tighten the last-ditch layer against aircraft and short-range missiles.",
+        desc: "Modern terminal SAM. Hit-to-kill interceptors that tighten the last-ditch layer against aircraft and short-range missiles.",
         kind: "defense",
         requiresTech: "def5",
         cost: 260,
@@ -357,7 +357,7 @@ export const UNITS = {
     },
     aegis: {
         label: "Aegis Ashore",
-        desc: "Land-based Standard Missile site — a midcourse interceptor node that reaches out well beyond terminal SAMs.",
+        desc: "Land-based Standard Missile site. A midcourse interceptor node that reaches well beyond terminal SAMs.",
         kind: "defense",
         requiresTech: "def6",
         cost: 380,
@@ -371,7 +371,7 @@ export const UNITS = {
     },
     thaad: {
         label: "THAAD Battery",
-        desc: "High-altitude terminal anti-ballistic defense — kills reentry vehicles above the atmosphere before they can bloom.",
+        desc: "High-altitude terminal anti-ballistic defense. Kills reentry vehicles above the atmosphere before they can bloom.",
         kind: "defense",
         antiBallistic: true,
         requiresTech: "def7",
@@ -390,7 +390,7 @@ export const UNITS = {
     },
     laser: {
         label: "Laser Defense Grid",
-        desc: "Directed-energy interceptor grid — speed-of-light kills with a bottomless magazine. Enormous to stand up, but almost free to keep firing.",
+        desc: "Directed-energy interceptor grid: speed-of-light kills with a bottomless magazine. Enormous to stand up, but almost free to keep firing.",
         kind: "defense",
         antiBallistic: true,
         // Fires a directed-energy beam instead of a flying round: it holds on the
@@ -408,7 +408,7 @@ export const UNITS = {
         fireCost: 1,
         hp: 60,
         upkeep: 1,
-        hint: "Huge upfront cost, minimal running cost — nearly free to keep firing once it is standing.",
+        hint: "Huge upfront cost and minimal running cost, so it is nearly free to keep firing once it is standing.",
     },
     // Space assets. The two orbital platforms have global reach on a fixed
     // inclination: stepMovement advances their longitude by orbitSpeedDegPerSec
@@ -419,7 +419,7 @@ export const UNITS = {
     // Command HQ, which is itself a ground structure and orbits nothing.
     spacehq: {
         label: "Space Command HQ",
-        desc: "National space operations center. Only one may be built — the prerequisite for every orbital asset in the arsenal.",
+        desc: "National space operations center. Only one may be built, and it is the prerequisite for every orbital asset in the arsenal.",
         kind: "support",
         maxCount: 1,
         requiresTech: "cmd11",
@@ -430,7 +430,7 @@ export const UNITS = {
     },
     reconsat: {
         label: "Reconnaissance Satellite",
-        desc: "Fire-control-grade orbital sensor with an integrated infrared launch-warning tier — sweeps a parallel of latitude, spotting plumes and cueing interceptors under its ground track.",
+        desc: "Fire-control-grade orbital sensor with an integrated infrared launch-warning tier. It sweeps a parallel of latitude, spotting plumes and cueing interceptors under its ground track.",
         kind: "support",
         orbital: true,
         orbitLift: 2.5,
@@ -450,7 +450,7 @@ export const UNITS = {
         warheads: true,
         ammo: ["cluster", "thermo", "thermomirv"], // strategic-only orbital bus — no conventional round
         signature: "thermo",
-        desc: "Kinetic-bombardment platform on a fixed-inclination orbit — a rod-from-god that only engages targets currently under its ground track, slow to recycle.",
+        desc: "Kinetic-bombardment platform on a fixed-inclination orbit. A rod-from-god that only engages targets currently under its ground track, and slow to recycle.",
         kind: "offense",
         ballistic: true,
         orbital: true,
@@ -473,7 +473,7 @@ export const UNITS = {
     // radar or satellites, only by asw sensors within sonarKm (see queries.js).
     "sub-ssn": {
         label: "Attack Submarine (SSN)",
-        desc: "Nuclear hunter-killer — a stealthy hull that stalks fleets and lofts land-attack cruise missiles from hiding.",
+        desc: "Nuclear hunter-killer. A stealthy hull that stalks fleets and lofts land-attack cruise missiles from hiding.",
         kind: "offense",
         domain: "sea",
         submarine: true,
@@ -500,7 +500,7 @@ export const UNITS = {
         warheads: true,
         ammo: ["standard", "cluster", "thermo", "thermomirv"], // full strategic warhead range
         signature: "thermo",
-        desc: "The survivable sea leg of the triad — a deep-stealth boomer whose tubes carry only strategic SLBMs: MIRV buses and city-killers for a guaranteed second strike.",
+        desc: "The survivable sea leg of the triad. A deep-stealth boomer whose tubes carry only strategic SLBMs: MIRV buses and city-killers for a guaranteed second strike.",
         kind: "offense",
         domain: "sea",
         ballistic: true,
@@ -520,7 +520,7 @@ export const UNITS = {
     },
     amphib: {
         label: "Amphibious Transport",
-        desc: "Ships embarked ground units across the ocean and lands them on a hostile coast — the sea bridge for the land game.",
+        desc: "Ships embarked ground units across the ocean and lands them on a hostile coast. The sea bridge for the land game.",
         kind: "support",
         domain: "sea",
         capacity: 4,
@@ -546,7 +546,7 @@ export const UNITS = {
         gdpAdd: 0.2,
         hp: 60,
         upkeep: 0.5,
-        hint: "Heavy manufacturing — steady income and GDP growth.",
+        hint: "Heavy manufacturing with steady income and GDP growth.",
     },
     port: {
         label: "Seaport",
@@ -558,7 +558,7 @@ export const UNITS = {
         gdpAdd: 0.35,
         hp: 70,
         upkeep: 0.5,
-        hint: "Coastal trade hub — build on land beside the sea.",
+        hint: "Coastal trade hub. Build on land beside the sea.",
     },
     refinery: {
         label: "Oil Refinery",
@@ -570,7 +570,7 @@ export const UNITS = {
         gdpAdd: 0.5,
         hp: 65,
         upkeep: 1,
-        hint: "Petrochemical exports — strong income. Needs a Factory.",
+        hint: "Petrochemical exports with strong income. Needs a Factory.",
     },
     techpark: {
         label: "Tech Park",
@@ -582,7 +582,7 @@ export const UNITS = {
         gdpAdd: 0.7,
         hp: 55,
         upkeep: 1,
-        hint: "High-tech sector — top-tier income. Needs a Factory.",
+        hint: "High-tech sector with top-tier income. Needs a Factory.",
     },
     // Aircraft only arrive as part of a base's `wing` — carrier, airstrip, or army
     // base — never bought alone, which is what `hidden` keeps them out of the build
@@ -592,7 +592,7 @@ export const UNITS = {
     // to flight).
     multirole: {
         label: "Multirole Fighter",
-        desc: "Workhorse multirole fighter — flexible strike at a friendly price.",
+        desc: "Workhorse multirole fighter. Flexible strike at a friendly price.",
         kind: "offense",
         hidden: true,
         cost: 180,
@@ -628,7 +628,7 @@ export const UNITS = {
     },
     interceptor: {
         label: "Air Superiority Fighter",
-        desc: "Air-superiority interceptor — the fastest way to kill what flies. Can't engage ballistic reentry vehicles.",
+        desc: "Air-superiority interceptor, the fastest way to kill what flies. Can't engage ballistic reentry vehicles.",
         kind: "defense",
         hidden: true,
         cost: 340,
@@ -663,7 +663,7 @@ export const UNITS = {
     },
     transport: {
         label: "Transport Aircraft",
-        desc: "Airlift for the wing — logistics muscle, not a combatant.",
+        desc: "Airlift for the wing. Logistics muscle rather than a combatant.",
         kind: "support",
         hidden: true,
         cost: 140,
@@ -676,7 +676,7 @@ export const UNITS = {
     },
     awacs: {
         label: "AEW&C (AWACS)",
-        desc: "Airborne early warning & control — a flying radar picket for fleet or front.",
+        desc: "Airborne early warning and control. A flying radar picket for fleet or front.",
         kind: "support",
         hidden: true,
         cost: 260,
@@ -698,7 +698,7 @@ export const UNITS = {
     helo: {
         label: "Attack Helicopter",
         rotary: true, // vertical lift-off, hover on station, vertical landing — not fixed-wing
-        desc: "Gunship close air support — slow, agile, deadly against surface targets.",
+        desc: "Gunship close air support: slow, agile, and deadly against surface targets.",
         kind: "offense",
         hidden: true,
         cost: 170,
@@ -717,7 +717,7 @@ export const UNITS = {
     transporthelo: {
         label: "Transport Helicopter",
         rotary: true,
-        desc: "Heavy-lift rotor logistics for the ground wing — not a combatant.",
+        desc: "Heavy-lift rotor logistics for the ground wing. It does not fight.",
         kind: "support",
         hidden: true,
         cost: 120,
@@ -730,7 +730,7 @@ export const UNITS = {
     },
     carrierfighter: {
         label: "Carrier Fighter",
-        desc: "Carrier-borne multirole strike fighter — the deck's main punch.",
+        desc: "Carrier-borne multirole strike fighter, the deck's main punch.",
         kind: "offense",
         domain: "sea",
         hidden: true,

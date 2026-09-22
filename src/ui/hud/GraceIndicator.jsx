@@ -53,10 +53,10 @@ export default function GraceIndicator({world}) {
                 <div
                     role="status"
                     aria-live="polite"
-                    className="absolute bottom-4 left-[60px] z-6 flex items-center gap-2 h-9 px-3 rounded-sm border border-gold-line bg-[rgba(244,192,42,0.12)] text-gold pointer-events-none backdrop-blur-[8px] shadow-sm motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
+                    className="db-notch-sm absolute bottom-4 left-[60px] z-6 flex items-center gap-[9px] h-[38px] px-[14px] border border-gold-line bg-gold-soft text-gold pointer-events-none backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                 >
-                    <span className="db-rail-dot w-1.5 h-1.5 rounded-full bg-gold shadow-[0_0_7px_var(--gold-line)] animate-[dbBlink_2.4s_var(--ease-in-out)_infinite] motion-reduce:animate-none" />
-                    <span className="font-display uppercase tracking-[2px] text-[10px] font-semibold">
+                    <span className="db-led db-led-warn" aria-hidden="true" />
+                    <span className="font-display uppercase tracking-[0.14em] text-[10px] font-semibold">
                         Opening Grace
                     </span>
                     <span className="font-mono text-[13px] font-bold tabular-nums [text-shadow:var(--glow-gold)]">
@@ -69,11 +69,12 @@ export default function GraceIndicator({world}) {
                     role="alert"
                     aria-live="assertive"
                     className={cn(
-                        "absolute bottom-4 left-[60px] z-6 flex items-center gap-2 h-9 px-4 rounded-sm border border-danger bg-[rgba(224,87,79,0.14)] text-[#ffd7dd] pointer-events-none backdrop-blur-[8px] shadow-sm",
+                        "db-notch-sm absolute bottom-4 left-[60px] z-6 flex items-center gap-[9px] h-[38px] px-[14px] border border-danger bg-[rgba(224,87,79,0.14)] text-[#ffd7dd] pointer-events-none backdrop-blur-[8px]",
                         "motion-safe:animate-[dbPop_220ms_var(--ease-out)]",
                     )}
                 >
-                    <span className="font-display uppercase tracking-[2px] text-[10px] font-semibold text-danger">
+                    <span className="db-led db-led-live" aria-hidden="true" />
+                    <span className="font-display uppercase tracking-[0.14em] text-[10px] font-semibold text-danger">
                         Grace Ended
                     </span>
                     <span className="text-[12.5px]">Wars may now be declared.</span>

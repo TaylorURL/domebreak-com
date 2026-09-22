@@ -3,6 +3,7 @@ import {motion, useReducedMotion, useScroll, useTransform} from "motion/react";
 import Reveal from "./Reveal.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow} from "./Primitives.jsx";
+import {button} from "../lib/variants.js";
 
 const ctaBg = "/shots/population-heat.webp";
 
@@ -51,7 +52,7 @@ export default function CtaBand({onSignIn}) {
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn?.("signup")}
-                                className="db-btn font-display inline-flex items-center rounded-sm border border-line bg-transparent px-6 py-4 text-[12px] font-semibold uppercase tracking-[1.4px] text-dim transition-colors duration-150 ease-out-db hover:border-blue hover:text-text"
+                                className={button({variant: "default", size: "lg"})}
                             >
                                 Create a Free Account
                             </button>

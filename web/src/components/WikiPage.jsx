@@ -4,15 +4,22 @@ import Footer from "./Footer.jsx";
 import GameIcon from "./GameIcon.jsx";
 import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
-import {CATEGORIES_WITH_UNITS} from "../lib/wiki.js";
+import {CATEGORIES_WITH_UNITS, UNIT_MAX} from "../lib/wiki.js";
 import {cn} from "../lib/cn.js";
-import {chip} from "../lib/variants.js";
+import {chip, panel} from "../lib/variants.js";
 
-// A pair of hairline-framed value tiles for the card header. Reads like the
-// game's telemetry readouts — mono number over an uppercase micro-label.
-function StatTile({label, value, unit}) {
+// A value's share of the largest that field reaches anywhere in the roster,
+// clamped to the track. A field the unit does not carry has no bar.
+function share(value, max) {
+    if (typeof value !== "number" || !max) return 0;
+    return Math.max(0, Math.min(100, (value / max) * 100));
+}
+
+// One of the four headline numbers, over a segmented meter that reads it against
+// the roster. Mono number, micro-label, ticks a glance can count.
+function StatTile({label, value, unit, pct}) {
     return (
-        <div className="flex flex-col gap-1 rounded-sm border border-line bg-bg-2 px-3 py-2">
+        <div className="db-notch-sm flex flex-col gap-1 border border-line bg-sunk px-3 py-2">
             <span className="font-display text-[9px] font-semibold uppercase tracking-[0.22em] text-faint">
                 {label}
             </span>
@@ -21,6 +28,11 @@ function StatTile({label, value, unit}) {
                 {unit && (
                     <span className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">{unit}</span>
                 )}
+            </span>
+            {/* The number above carries the value; the meter is the same fact in
+                a shape, so it is not read out twice. */}
+            <span aria-hidden className="db-seg mt-1 block h-1.5 w-full bg-line-soft">
+                <span className="block h-full bg-gold" style={{width: `${pct}%`}} />
             </span>
         </div>
     );
@@ -36,12 +48,37 @@ function StatRow({k, v}) {
     );
 }
 
+// One filter in the rail. The label never moves between states: the resting
+// hairline under the strip and the active 2px amber rule are both drawn over the
+// tab rather than added to its box.
+function FilterTab({active, onClick, children}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={active}
+            className={cn(
+                "relative shrink-0 cursor-pointer px-[18px] py-3 font-display text-[12px] font-semibold uppercase tracking-[0.12em] transition-colors duration-[var(--dur-fast)] ease-out-db",
+                active ? "db-notch-sm bg-gold-soft text-gold" : "text-dim hover:text-text",
+            )}
+        >
+            {children}
+            {active && <span aria-hidden className="absolute inset-x-0 bottom-0 h-0.5 bg-gold" />}
+        </button>
+    );
+}
+
 function UnitCard({unit, categoryLabel}) {
     return (
-        <article className="group relative flex h-full flex-col rounded border border-line bg-bg-2 p-6 db-tick transition-colors duration-200 hover:border-gold-line">
+        <article
+            className={cn(
+                panel(),
+                "flex h-full flex-col bg-bg-2 p-6 transition-colors duration-[var(--dur)] hover:border-gold-line",
+            )}
+        >
             <header className="flex items-start gap-4">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded border border-line bg-gold-soft text-gold transition-colors duration-200 group-hover:border-gold-line">
-                    <GameIcon name={unit.icon} size={34} />
+                <span className="db-notch-sm flex h-14 w-14 shrink-0 items-center justify-center border border-gold-line bg-gold-soft text-gold">
+                    <GameIcon name={unit.icon} size={30} />
                 </span>
                 <div className="min-w-0 flex-1">
                     <h3 className="font-display text-[15px] font-bold uppercase tracking-[0.06em] text-text">
@@ -58,15 +95,20 @@ function UnitCard({unit, categoryLabel}) {
 
             {/* Cost / upkeep / build time / HP — the four numbers every player checks. */}
             <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <StatTile label="Cost" value={unit.cost} unit="pts" />
-                <StatTile label="Upkeep" value={unit.upkeep} unit="pts/s" />
-                <StatTile label="Build" value={unit.buildTime} unit="s" />
-                <StatTile label="HP" value={unit.hp} />
+                <StatTile label="Cost" value={unit.cost} unit="pts" pct={share(unit.cost, UNIT_MAX.cost)} />
+                <StatTile label="Upkeep" value={unit.upkeep} unit="pts/s" pct={share(unit.upkeep, UNIT_MAX.upkeep)} />
+                <StatTile
+                    label="Build"
+                    value={unit.buildTime}
+                    unit="s"
+                    pct={share(unit.buildTime, UNIT_MAX.buildTime)}
+                />
+                <StatTile label="HP" value={unit.hp} pct={share(unit.hp, UNIT_MAX.hp)} />
             </div>
 
             {/* Detailed stats — weapon reach, intercept chance, sensor coverage, etc. */}
             {unit.stats?.length > 0 && (
-                <div className="mt-5 rounded-sm border border-line bg-panel-solid p-4">
+                <div className={cn(panel({frame: "well"}), "mt-5 p-4")}>
                     {unit.stats.map(([k, v]) => (
                         <StatRow key={k} k={k} v={v} />
                     ))}
@@ -142,13 +184,13 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                     <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
                     <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow>Field Manual</Eyebrow>
+                            <Eyebrow framed>Field Manual</Eyebrow>
                             <h1 className="mt-5 max-w-4xl font-display text-[clamp(2rem,5vw,3.6rem)] font-bold uppercase leading-[1.02] text-text">
                                 The DomeBreak <span className="text-dim">arsenal</span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-dim">
-                                Every unit in the roster, straight from the sim — cost, upkeep, build time, HP, reach,
-                                and payload. Prices are in build points; ranges are in kilometers; times are in
+                                Every unit in the roster, straight from the sim: cost, upkeep, build time, HP, reach,
+                                and payload. Prices are in build points, ranges are in kilometers, and times are in
                                 game-seconds.
                             </p>
                         </Reveal>
@@ -156,27 +198,14 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                 </section>
 
                 <div className="sticky top-16 z-40 border-y border-line bg-chrome-strong backdrop-blur-[10px]">
-                    <div className="mx-auto flex max-w-[1400px] items-center gap-2 overflow-x-auto px-5 py-3 sm:px-8 db-scroll">
-                        <button
-                            onClick={() => selectCategory("all")}
-                            className={cn(
-                                chip({tone: activeCategory === "all" ? "gold" : "subtle"}),
-                                "shrink-0 cursor-pointer transition-colors",
-                            )}
-                        >
+                    <div className="mx-auto flex max-w-[1400px] items-stretch overflow-x-auto px-5 sm:px-8 db-scroll">
+                        <FilterTab active={activeCategory === "all"} onClick={() => selectCategory("all")}>
                             All
-                        </button>
+                        </FilterTab>
                         {CATEGORIES_WITH_UNITS.map((c) => (
-                            <button
-                                key={c.id}
-                                onClick={() => selectCategory(c.id)}
-                                className={cn(
-                                    chip({tone: activeCategory === c.id ? "gold" : "subtle"}),
-                                    "shrink-0 cursor-pointer transition-colors",
-                                )}
-                            >
+                            <FilterTab key={c.id} active={activeCategory === c.id} onClick={() => selectCategory(c.id)}>
                                 {c.label}
-                            </button>
+                            </FilterTab>
                         ))}
                     </div>
                 </div>
@@ -187,15 +216,16 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                             <Reveal>
                                 <div className="flex flex-col gap-2 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
-                                        <Eyebrow
-                                            dot={false}
-                                        >{`§ ${String(CATEGORIES_WITH_UNITS.findIndex((x) => x.id === c.id) + 1).padStart(2, "0")}`}</Eyebrow>
+                                        <span className={chip({tone: "subtle", shape: "notch"})}>
+                                            {`§ ${String(CATEGORIES_WITH_UNITS.findIndex((x) => x.id === c.id) + 1).padStart(2, "0")}`}
+                                        </span>
                                         <h2 className="mt-3 font-display text-[clamp(1.4rem,3vw,2.1rem)] font-bold uppercase leading-tight text-text">
                                             {c.label}
                                         </h2>
                                         <p className="mt-2 max-w-2xl text-[14px] text-dim">{c.blurb}</p>
                                     </div>
-                                    <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-faint">
+                                    <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-faint">
+                                        <span className="db-led db-led-sensor" />
                                         {c.units.length} unit{c.units.length === 1 ? "" : "s"}
                                     </span>
                                 </div>
@@ -203,7 +233,11 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
 
                             <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                 {c.units.map((u, i) => (
-                                    <Reveal key={u.id} delay={Math.min(i * 0.04, 0.24)}>
+                                    <Reveal
+                                        key={u.id}
+                                        delay={Math.min(i * 0.04, 0.24)}
+                                        className="db-brackets db-brackets-hover relative h-full"
+                                    >
                                         <UnitCard unit={u} categoryLabel={c.label} />
                                     </Reveal>
                                 ))}

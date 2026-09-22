@@ -18,7 +18,7 @@ import Flag from "../common/Flag.jsx";
 import Icon from "../common/Icon.jsx";
 import UnitIcon from "../common/UnitIcon.jsx";
 import {cn} from "../lib/cn.js";
-import {miniButton} from "../lib/variants.js";
+import {button, miniButton} from "../lib/variants.js";
 import {cmpStr, countBy} from "../../lib/iter.js";
 import {fmtKm} from "../lib/format.js";
 
@@ -41,20 +41,23 @@ function Toggle({on, onClick, label, hint, accent}) {
             aria-checked={on}
             title={hint}
             className={cn(
-                "flex items-center justify-between gap-3 w-full px-3 py-2 rounded-sm border text-[12px] font-semibold transition-[border-color,background,color] duration-150 ease-out-db",
+                "db-notch-sm flex items-center justify-between gap-3 w-full px-3 py-2 rounded-none border font-display text-[12px] font-semibold transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                 on
                     ? "border-gold-line bg-gold-soft text-gold"
                     : "border-line bg-sunk text-dim hover:border-line-soft hover:text-text",
                 accent && on && "border-[rgba(224,87,79,0.5)] bg-[rgba(224,87,79,0.12)] text-[#ffb3bc]",
             )}
         >
-            <span className="tracking-[0.4px] uppercase">{label}</span>
+            <span className="tracking-[0.12em] uppercase">{label}</span>
             <span
-                className={cn("relative w-9 h-4 rounded-full transition-colors flex-none", on ? "bg-gold" : "bg-hair")}
+                className={cn(
+                    "relative w-9 h-4 rounded-full transition-colors duration-[var(--dur-fast)] flex-none",
+                    on ? "bg-gold" : "bg-hair",
+                )}
             >
                 <span
                     className={cn(
-                        "absolute top-[2px] w-3 h-3 rounded-full bg-[#0b0d10] transition-[left] duration-150 ease-out-db",
+                        "absolute top-[2px] w-3 h-3 rounded-full bg-gold-contrast transition-[left] duration-[var(--dur-fast)] ease-out-db",
                         on ? "left-[22px]" : "left-[2px]",
                     )}
                 />
@@ -63,7 +66,7 @@ function Toggle({on, onClick, label, hint, accent}) {
     );
 }
 
-export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
+export default function BattlePlanScreen({world: w, mySlot, bp, onClose, head}) {
     const {plans, active, activeId, setActiveId} = bp;
 
     // My live offensive platforms, tallied by type — the ×N badge per option.
@@ -149,20 +152,21 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
               : active.targetTypes.length === 0
                 ? "Pick one or more target types on the right."
                 : solved.attackerCount === 0
-                  ? "You own no units of the selected types yet — arm it now and it fires once you build them."
+                  ? "You own no units of the selected types yet. Arm it now and it fires once you build them."
                   : solved.targetsLive === 0
                     ? active.mode === "standing"
-                        ? "No active wars yet — arm this plan and it engages the moment you go to war."
-                        : "No active wars yet — a one-shot strike needs a nation you're at war with."
+                        ? "No active wars yet. Arm this plan and it engages the moment you go to war."
+                        : "No active wars yet. A one-shot strike needs a nation you're at war with."
                     : solved.firing === 0
-                      ? "No attackers in range — widen the engagement range or choose nearer targets."
+                      ? "No attackers in range. Widen the engagement range or choose nearer targets."
                       : null;
 
     return (
         <ScreenFrame
-            title="BATTLE PLANNING"
-            subtitle="Author plans of attack — unit types → target types"
+            title="Battle Planning"
+            subtitle="Author plans of attack: unit types → target types"
             wide
+            head={head}
             onClose={onClose}
         >
             {plans.length === 0 ? (
@@ -170,43 +174,39 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                     <Icon name="battle-plan" size={38} className="text-gold" strokeWidth={1.4} />
                     <p className="text-dim text-sm max-w-[420px]">
                         Draw up a plan of attack: pick which of your platforms fire, choose what they hit, set the
-                        reach, and arm it. No hunting for units on the map.
+                        reach, and arm it. You never have to hunt for units on the map.
                     </p>
-                    <button className={cn(miniButton(), "px-4 py-2")} onClick={bp.addPlan}>
-                        New plan
+                    <button className={cn(button({variant: "primary"}), "px-5")} onClick={bp.addPlan}>
+                        New Plan
                     </button>
                 </div>
             ) : (
                 <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="db-tabs items-center gap-x-1" role="tablist" aria-label="Attack plans">
                         {plans.map((p) => (
                             <button
                                 key={p.id}
+                                role="tab"
+                                aria-selected={p.id === activeId}
                                 onClick={() => setActiveId(p.id)}
-                                className={cn(
-                                    "flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px] font-semibold whitespace-nowrap transition-[border-color,background] duration-150 ease-out-db",
-                                    p.id === activeId
-                                        ? "border-gold-line bg-gold-soft text-text"
-                                        : "border-line bg-sunk text-dim hover:border-line-soft",
-                                )}
+                                className="db-tab flex items-center gap-2"
                             >
                                 <span className="w-2.5 h-2.5 rounded-full flex-none" style={{background: p.color}} />
                                 <span className="max-w-[160px] overflow-hidden text-ellipsis">{p.name}</span>
-                                {p.armed && (
-                                    <span
-                                        className="w-1.5 h-1.5 rounded-full bg-red flex-none animate-pulse"
-                                        title="Armed"
-                                    />
-                                )}
+                                {p.armed && <i className="db-led db-led-live" title="Armed" />}
                             </button>
                         ))}
                         <button
-                            className={cn(miniButton(), "px-2.5 py-1")}
+                            className={cn(
+                                miniButton(),
+                                "ml-2 self-center inline-flex items-center gap-1.5 px-2.5 py-1",
+                            )}
                             onClick={bp.addPlan}
                             disabled={plans.length >= BATTLE_PLAN.maxPlans}
                             title="New plan"
                         >
-                            ＋ Plan
+                            <Icon name="plus" size={11} />
+                            Plan
                         </button>
                     </div>
 
@@ -228,7 +228,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                             key={m}
                                             onClick={() => bp.setPlanMode(active.id, m)}
                                             className={cn(
-                                                "px-3 py-2 rounded-sm border text-[11px] font-semibold uppercase tracking-[0.4px] transition-[border-color,background,color] duration-150 ease-out-db",
+                                                "db-notch-sm px-3 py-2 rounded-none border font-display text-[11px] font-semibold uppercase tracking-[0.12em] transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                                                 active.mode === m
                                                     ? "border-gold-line bg-gold-soft text-gold"
                                                     : "border-line bg-sunk text-dim hover:text-text",
@@ -271,23 +271,24 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
 
                             {/* Two columns: attacker types → target types */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="flex flex-col gap-2 rounded-md border border-line bg-sunk/40 p-3">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-[11px] tracking-[1px] uppercase text-faint">
-                                            Attackers · unit types
-                                        </span>
+                                <div
+                                    className="db-hud-panel relative flex flex-col gap-2 p-3 pt-0"
+                                    style={{"--db-tab": "150px"}}
+                                >
+                                    <header className="flex items-center justify-between gap-2 -mx-3 px-3 py-[7px]">
+                                        <span>Attackers · Unit Types</span>
                                         {active.attackerTypes.length > 0 && (
                                             <button
                                                 onClick={() => bp.clearAttackerTypes(active.id)}
-                                                className={cn(miniButton(), "px-2 py-0.5 text-[10px]")}
+                                                className={cn(miniButton(), "px-2 py-0.5 text-[10px] tracking-normal")}
                                             >
                                                 Clear
                                             </button>
                                         )}
-                                    </div>
+                                    </header>
                                     {offenseTypes.length === 0 && (
                                         <div className="text-faint text-[12px] py-3 text-center">
-                                            No offensive platforms yet — build silos, launchers, or ground forces.
+                                            No offensive platforms yet. Build silos, launchers, or ground forces.
                                         </div>
                                     )}
                                     <div className="flex flex-col gap-1.5">
@@ -299,9 +300,9 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                                 <button
                                                     key={type}
                                                     onClick={() => bp.toggleAttackerType(active.id, type)}
-                                                    title={elsewhere ? `In ${owner.name} — moves here` : undefined}
+                                                    title={elsewhere ? `In ${owner.name}, moves here` : undefined}
                                                     className={cn(
-                                                        "flex items-center gap-2.5 w-full px-2.5 py-2 rounded-sm border text-left transition-[border-color,background] duration-150 ease-out-db",
+                                                        "db-notch-sm flex items-center gap-2.5 w-full px-2.5 py-2 rounded-none border text-left transition-[border-color,background] duration-[var(--dur-fast)] ease-out-db",
                                                         mine
                                                             ? "border-gold-line bg-gold-soft"
                                                             : "border-line bg-sunk hover:border-line-soft",
@@ -348,21 +349,22 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                 </div>
 
                                 {/* Targets: which nations, then which asset types */}
-                                <div className="flex flex-col gap-2.5 rounded-md border border-line bg-sunk/40 p-3">
+                                <div
+                                    className="db-hud-panel relative flex flex-col gap-2.5 p-3 pt-0"
+                                    style={{"--db-tab": "128px"}}
+                                >
+                                    <header className="flex items-center justify-between gap-2 -mx-3 px-3 py-[7px]">
+                                        <span>Target Nations</span>
+                                        {active.targetNations.length > 0 && (
+                                            <button
+                                                onClick={() => bp.clearTargetNations(active.id)}
+                                                className={cn(miniButton(), "px-2 py-0.5 text-[10px] tracking-normal")}
+                                            >
+                                                Any
+                                            </button>
+                                        )}
+                                    </header>
                                     <div className="flex flex-col gap-1.5">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[11px] tracking-[1px] uppercase text-faint">
-                                                Target nations
-                                            </span>
-                                            {active.targetNations.length > 0 && (
-                                                <button
-                                                    onClick={() => bp.clearTargetNations(active.id)}
-                                                    className={cn(miniButton(), "px-2 py-0.5 text-[10px]")}
-                                                >
-                                                    Any
-                                                </button>
-                                            )}
-                                        </div>
                                         {enemyNations.length === 0 ? (
                                             <div className="text-faint text-[12px] py-2 text-center">
                                                 No rival powers in this match.
@@ -377,11 +379,11 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                                             onClick={() => bp.toggleTargetNation(active.id, n.slot)}
                                                             title={
                                                                 n.war
-                                                                    ? "At war — live target"
-                                                                    : "At peace — this plan engages it if war breaks out"
+                                                                    ? "At war, live target"
+                                                                    : "At peace. This plan engages it if war breaks out"
                                                             }
                                                             className={cn(
-                                                                "flex items-center gap-1.5 px-2 py-1 rounded-full border text-[12px] font-semibold transition-[border-color,background,color] duration-150 ease-out-db",
+                                                                "flex items-center gap-1.5 px-2 py-1 rounded-sm border text-[12px] font-semibold transition-[border-color,background,color] duration-[var(--dur-fast)] ease-out-db",
                                                                 on
                                                                     ? "border-gold-line bg-gold-soft text-text"
                                                                     : "border-line bg-sunk text-dim hover:border-line-soft hover:text-text",
@@ -396,10 +398,10 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                                             <span className="whitespace-nowrap max-w-[120px] overflow-hidden text-ellipsis">
                                                                 {n.name}
                                                             </span>
-                                                            <span
+                                                            <i
                                                                 className={cn(
-                                                                    "w-1.5 h-1.5 rounded-full flex-none",
-                                                                    n.war ? "bg-red" : "bg-hair",
+                                                                    "db-led",
+                                                                    n.war ? "db-led-live" : "text-faint shadow-none",
                                                                 )}
                                                                 title={n.war ? "At war" : "At peace"}
                                                             />
@@ -411,14 +413,14 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                         <p className="text-[10px] text-faint leading-[1.4]">
                                             {active.targetNations.length === 0
                                                 ? "Any nation you're at war with. Pick specific powers to strike only them; neutrals are never targeted."
-                                                : "Only the selected powers are struck — and only once you're at war with them."}
+                                                : "Only the selected powers are struck, and only once you're at war with them."}
                                         </p>
                                     </div>
 
                                     <div className="flex flex-col gap-1.5 border-t border-hair pt-2.5">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[11px] tracking-[1px] uppercase text-faint">
-                                                Target types
+                                            <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
+                                                Target Types
                                             </span>
                                             {active.targetTypes.length > 0 && (
                                                 <button
@@ -443,7 +445,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                                                 : "None live under this plan's target scope yet"
                                                         }
                                                         className={cn(
-                                                            "flex items-center gap-2.5 w-full px-2.5 py-2 rounded-sm border text-left transition-[border-color,background] duration-150 ease-out-db",
+                                                            "db-notch-sm flex items-center gap-2.5 w-full px-2.5 py-2 rounded-none border text-left transition-[border-color,background] duration-[var(--dur-fast)] ease-out-db",
                                                             on
                                                                 ? "border-gold-line bg-gold-soft"
                                                                 : "border-line bg-sunk hover:border-line-soft",
@@ -479,26 +481,27 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="rounded-md border border-line bg-sunk/40 p-3">
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <span className="text-[11px] tracking-[1px] uppercase text-faint">
-                                            Engagement range
-                                        </span>
+                                <div className="db-hud-panel relative p-3 pt-0" style={{"--db-tab": "142px"}}>
+                                    <header className="flex items-center justify-between gap-2 -mx-3 px-3 py-[7px] mb-2.5">
+                                        <span>Engagement Range</span>
                                         <div className="flex items-center gap-2">
                                             {fitKm != null && fitKm !== active.engagementKm && (
                                                 <button
                                                     onClick={() => bp.patchPlan(active.id, {engagementKm: fitKm})}
-                                                    title={`Set the dial to ${fmtKm(fitKm)} — the tightest range that still reaches every target this plan can hit`}
-                                                    className={cn(miniButton(), "px-2 py-0.5 text-[10px]")}
+                                                    title={`Set the dial to ${fmtKm(fitKm)}, the tightest range that still reaches every target this plan can hit`}
+                                                    className={cn(
+                                                        miniButton(),
+                                                        "px-2 py-0.5 text-[10px] tracking-normal",
+                                                    )}
                                                 >
                                                     Fit
                                                 </button>
                                             )}
-                                            <span className="font-mono text-[12px] text-dim">
+                                            <span className="font-mono text-[12px] tracking-normal normal-case text-text">
                                                 {fmtKm(active.engagementKm)}
                                             </span>
                                         </div>
-                                    </div>
+                                    </header>
                                     <input
                                         type="range"
                                         min={BATTLE_PLAN.minEngagementKm}
@@ -526,7 +529,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                     <Toggle
                                         on={active.autoBuild}
                                         onClick={() => bp.patchPlan(active.id, {autoBuild: !active.autoBuild})}
-                                        label="Auto-build munitions"
+                                        label="Auto-build Munitions"
                                         hint="Keep your warhead stock topped up for this plan"
                                     />
                                 </div>
@@ -536,7 +539,16 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                 <div className="flex flex-col gap-2 border-t border-hair pt-3">
                                     <div className="flex items-center gap-4">
                                         <div className="text-[12px] text-dim flex-1 leading-[1.5]">
-                                            <span className="text-good font-semibold">{solved.firing} firing</span>
+                                            <span className="inline-flex items-center gap-1.5 font-mono text-good font-semibold">
+                                                <i
+                                                    className={cn(
+                                                        "db-led",
+                                                        solved.firing > 0 ? "db-led-ok" : "text-faint shadow-none",
+                                                    )}
+                                                    aria-hidden="true"
+                                                />
+                                                {solved.firing} firing
+                                            </span>
                                             {solved.idle.length > 0 && (
                                                 <span className="text-faint"> · {solved.idle.length} idle</span>
                                             )}
@@ -563,26 +575,24 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                                 onClick={() => bp.patchPlan(active.id, {armed: !armed})}
                                                 disabled={!canArm && !armed}
                                                 className={cn(
-                                                    "px-5 py-2.5 rounded-sm border font-display text-[13px] font-semibold tracking-[1.2px] uppercase transition-[border-color,background,color,filter] duration-150 ease-out-db disabled:opacity-50 disabled:cursor-not-allowed",
-                                                    armed
-                                                        ? "border-[rgba(224,87,79,0.6)] bg-[rgba(224,87,79,0.16)] text-[#ffb3bc] hover:brightness-110"
-                                                        : "border-[rgba(0,0,0,0.25)] bg-gold text-gold-contrast enabled:hover:brightness-105",
+                                                    button({variant: armed ? "danger" : "primary"}),
+                                                    "px-5 py-2.5 text-[13px]",
                                                 )}
                                             >
                                                 <span className="inline-flex items-center gap-2">
                                                     <Icon name={armed ? "stop" : "play"} size={13} />
-                                                    {armed ? "Disarm" : "Arm plan"}
+                                                    {armed ? "Disarm" : "Arm Plan"}
                                                 </span>
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={() => bp.executePlan(active.id)}
                                                 disabled={!canFire}
-                                                className="px-5 py-2.5 rounded-sm border border-[rgba(0,0,0,0.25)] bg-gold text-gold-contrast font-display text-[13px] font-semibold tracking-[1.2px] uppercase enabled:hover:brightness-105 transition-[filter] duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className={cn(button({variant: "primary"}), "px-5 py-2.5 text-[13px]")}
                                             >
                                                 <span className="inline-flex items-center gap-2">
                                                     <Icon name="bolt" size={13} />
-                                                    Execute strike
+                                                    Execute Strike
                                                 </span>
                                             </button>
                                         )}
@@ -590,23 +600,21 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                     {armed
                                         ? solved.firing === 0 && (
                                               <p className="text-[11px] text-dim leading-[1.4]">
-                                                  Armed · standing by — engages automatically once a valid target is in
+                                                  Armed · standing by. Engages automatically once a valid target is in
                                                   play.
                                               </p>
                                           )
-                                        : reason && (
-                                              <p className="text-[11px] text-[#d79a3f] leading-[1.4]">{reason}</p>
-                                          )}
+                                        : reason && <p className="text-[11px] text-gold leading-[1.4]">{reason}</p>}
                                     {/* Munitions readiness — only meaningful once a warhead-hungry plan is
                                         firing. A shortfall warns unless Auto-build is already topping it up. */}
                                     {munitions &&
                                         munitions.want > 0 &&
                                         (munitions.short > 0 ? (
-                                            <p className="text-[11px] text-[#d79a3f] leading-[1.4]">
+                                            <p className="text-[11px] text-gold leading-[1.4]">
                                                 Munitions: short {munitions.short} of {munitions.want} warheads
                                                 {active.autoBuild
-                                                    ? " — auto-build is topping up."
-                                                    : " — enable Auto-build or produce them."}
+                                                    ? ". Auto-build is topping up."
+                                                    : ". Enable Auto-build or produce them."}
                                             </p>
                                         ) : (
                                             <p className="text-[11px] text-good/80 leading-[1.4]">

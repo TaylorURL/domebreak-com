@@ -35,7 +35,7 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
     return (
         <div className={overlay({placement: "center"})} onClick={onClose}>
             <div
-                className={card({size: "wide"})}
+                className={cn(card({size: "wide"}), "text-left")}
                 ref={ref}
                 tabIndex={-1}
                 role="dialog"
@@ -43,20 +43,22 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                 aria-labelledby={titleId}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className={menuTitle({sm: true})} id={titleId}>
-                    {mode === "save" ? "Save Game" : "Load Game"}
+                <div className="db-card-head">
+                    <div className={menuTitle({sm: true})} id={titleId}>
+                        {mode === "save" ? "Save Game" : "Load Game"}
+                    </div>
                 </div>
                 <div className="db-savelist flex flex-col gap-2 mt-1.5" role="list" aria-labelledby={titleId}>
                     {slots.map((slot) => {
                         const s = saves.find((x) => x.slot === slot);
                         const summary = s
-                            ? `Slot ${slot} — ${s.meta.playerName || "?"} · ${s.meta.nations || "?"} Powers · ${fmt(s.meta)}`
-                            : `Slot ${slot} — Empty`;
+                            ? `Slot ${slot}: ${s.meta.playerName || "?"} · ${s.meta.nations || "?"} Powers · ${fmt(s.meta)}`
+                            : `Slot ${slot}: Empty`;
                         const confirming = confirmSlot === slot;
                         return (
                             <div
                                 key={slot}
-                                className="db-saverow flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line rounded"
+                                className="db-saverow db-notch-sm flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line"
                                 role="listitem"
                                 aria-label={summary}
                             >
@@ -70,7 +72,7 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                                     >
                                         {s
                                             ? s.outdated
-                                                ? "Outdated save — cannot be played"
+                                                ? "Outdated save, cannot be played"
                                                 : `${s.meta.playerName || "?"} · ${s.meta.nations || "?"} Powers · ${fmt(s.meta)}`
                                             : "Empty"}
                                     </span>
@@ -110,9 +112,9 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                     })}
                     {auto && mode === "load" && (
                         <div
-                            className="db-saverow flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line rounded"
+                            className="db-saverow db-notch-sm flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line"
                             role="listitem"
-                            aria-label={`Autosave — ${fmt(auto.meta)}`}
+                            aria-label={`Autosave: ${fmt(auto.meta)}`}
                         >
                             <div className="db-saveinfo flex-1 flex flex-col min-w-0">
                                 <b className="text-sm">Autosave</b>
@@ -122,7 +124,7 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                                         auto.outdated ? "text-danger" : "text-dim",
                                     )}
                                 >
-                                    {auto.outdated ? "Outdated save — cannot be played" : fmt(auto.meta)}
+                                    {auto.outdated ? "Outdated save, cannot be played" : fmt(auto.meta)}
                                 </span>
                             </div>
                             <button
@@ -136,9 +138,11 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                         </div>
                     )}
                 </div>
-                <button className={cn(button(), "block")} onClick={onClose}>
-                    Close
-                </button>
+                <div className="flex justify-end mt-[18px] pt-4 border-t border-hair">
+                    <button className={button()} onClick={onClose}>
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
     );

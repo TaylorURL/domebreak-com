@@ -16,6 +16,10 @@ const REGION_OWNER_LINE_WIDTH = ["interpolate", ["linear"], ["zoom"], 2, 0.6, 6,
 // Diplomacy filter tint: solid enough at the whole-earth view to read green/red/grey
 // at a glance, easing back as you zoom in so terrain and cities stay legible.
 const REGION_DIPLO_OPACITY = ["interpolate", ["linear"], ["zoom"], 2, 0.8, 4, 0.62, 6, 0.4];
+// The accent, as a literal: these go into MapLibre paint expressions, which are
+// evaluated in the map's own worker and never see a CSS variable. A plan with no
+// colour of its own falls back to it, and a neutral city I can annex rings in it.
+const PLAN_ACCENT = "#f2b544";
 
 export default function MapLayers({
     layers,
@@ -239,7 +243,7 @@ export default function MapLayers({
                         id="plan-arc-line"
                         type="line"
                         paint={{
-                            "line-color": planColor || "#f0a63c",
+                            "line-color": planColor || PLAN_ACCENT,
                             "line-width": 1.9,
                             "line-opacity": 0.9,
                             "line-dasharray": [2, 1.6],
@@ -254,7 +258,7 @@ export default function MapLayers({
                         type="circle"
                         paint={{
                             "circle-radius": ["case", ["==", ["get", "on"], 1], 3.4, 2.4],
-                            "circle-color": planColor || "#f0a63c",
+                            "circle-color": planColor || PLAN_ACCENT,
                             "circle-opacity": ["case", ["==", ["get", "on"], 1], 0.95, 0.4],
                             "circle-stroke-color": "#05070c",
                             "circle-stroke-width": 0.8,
@@ -271,7 +275,7 @@ export default function MapLayers({
                         paint={{
                             "circle-radius": 7,
                             "circle-color": "rgba(0,0,0,0)",
-                            "circle-stroke-color": planColor || "#f0a63c",
+                            "circle-stroke-color": planColor || PLAN_ACCENT,
                             "circle-stroke-width": 1.8,
                             "circle-stroke-opacity": 0.9,
                         }}
@@ -285,7 +289,7 @@ export default function MapLayers({
                         paint={{
                             "circle-radius": 5.5,
                             "circle-color": "rgba(0,0,0,0)",
-                            "circle-stroke-color": planColor || "#f0a63c",
+                            "circle-stroke-color": planColor || PLAN_ACCENT,
                             "circle-stroke-width": 1.1,
                             "circle-stroke-opacity": 0.4,
                         }}
@@ -400,14 +404,14 @@ export default function MapLayers({
                     paint={{
                         "circle-radius": ["case", ["==", ["get", "cap"], 1], 5, 3],
                         "circle-color": ["get", "color"],
-                        // Own cities ring white; a bordering neutral I can annex rings in the
-                        // amber capture accent so it reads as a target; everything else dark.
+                        // Own cities ring white; a bordering neutral I can annex rings in
+                        // the accent so it reads as a target; everything else dark.
                         "circle-stroke-color": [
                             "case",
                             ["==", ["get", "mine"], 1],
                             "#ffffff",
                             ["==", ["get", "neutral"], 1],
-                            "#e0a53a",
+                            PLAN_ACCENT,
                             "#05070c",
                         ],
                         "circle-stroke-width": [

@@ -119,7 +119,7 @@ export function useEventEffects({w, mySlot, mapRef, setErr, setExplosions, onGam
                 (e.type === "launch" && e.tgtSlot === mySlot && e.seen?.includes(mySlot)) ||
                 (e.type === "detected" && e.slot === mySlot)
             ) {
-                setErr({msg: "Launch detected — missile inbound.", kind: "err"});
+                setErr({msg: "Launch detected. Missile inbound.", kind: "err"});
                 setTimeout(() => setErr(null), 2600);
             }
             // Fallout on home soil: a fresh cloud that covers one of my cities

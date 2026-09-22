@@ -6,6 +6,7 @@ import GameIcon from "./GameIcon.jsx";
 import PlayCta from "./PlayCta.jsx";
 import ScrollVelocity from "./reactbits/ScrollVelocity.jsx";
 import useReleaseVersion from "../hooks/useReleaseVersion.js";
+import {chip} from "../lib/variants.js";
 
 const ICON_STRIP = ["dome", "radar", "interceptor", "thaad", "silo", "reconsat", "carrier", "factory"];
 
@@ -95,9 +96,16 @@ export default function Footer({onShowShortcuts}) {
                         <div className="mt-6">
                             <PlayCta size="md" />
                         </div>
-                        <div className="mt-5 inline-flex items-center gap-2 rounded border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
-                            <span className="h-[6px] w-[6px] rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
-                            Now Live · Free to Play
+                        <div className="mt-5 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 db-notch-sm border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
+                            <span className="flex items-center gap-2">
+                                <span className="db-led db-led-live" />
+                                Now Live · Free to Play
+                            </span>
+                            <span className="flex items-center gap-2">
+                                <span className="db-led db-led-ok" />
+                                macOS + Windows
+                            </span>
+                            {version && <span className={chip({tone: "subtle", shape: "notch"})}>{`v${version}`}</span>}
                         </div>
                     </div>
 
@@ -107,7 +115,7 @@ export default function Footer({onShowShortcuts}) {
 
                     <Col title="More">
                         <FootLink onClick={() => scrollToId("play")}>
-                            <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
+                            <span className="db-led db-led-live" />
                             Play Free
                         </FootLink>
                         <FootLink onClick={() => scrollToId("top")}>Top</FootLink>
@@ -144,9 +152,6 @@ export default function Footer({onShowShortcuts}) {
                         <a href="#/contact" className={LEGAL_LINK}>
                             Contact
                         </a>
-                        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-faint">
-                            macOS + Windows{version ? ` · v${version}` : ""}
-                        </p>
                     </div>
                 </div>
             </div>

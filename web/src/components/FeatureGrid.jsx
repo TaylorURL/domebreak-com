@@ -22,7 +22,7 @@ const FEATURES = [
     {
         icon: "silo",
         title: "Missile offense",
-        body: "Plan an attack — pick launchers, choose targets, route the trajectory, and let it fly.",
+        body: "Plan an attack: pick launchers, choose targets, route the trajectory, and let it fly.",
     },
     {
         icon: "factory",
@@ -32,7 +32,7 @@ const FEATURES = [
     {
         icon: "awacs",
         title: "Play online",
-        body: "Take on other commanders in real time. Server-authoritative online matches with a live lobby, parties, and friends — the same world and arsenal, human opponents.",
+        body: "Take on other commanders in real time. Server-authoritative online matches with a live lobby, parties, and friends: the same world and arsenal, against human opponents.",
     },
 ];
 
@@ -46,11 +46,11 @@ export default function FeatureGrid() {
                 </h2>
             </Reveal>
 
-            <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden db-notch border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
                 {FEATURES.map((f, i) => (
                     <Reveal key={f.title} delay={0.05 * i} className="group relative bg-bg">
-                        <div className="relative h-full db-tick p-7 transition-colors duration-200 hover:bg-bg-2 sm:p-8">
-                            <span className="flex h-11 w-11 items-center justify-center rounded border border-line bg-gold-soft text-gold transition-colors duration-200 group-hover:border-gold-line">
+                        <div className="relative h-full db-brackets db-brackets-hover p-7 transition-colors duration-[var(--dur)] hover:bg-bg-2 sm:p-8">
+                            <span className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line bg-gold-soft text-gold transition-colors duration-[var(--dur)] group-hover:border-gold-line">
                                 <GameIcon name={f.icon} size={22} />
                             </span>
                             <h3 className="mt-5 font-display text-[13px] font-semibold uppercase tracking-[0.14em] text-text">

@@ -43,7 +43,7 @@ export const WARHEADS = {
         flame: "#ffd23f", // warm gold — a scattering-bomblet hue, kept clear of THAAD's cyan interceptor
         trail: "#f2e4b0",
         trailW: 2.2,
-        desc: "MIRV bus — splits into 8 warheads on reentry; half strike the target, half fan out to nearby targets.",
+        desc: "MIRV bus that splits into 8 warheads on reentry; half strike the target, half fan out to nearby targets.",
     },
     hgv: {
         name: "Hypersonic Missile",
@@ -58,7 +58,7 @@ export const WARHEADS = {
         flame: "#b98cff",
         trail: "#cdb8ff", // thin ionization streak — a glide body, not a rocket plume
         trailW: 1.7,
-        desc: "Maneuvering kinetic glide body — the fastest round in the arsenal and very hard to intercept. The Hypersonic Battery's signature round.",
+        desc: "Maneuvering kinetic glide body, the fastest round in the arsenal and very hard to intercept. The Hypersonic Battery's signature round.",
     },
     thermo: {
         name: "Thermonuclear",
@@ -108,7 +108,7 @@ export const WARHEADS = {
         flame: "#ff3b6b",
         trail: "#ffcdd6",
         trailW: 3.0,
-        desc: "Multi-warhead thermonuclear bus — splits into three city-killers on reentry, each leaving fallout.",
+        desc: "Multi-warhead thermonuclear bus that splits into three city-killers on reentry, each leaving fallout.",
     },
 };
 // Ground-zero blast: on detonation every OTHER unit within a warhead's blastKm

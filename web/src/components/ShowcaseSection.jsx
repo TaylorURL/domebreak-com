@@ -3,6 +3,7 @@ import {motion, useReducedMotion, useScroll, useTransform} from "motion/react";
 import {cn} from "../lib/cn.js";
 import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
+import {chip} from "../lib/variants.js";
 import {useInViewOnce} from "../hooks/useInViewOnce.js";
 import GameIcon from "./GameIcon.jsx";
 
@@ -49,40 +50,50 @@ export default function ShowcaseSection({
             className="mx-auto max-w-[1400px] px-5 py-16 sm:px-8 sm:py-24"
         >
             <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-                <div className={cn("order-1", imageFirst ? "lg:order-1" : "lg:order-2")}>
+                {/* The reveal is watched from out here rather than on the wiping
+                    box itself. A clip-path zeroes the intersection rectangle an
+                    IntersectionObserver reads, so an element that starts fully
+                    clipped never reports itself on screen and never unclips. */}
+                <div ref={panelRef} className={cn("order-1", imageFirst ? "lg:order-1" : "lg:order-2")}>
+                    {/* Two elements, because both the wipe and the chamfer are a
+                        clip-path and one box only has the one: the wrapper wipes,
+                        the frame inside it carries the notch, the hairline and the
+                        targeting corners. */}
                     <div
-                        ref={panelRef}
-                        className="relative db-tick db-seam overflow-hidden rounded-lg border border-line bg-panel-solid shadow"
                         style={{
                             clipPath: reduce ? "none" : panelIn ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)",
                             opacity: panelIn ? 1 : reduce ? 1 : 0,
                             transition: "clip-path 0.9s cubic-bezier(0.77,0,0.175,1), opacity 0.6s ease",
                         }}
                     >
-                        <div className="overflow-hidden">
-                            <motion.img
-                                src={image}
-                                srcSet={srcSet(image)}
-                                // Half the column past 1024 and the whole of it below,
-                                // which is what the grid does. Without this the browser
-                                // assumes full width and picks a file twice the size it
-                                // needs on every desktop.
-                                sizes="(min-width: 1024px) 50vw, 100vw"
-                                alt={imageAlt}
-                                width={2600}
-                                height={1626}
-                                loading="lazy"
-                                decoding="async"
-                                style={reduce ? undefined : {y: imgY, scale: 1.08}}
-                                className="aspect-[16/10] w-full object-cover"
-                            />
-                        </div>
-                        <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-line bg-chrome px-4 py-2 backdrop-blur-[8px]">
-                            <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
-                                {icon && <GameIcon name={icon} size={13} className="text-dim" />}
-                                DBK-{index}
-                            </span>
-                            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">{kicker}</span>
+                        <div className="relative db-brackets db-notch db-seam overflow-hidden border border-line bg-panel-solid">
+                            <div className="overflow-hidden">
+                                <motion.img
+                                    src={image}
+                                    srcSet={srcSet(image)}
+                                    // Half the column past 1024 and the whole of it below,
+                                    // which is what the grid does. Without this the browser
+                                    // assumes full width and picks a file twice the size it
+                                    // needs on every desktop.
+                                    sizes="(min-width: 1024px) 50vw, 100vw"
+                                    alt={imageAlt}
+                                    width={2600}
+                                    height={1626}
+                                    loading="lazy"
+                                    decoding="async"
+                                    style={reduce ? undefined : {y: imgY, scale: 1.08}}
+                                    className="aspect-[16/10] w-full object-cover"
+                                />
+                            </div>
+                            <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex items-center justify-between border-t border-line bg-panel px-4 py-2 backdrop-blur-[8px]">
+                                <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
+                                    {icon && <GameIcon name={icon} size={13} className="text-dim" />}
+                                    DBK-{index}
+                                </span>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">
+                                    {kicker}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -91,12 +102,12 @@ export default function ShowcaseSection({
                     <Reveal>
                         <div className="flex items-center gap-4">
                             {icon && (
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded border border-line bg-gold-soft text-gold">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center db-notch-sm border border-line bg-gold-soft text-gold">
                                     <GameIcon name={icon} size={22} />
                                 </span>
                             )}
-                            <div className="flex items-baseline gap-4">
-                                <span className="font-mono text-[13px] font-semibold text-faint">{index}</span>
+                            <div className="flex items-center gap-4">
+                                <span className={chip({shape: "notch"})}>{index}</span>
                                 <Eyebrow dot={false}>{kicker}</Eyebrow>
                             </div>
                         </div>
@@ -113,7 +124,7 @@ export default function ShowcaseSection({
                             {points.map((p, i) => (
                                 <Reveal as="li" key={p} delay={0.06 * (i + 1)}>
                                     <div className="flex items-start gap-3 border-t border-hair pt-3">
-                                        <span className="mt-2 h-[6px] w-[6px] shrink-0 rounded-full bg-gold" />
+                                        <span className="mt-2 h-[6px] w-[6px] shrink-0 bg-gold" />
                                         <span className="text-[15px] leading-relaxed text-dim">{p}</span>
                                     </div>
                                 </Reveal>

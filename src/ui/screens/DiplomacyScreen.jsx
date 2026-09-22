@@ -12,7 +12,31 @@ import {cn} from "../lib/cn.js";
 import {fmtGdp} from "../lib/format.js";
 import {useRoster} from "../lib/roster.js";
 
-export default function DiplomacyScreen({world, api, mySlot, online, players, onClose}) {
+// One theatre readout: a mono kicker over a mono figure on a notched sunk cell,
+// with an LED where the number carries a state a glance should catch.
+function Cell({label, value, valueClass, led}) {
+    return (
+        <div className="db-notch-sm flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded-none">
+            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-faint">{label}</span>
+            <b className={cn("inline-flex items-center gap-2 font-mono text-lg", valueClass)}>
+                {led && <i className={cn("db-led", led)} aria-hidden="true" />}
+                {value}
+            </b>
+        </div>
+    );
+}
+
+// A power's standing toward you, stated by a lamp as well as a word.
+function Standing({label, tone = "text-dim", led}) {
+    return (
+        <span className={cn("inline-flex items-center gap-2 font-mono text-[11px]", tone)}>
+            {led && <i className={cn("db-led", led)} aria-hidden="true" />}
+            {label}
+        </span>
+    );
+}
+
+export default function DiplomacyScreen({world, api, mySlot, online, players, onClose, head}) {
     const [q, setQ] = useState("");
     const {isHuman} = useRoster(players);
     const me = world.nations.find((n) => n.slot === mySlot);
@@ -82,38 +106,34 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
 
     return (
         <ScreenFrame
-            title="DIPLOMACY"
+            title="Diplomacy"
             subtitle="Theatre powers & standings"
             bare
+            head={head}
             onClose={onClose}
             foot={
-                <span className="block px-[22px] py-[10px] border-t border-line-soft font-mono text-[10px] tracking-[1px] text-faint text-center">
-                    The active powers contesting this match — human players and AI great powers
+                <span className="block px-[22px] py-[11px] border-t border-hair font-mono text-[10px] tracking-[0.12em] text-faint text-center">
+                    The active powers contesting this match: human players and AI great powers
                 </span>
             }
         >
             <div className="flex flex-col gap-4 h-full px-6 py-5 overflow-hidden">
                 <div className="flex gap-[10px] flex-wrap">
-                    <div className="flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-                        <span className="text-[9px] tracking-[1.2px] uppercase text-faint">Powers Standing</span>
-                        <b className="font-mono text-lg">{aliveCount}</b>
-                    </div>
-                    <div className="flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-                        <span className="text-[9px] tracking-[1.2px] uppercase text-faint">You Are At War With</span>
-                        <b className={cn("font-mono text-lg", atWar && "text-red")}>{atWar}</b>
-                    </div>
-                    <div className="flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-                        <span className="text-[9px] tracking-[1.2px] uppercase text-faint">Your Alliances</span>
-                        <b className={cn("font-mono text-lg", allied && "text-[#5fa8ff]")}>{allied}</b>
-                    </div>
-                    <div className="flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-                        <span className="text-[9px] tracking-[1.2px] uppercase text-faint">Your Holdings</span>
-                        <b className="font-mono text-lg">{citiesOf(mySlot)} cities</b>
-                    </div>
-                    <div className="flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded">
-                        <span className="text-[9px] tracking-[1.2px] uppercase text-faint">Your Forces</span>
-                        <b className="font-mono text-lg">{forcesOf(mySlot)} units</b>
-                    </div>
+                    <Cell label="Powers Standing" value={aliveCount} />
+                    <Cell
+                        label="You Are At War With"
+                        value={atWar}
+                        valueClass={atWar ? "text-red" : undefined}
+                        led={atWar ? "db-led-live" : null}
+                    />
+                    <Cell
+                        label="Your Alliances"
+                        value={allied}
+                        valueClass={allied ? "text-[#5fa8ff]" : undefined}
+                        led={allied ? "db-led-sensor" : null}
+                    />
+                    <Cell label="Your Holdings" value={`${citiesOf(mySlot)} cities`} />
+                    <Cell label="Your Forces" value={`${forcesOf(mySlot)} units`} />
                 </div>
 
                 <input
@@ -128,7 +148,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                     <div
                         className={cn(
                             rowGrid,
-                            "sticky top-0 z-[1] bg-panel-solid border-b border-line text-[9px] tracking-[1.2px] uppercase text-faint",
+                            "sticky top-0 z-[1] bg-panel-solid border-b border-line font-mono text-[9px] tracking-[0.2em] uppercase text-faint",
                         )}
                         role="row"
                     >
@@ -159,7 +179,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                         return (
                             <div
                                 key={n.slot}
-                                className={cn(rowGrid, !n.alive && "opacity-50", isMe && "bg-[rgba(245,197,49,0.05)]")}
+                                className={cn(rowGrid, !n.alive && "opacity-50", isMe && "bg-gold-soft")}
                                 role="row"
                                 aria-current={isMe ? "true" : undefined}
                             >
@@ -180,7 +200,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                                 <span role="cell">
                                     <span
                                         className={cn(
-                                            "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-full text-dim",
+                                            "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-sm text-dim",
                                             s.cls,
                                         )}
                                     >
@@ -198,15 +218,15 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                                 </span>
                                 <span role="cell">
                                     {isMe ? (
-                                        <span className="font-mono text-[11px] text-dim">Home</span>
+                                        <Standing label="Home" />
                                     ) : !n.alive ? (
-                                        <span className="font-mono text-[11px] text-dim">Eliminated</span>
+                                        <Standing label="Eliminated" />
                                     ) : war ? (
-                                        <span className="font-mono text-[11px] text-red">At War</span>
+                                        <Standing label="At War" tone="text-red" led="db-led-live" />
                                     ) : standing === "ally" ? (
-                                        <span className="font-mono text-[11px] text-[#5fa8ff]">Allied</span>
+                                        <Standing label="Allied" tone="text-[#5fa8ff]" led="db-led-sensor" />
                                     ) : (
-                                        <span className="font-mono text-[11px] text-[#46d38a]">At Peace</span>
+                                        <Standing label="At Peace" tone="text-good" led="db-led-ok" />
                                     )}
                                 </span>
                                 <span className="flex justify-end gap-[6px]" role="cell">
@@ -252,7 +272,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                                                 disabled={graceActive}
                                                 title={
                                                     graceActive
-                                                        ? "Opening grace — no wars can be declared yet."
+                                                        ? "Opening grace holds. No war can be declared yet."
                                                         : undefined
                                                 }
                                                 onClick={() => api.declareWar(n.slot)}

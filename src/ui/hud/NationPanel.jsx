@@ -18,6 +18,10 @@ import Meter from "../common/Meter.jsx";
 import PopTrend from "../common/PopTrend.jsx";
 import {cn} from "../lib/cn.js";
 
+// The panel's label type: the same mono micro-caps the HUD panel header uses, so
+// every readout inside it is annotated the same way.
+const KICKER = "font-mono text-[9px] tracking-[0.18em] uppercase text-faint";
+
 // A territory's readiness band from its city vitality (hp share). Drives the
 // status pill colour and label; a dead holding reads "Lost".
 function statusOf(c) {
@@ -72,61 +76,67 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
     const indUsed = view.indCount + view.indPending;
     const indFrac = view.indCap > 0 ? Math.min(1, indUsed / view.indCap) : 0;
 
+    // Status pill tone per readiness band. Each carries its own lamp colour, so a
+    // roster row states its condition twice — once as a lit dot a glance catches,
+    // once as the word behind it.
     const pillClass = {
         secure: "text-dim border-line",
-        strained: "text-[#d79a3f] border-[rgba(215,154,63,0.5)]",
+        strained: "text-gold border-gold-line",
         critical: "text-red border-[rgba(224,87,79,0.5)]",
         lost: "text-faint border-line",
+    };
+    const pillLed = {
+        secure: "db-led-ok",
+        strained: "db-led-warn",
+        critical: "db-led-live",
+        lost: "text-faint",
     };
 
     return (
         <aside
-            className={cn(
-                "w-[246px] max-h-[calc(100vh-132px)] flex flex-col bg-panel border border-line rounded-lg shadow-[var(--shadow),inset_0_1px_0_var(--hair)] backdrop-blur-[14px] pointer-events-auto overflow-hidden motion-safe:animate-[dbDropIn_300ms_var(--ease-drawer)]",
-                collapsed && "w-[246px]",
-            )}
+            className="db-hud-panel relative w-[246px] max-h-[calc(100vh-132px)] flex flex-col pointer-events-auto overflow-hidden [--db-tab:118px] motion-safe:animate-[dbDropIn_300ms_var(--ease-drawer)]"
             aria-label="Nation status"
         >
-            <div className="flex items-center gap-[10px] px-3 py-[11px] border-b border-hair">
-                <Flag
-                    iso={myNation.iso}
-                    className="w-[26px] h-[18px] rounded-sm shadow-[0_0_0_1px_var(--line)] flex-none"
-                />
+            <header className="flex items-center gap-[10px] px-3 py-[9px]">
+                <Flag iso={myNation.iso} className="w-[26px] h-[18px] shadow-[0_0_0_1px_var(--line)] flex-none" />
                 <div className="flex flex-col leading-[1.15] min-w-0 flex-1">
-                    <span className="font-display text-[15px] font-bold text-text whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="font-display text-[15px] font-bold normal-case tracking-normal text-text whitespace-nowrap overflow-hidden text-ellipsis">
                         {myNation.name}
                     </span>
-                    <span className="text-[9.5px] tracking-[1px] uppercase text-faint">Your Command</span>
+                    <span className="text-[9px] tracking-[0.2em]">Your Command</span>
                 </div>
                 <button
-                    className="w-6 h-6 border border-line rounded-sm bg-transparent text-dim text-[11px] flex-none transition-[border-color,color] duration-150 ease-out-db hover:text-text hover:border-line-soft"
+                    className="db-notch-sm w-6 h-6 grid place-items-center border border-line bg-transparent text-dim flex-none transition-[border-color,color] duration-[var(--dur-fast)] ease-out-db hover:text-gold hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]"
                     onClick={() => setCollapsed((v) => !v)}
                     title={collapsed ? "Expand" : "Collapse"}
                     aria-label={collapsed ? "Expand nation panel" : "Collapse nation panel"}
+                    aria-expanded={!collapsed}
                 >
-                    {collapsed ? "▸" : "▾"}
+                    <Icon name="chevron-down" size={13} className={cn(collapsed && "-rotate-90")} />
                 </button>
-            </div>
+            </header>
 
             {!collapsed && (
                 <>
                     <div className="grid grid-cols-2 gap-px bg-hair border-b border-hair">
                         <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className="text-[9.5px] tracking-[0.8px] uppercase text-faint">Population</span>
-                            <span className="font-display text-[15px] font-semibold text-text inline-flex items-center gap-[4px]">
+                            <span className={KICKER}>Population</span>
+                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text inline-flex items-center gap-[4px]">
                                 {fmtPop(view.pop)}
                                 <PopTrend rate={view.popRate} base={view.pop} className="text-[11px]" />
                             </span>
                         </div>
                         <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className="text-[9.5px] tracking-[0.8px] uppercase text-faint">GDP</span>
-                            <span className="font-display text-[15px] font-semibold text-text">{fmtGdp(view.gdp)}</span>
+                            <span className={KICKER}>GDP</span>
+                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text">
+                                {fmtGdp(view.gdp)}
+                            </span>
                         </div>
                         <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className="text-[9.5px] tracking-[0.8px] uppercase text-faint">Net</span>
+                            <span className={KICKER}>Net</span>
                             <span
                                 className={cn(
-                                    "font-display text-[15px] font-semibold text-text",
+                                    "font-mono text-[14px] font-semibold tabular-nums text-text",
                                     view.net < 0 && "text-red",
                                 )}
                             >
@@ -134,10 +144,10 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                             </span>
                         </div>
                         <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className="text-[9.5px] tracking-[0.8px] uppercase text-faint">Territories</span>
-                            <span className="font-display text-[15px] font-semibold text-text">
+                            <span className={KICKER}>Territories</span>
+                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text">
                                 {view.heldCount}
-                                <span className="text-faint font-normal text-xs">/{view.totalCount}</span>
+                                <span className="text-faint font-normal text-[11px]">/{view.totalCount}</span>
                             </span>
                         </div>
                     </div>
@@ -147,25 +157,23 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                         title={`${view.indCount} standing${view.indPending ? ` + ${view.indPending} in production` : ""} of ${view.indCap} industry slots (factories, ports, refineries, tech parks). Cap grows with population. Combined output +${view.indOut.toFixed(1)} pts/s.`}
                     >
                         <div className="flex items-baseline justify-between mb-[6px]">
-                            <span className="text-[9.5px] tracking-[0.8px] uppercase text-faint">
+                            <span className={cn(KICKER, "tracking-[0.1em] whitespace-nowrap")}>
                                 Industry (used / cap)
                             </span>
-                            <span className="font-display text-[12.5px] text-dim">
+                            <span className="font-mono text-[10.5px] tabular-nums text-dim whitespace-nowrap">
                                 {indUsed}
-                                <span className="text-faint font-normal text-xs">/{view.indCap}</span> · +
-                                {view.indOut.toFixed(1)}/s
+                                <span className="text-faint">/{view.indCap}</span> · +{view.indOut.toFixed(1)}/s
                             </span>
                         </div>
                         <Meter
                             frac={indFrac}
-                            className="h-[5px] rounded-[3px] bg-hair"
-                            fillClass="rounded-[3px] bg-linear-to-r from-dim to-text duration-[400ms]"
+                            className="h-[6px] bg-line-soft [--db-seg-gap:var(--sunk)]"
+                            fillClass="bg-gold duration-[400ms]"
+                            ariaLabel="Industry slots used"
                         />
                     </div>
 
-                    <div className="px-3 pt-[9px] pb-[5px] text-[9.5px] tracking-[1px] uppercase text-faint">
-                        Territories
-                    </div>
+                    <div className={cn(KICKER, "px-3 pt-[9px] pb-[5px]")}>Territories</div>
                     <div className="db-scroll flex-1 overflow-y-auto px-[6px] pb-2">
                         {view.rows.map((c) => {
                             const st = statusOf(c);
@@ -174,7 +182,7 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                                 <button
                                     key={c.id}
                                     className={cn(
-                                        "flex items-center justify-between gap-2 w-full px-2 py-[7px] border-none rounded-sm bg-transparent text-left cursor-pointer transition-[background] duration-150 ease-out-db hover:bg-hair",
+                                        "db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent bg-transparent text-left cursor-pointer transition-[background,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-gold-soft hover:border-gold-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--gold)]",
                                         !c.alive && "opacity-55",
                                     )}
                                     onClick={() => onFocus?.(c)}
@@ -201,22 +209,23 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
                                         )}
                                     </span>
                                     <span className="flex flex-col items-end gap-[3px] flex-none">
-                                        <span className="font-display text-[11.5px] text-dim inline-flex items-center gap-[3px]">
+                                        <span className="font-mono text-[11px] tabular-nums text-dim inline-flex items-center gap-[3px]">
                                             {c.alive ? fmtPop((c.pop || 0) * v) : "—"}
                                             {c.alive && view.standing && (c.pop || 0) > 0 && c.hp < c.maxHp && (
                                                 <PopTrend
                                                     up
-                                                    title="Rebuilding — population recovering as the city heals"
+                                                    title="Rebuilding: population recovers as the city heals"
                                                     className="text-[9px]"
                                                 />
                                             )}
                                         </span>
                                         <span
                                             className={cn(
-                                                "text-[9px] tracking-[0.4px] uppercase px-[6px] py-px rounded-full border border-line text-dim",
+                                                "db-notch-sm inline-flex items-center gap-[5px] font-mono text-[9px] tracking-[0.14em] uppercase px-[6px] py-[2px] border border-line text-dim",
                                                 pillClass[st.key],
                                             )}
                                         >
+                                            <span className={cn("db-led", pillLed[st.key])} aria-hidden="true" />
                                             {st.label}
                                         </span>
                                     </span>

@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from "react";
 import {AnimatePresence, motion, useReducedMotion} from "motion/react";
 import {X, Loader2} from "lucide-react";
 import {cn} from "../lib/cn.js";
-import {button, input, label as labelCva} from "../lib/variants.js";
+import {button, input, label as labelCva, panel} from "../lib/variants.js";
 import {AUTH_RULES} from "../lib/authRules.js";
 import {useAccount} from "../lib/accountStore.js";
 import GameIcon from "./GameIcon.jsx";
@@ -57,7 +57,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
         if (signup) {
             const u = username.trim();
             if (u.length < AUTH_RULES.username.min || u.length > AUTH_RULES.username.max)
-                return fail(`Username must be ${AUTH_RULES.username.min}–${AUTH_RULES.username.max} characters.`);
+                return fail(`Username must be ${AUTH_RULES.username.min} to ${AUTH_RULES.username.max} characters.`);
         }
         setStatus("loading");
         setError("");
@@ -92,19 +92,20 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                         animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(8px) scale(0.98)"}}
                         transition={{duration: 0.22, ease: [0.23, 1, 0.32, 1]}}
-                        className="relative db-tick db-seam w-[min(420px,94vw)] overflow-hidden rounded-lg border border-line bg-panel-solid p-7 shadow"
+                        className={cn(panel(), "db-seam w-[min(420px,94vw)] p-7")}
                     >
                         <button
                             onClick={onClose}
                             aria-label="Close"
-                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-sm border border-line text-dim transition-[color,border-color,transform] duration-150 ease-out-db hover:border-blue hover:text-text active:scale-95"
+                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center db-notch-sm border border-line text-dim transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue hover:text-text active:scale-95"
                         >
                             <X size={15} />
                         </button>
 
                         <div className="flex items-center gap-2 text-gold">
                             <GameIcon name="dome" size={22} />
-                            <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
+                            <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
+                                <span className="db-led db-led-warn" />
                                 {signup ? "Create account" : "Sign in"}
                             </span>
                         </div>
@@ -114,7 +115,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                         <p className="mt-2 text-[13px] leading-relaxed text-dim">
                             {signup
                                 ? "Your DomeBreak account keeps your profile and match history in sync across the game and this site."
-                                : "Use your DomeBreak game account — same login, everywhere."}
+                                : "Use your DomeBreak game account. It's the same login everywhere."}
                         </p>
 
                         <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>

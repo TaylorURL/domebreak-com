@@ -3,6 +3,7 @@ import {AnimatePresence, motion, useReducedMotion} from "motion/react";
 import {ChevronDown, LogOut, ShieldCheck} from "lucide-react";
 import {cn} from "../lib/cn.js";
 import {useAccount} from "../lib/accountStore.js";
+import {panel} from "../lib/variants.js";
 import GameIcon from "./GameIcon.jsx";
 import {monthYear} from "../lib/dates.js";
 
@@ -10,7 +11,7 @@ function Avatar({avatar, name, size = 26}) {
     if (avatar) {
         return (
             <span
-                className="flex shrink-0 items-center justify-center rounded-full border border-gold-line bg-gold-soft text-gold"
+                className="flex shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft text-gold"
                 style={{width: size, height: size}}
             >
                 <GameIcon name={avatar} size={size * 0.6} />
@@ -19,7 +20,7 @@ function Avatar({avatar, name, size = 26}) {
     }
     return (
         <span
-            className="flex shrink-0 items-center justify-center rounded-full border border-gold-line bg-gold-soft font-display text-[12px] font-bold text-gold"
+            className="flex shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft font-display text-[12px] font-bold text-gold"
             style={{width: size, height: size}}
         >
             {(name || "?").slice(0, 1).toUpperCase()}
@@ -70,7 +71,7 @@ export default function AccountMenu() {
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-sm border border-line bg-field py-2 pl-2 pr-2 text-text transition-[color,border-color,transform] duration-150 ease-out-db hover:border-blue active:scale-[0.98]"
+                className="flex items-center gap-2 db-notch-sm border border-line bg-field py-2 pl-2 pr-2 text-text transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue active:scale-[0.98]"
                 aria-haspopup="menu"
                 aria-expanded={open}
             >
@@ -93,7 +94,10 @@ export default function AccountMenu() {
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         transition={{duration: 0.16, ease: [0.23, 1, 0.32, 1]}}
                         style={{transformOrigin: "top right"}}
-                        className="db-seam absolute right-0 top-[calc(100%+8px)] w-[280px] overflow-hidden rounded-lg border border-line bg-panel-2 shadow backdrop-blur-[14px]"
+                        className={cn(
+                            panel({frame: "glass"}),
+                            "db-seam absolute right-0 top-[calc(100%+8px)] w-[280px]",
+                        )}
                     >
                         <div className="flex items-center gap-3 border-b border-hair p-4">
                             <Avatar avatar={profile?.avatar} name={name} size={38} />
@@ -119,7 +123,7 @@ export default function AccountMenu() {
                                     href="#/admin"
                                     role="menuitem"
                                     onClick={() => setOpen(false)}
-                                    className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-[13px] text-dim transition-colors hover:bg-bg-2 hover:text-text"
+                                    className="flex w-full items-center gap-3 db-notch-sm border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-gold-line hover:bg-gold-soft hover:text-gold"
                                 >
                                     <ShieldCheck size={15} />
                                     <span>Admin Panel</span>
@@ -131,7 +135,7 @@ export default function AccountMenu() {
                                     setOpen(false);
                                     signOut();
                                 }}
-                                className="flex w-full items-center gap-3 rounded-sm px-3 py-2 text-[13px] text-dim transition-colors hover:bg-bg-2 hover:text-danger"
+                                className="flex w-full items-center gap-3 db-notch-sm border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
                             >
                                 <LogOut size={15} />
                                 <span>Sign Out</span>

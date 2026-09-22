@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {acceptFriend, fetchFriends, removeFriend, requestFriend} from "../../account/social.js";
 import {useModal} from "../hooks/useModal.js";
-import {overlay, card, button, miniButton, badge, input as inputCls, label, sub} from "../lib/variants.js";
+import {overlay, card, button, miniButton, badge, input as inputCls, label, menuTitle, sub} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import Flag from "./Flag.jsx";
 
@@ -125,12 +125,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
               : "Offline";
         return (
             <span className="flex items-center gap-1.5 text-[11px] text-dim mt-[3px]">
-                <span
-                    className={cn(
-                        "inline-block w-2 h-2 rounded-full shrink-0",
-                        online ? "bg-[#46d38a] shadow-[0_0_6px_rgba(70,211,138,0.9)]" : "bg-line",
-                    )}
-                />
+                <span className={cn("db-led", online ? "db-led-ok" : "text-line")} />
                 <span className="truncate">{text}</span>
             </span>
         );
@@ -154,14 +149,14 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
         const isLeader = party.leader === meId;
         const me = members.find((m) => m.user_id === meId);
         return (
-            <div className="px-[10px] py-2 bg-btn-bg border border-line rounded-sm">
+            <div className="db-notch-sm px-[10px] py-2 bg-btn-bg border border-line">
                 <div role="list" aria-labelledby="db-party-roster-h">
                     {members.map((m) => (
                         <div
                             key={m.user_id}
                             className="flex items-center justify-between gap-2 py-1"
                             role="listitem"
-                            aria-label={`${m.username} — ${m.ready ? "ready" : "not ready"}`}
+                            aria-label={`${m.username}, ${m.ready ? "ready" : "not ready"}`}
                         >
                             <div className="min-w-0 flex items-center gap-1.5">
                                 <span
@@ -248,7 +243,10 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
     return (
         <div className={overlay({placement: "center"})} onClick={onClose}>
             <div
-                className={cn(card(), "pointer-events-auto w-[min(380px,94vw)] text-left max-h-[84vh] overflow-auto")}
+                className={cn(
+                    card(),
+                    "db-card-scroll pointer-events-auto w-[min(380px,94vw)] text-left max-h-[84vh] overflow-auto",
+                )}
                 ref={ref}
                 tabIndex={-1}
                 role="dialog"
@@ -256,13 +254,12 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                 aria-labelledby={titleId}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div
-                    className="db-menu-title sm text-[26px] tracking-[3px] mb-4 font-bold uppercase text-dim"
-                    id={titleId}
-                >
-                    Command Network
+                <div className="db-card-head">
+                    <div className={menuTitle({sm: true})} id={titleId}>
+                        Command Network
+                    </div>
                 </div>
-                <div className="flex gap-[10px] mt-4">
+                <div className="flex gap-[10px]">
                     <label className="sr-only" htmlFor="db-friends-input">
                         Username
                     </label>
@@ -283,7 +280,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                 </div>
                 <div aria-live="assertive">
                     {addErr && (
-                        <p className="text-danger bg-[rgba(224,87,79,0.1)] border border-danger rounded-sm px-3 py-2 text-[12.5px] mt-[10px] mb-0">
+                        <p className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger px-3 py-2 text-[12.5px] mt-[10px] mb-0">
                             {addErr}
                         </p>
                     )}
@@ -301,7 +298,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                 )}
 
                 {loading && <p className={sub()}>Loading allies…</p>}
-                {!loading && friends.length === 0 && <p className={sub()}>No allies yet — add a commander by name.</p>}
+                {!loading && friends.length === 0 && <p className={sub()}>No allies yet. Add a commander by name.</p>}
 
                 {incoming.length > 0 && (
                     <div className="mt-4">
@@ -314,9 +311,9 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line rounded-sm mt-[6px] animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
-                                        aria-label={`${uname} — incoming request`}
+                                        aria-label={`${uname}, incoming request`}
                                     >
                                         <span className="text-[13px] text-text whitespace-nowrap overflow-hidden text-ellipsis">
                                             {uname}
@@ -357,9 +354,9 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line rounded-sm mt-[6px] animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
-                                        aria-label={`${uname} — pending request`}
+                                        aria-label={`${uname}, pending request`}
                                     >
                                         <span className="text-[13px] text-text whitespace-nowrap overflow-hidden text-ellipsis">
                                             {uname}
@@ -403,9 +400,9 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line rounded-sm mt-[6px] animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
-                                        aria-label={`${uname} — ${online ? "online" : "offline"}`}
+                                        aria-label={`${uname}, ${online ? "online" : "offline"}`}
                                     >
                                         <div className="min-w-0 flex flex-col">
                                             <span className="text-[13px] text-text truncate">{uname}</span>
@@ -448,7 +445,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                     </div>
                 )}
 
-                <button className={cn(button(), "w-full mt-[14px]")} onClick={onClose}>
+                <button className={cn(button(), "w-full mt-[18px]")} onClick={onClose}>
                     Close
                 </button>
             </div>

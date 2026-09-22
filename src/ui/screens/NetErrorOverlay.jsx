@@ -45,16 +45,17 @@ export default function NetErrorOverlay({title, message, details, onRetry, onDis
             aria-modal="true"
             aria-labelledby="db-neterror-title"
         >
-            <div className="w-[min(560px,94vw)] max-h-[86vh] overflow-y-auto grid gap-3 px-7 py-[24px] border border-danger rounded bg-[rgba(20,10,10,0.94)] text-[#ffd7dd] shadow motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+            <div className="db-notch db-scan db-card-scroll relative w-[min(560px,94vw)] max-h-[86vh] overflow-y-auto grid gap-3 px-7 py-[24px] border border-danger bg-[rgba(20,10,10,0.96)] text-[#ffd7dd] motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
                 <div
                     id="db-neterror-title"
-                    className="font-display text-danger text-[22px] font-bold tracking-[2px] uppercase text-center"
+                    className="font-display text-danger text-[22px] font-bold tracking-[2px] uppercase text-center flex items-center justify-center gap-2.5"
                 >
+                    <span className="db-led db-led-live" />
                     {title}
                 </div>
                 {message && <p className="text-center text-[13px] text-dim m-0">{message}</p>}
                 {details && (
-                    <pre className="text-left text-[11px] leading-[1.55] text-faint bg-[rgba(255,255,255,0.04)] border border-line rounded p-3 overflow-auto max-h-[240px] whitespace-pre-wrap font-mono select-text">
+                    <pre className="db-card-scroll db-notch-sm text-left text-[11px] leading-[1.55] text-faint bg-sunk border border-line p-3 overflow-auto max-h-[240px] whitespace-pre-wrap font-mono select-text">
                         {details}
                     </pre>
                 )}

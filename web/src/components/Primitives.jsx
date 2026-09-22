@@ -23,18 +23,20 @@ export function Wordmark({className, glow = false, stacked = false}) {
     );
 }
 
-// Mono kicker with a blinking status dot — the "SYSTEM ONLINE" motif.
-export function Eyebrow({children, dot = true, className}) {
+// Mono kicker with a status LED — the "SYSTEM ONLINE" motif. `tone` picks the
+// lamp: live is the red blink that says something is happening, and the other
+// three are steady. `framed` sets the kicker inside the four corner brackets,
+// which is how the hero opens.
+export function Eyebrow({children, dot = true, tone = "live", framed = false, className}) {
     return (
         <div
             className={cn(
                 "inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.28em] text-faint",
+                framed && "relative db-brackets px-[14px] py-[9px]",
                 className,
             )}
         >
-            {dot && (
-                <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-danger db-blink shadow-[0_0_7px_var(--danger)]" />
-            )}
+            {dot && <span className={cn("db-led", `db-led-${tone}`)} />}
             <span>{children}</span>
         </div>
     );

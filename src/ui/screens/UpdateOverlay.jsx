@@ -83,7 +83,7 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
             aria-modal="true"
             aria-labelledby="db-update-title"
         >
-            <div className="w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-gold-line rounded bg-[rgba(18,16,8,0.94)] text-text shadow motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+            <div className="db-notch db-scan relative w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-gold-line bg-[rgba(18,16,8,0.96)] text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
                 <div
                     id="db-update-title"
                     className="font-display text-gold text-[22px] font-bold tracking-[2px] uppercase text-center"
@@ -92,7 +92,7 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
                 </div>
                 <p className="text-center text-[13px] text-dim m-0">
                     {latestVersion ? `DomeBreak v${latestVersion} is out` : "A newer DomeBreak is out"}
-                    {currentVersion ? ` — you are on v${currentVersion}.` : "."}{" "}
+                    {currentVersion ? `. You are on v${currentVersion}.` : "."}{" "}
                     {forced
                         ? "Installing the latest version before you play."
                         : "Multiplayer requires the latest version; single player is unaffected."}
@@ -104,14 +104,14 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
                 )}
                 {busy && (
                     <div
-                        className="h-[3px] rounded overflow-hidden bg-[rgba(255,255,255,0.1)]"
+                        className="db-seg h-1.5 overflow-hidden bg-[rgba(255,255,255,0.1)] [--db-seg-gap:rgba(18,16,8,0.96)]"
                         role="progressbar"
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={phase === "downloading" ? Math.round(percent * 100) : undefined}
                     >
                         <div
-                            className="h-full bg-gold transition-[width] duration-150"
+                            className="h-full bg-gold transition-[width] duration-150 motion-reduce:transition-none"
                             style={{width: `${phase === "downloading" ? Math.round(percent * 100) : 100}%`}}
                         />
                     </div>
@@ -151,7 +151,7 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
                         target="_blank"
                         rel="noreferrer"
                     >
-                        or download the update manually
+                        Or download the update manually
                     </a>
                 )}
             </div>

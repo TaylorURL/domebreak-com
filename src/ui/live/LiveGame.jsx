@@ -64,6 +64,36 @@ import {useOwnershipLayer} from "../hooks/useOwnershipLayer.js";
 import {useDiplomacyLayer} from "../hooks/useDiplomacyLayer.js";
 import SelectionPanel from "./SelectionPanel.jsx";
 
+// The three command screens, in the order the top bar lists them. A screen
+// covers the bar that opened it, so the same three sit in its header strip and
+// switching between them swaps the body rather than closing back to the map.
+const SCREEN_TABS = [
+    {id: "production", label: "Production"},
+    {id: "battle", label: "Battle Plan"},
+    {id: "diplomacy", label: "Diplomacy"},
+];
+
+// The strip itself, handed to ScreenFrame's head slot. It stretches to the
+// header's bottom edge so the active tab's amber rule lands on the hairline
+// that closes the strip.
+function ScreenTabs({panel, onPanel}) {
+    return (
+        <div className="db-tabs self-stretch flex-none -mb-[13px] ml-3" role="tablist" aria-label="Command screens">
+            {SCREEN_TABS.map((t) => (
+                <button
+                    key={t.id}
+                    className="db-tab"
+                    role="tab"
+                    aria-selected={panel === t.id}
+                    onClick={() => onPanel(t.id)}
+                >
+                    {t.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 const CITY_LAYERS = ["live-cities"];
 // Below this zoom, hovering a country shows a whole-country readout instead of a city.
 const COUNTRY_ZOOM = 4.2;
@@ -181,13 +211,15 @@ export default function LiveGame({
     // commands. Plans are seeded from — and mirrored back onto — the world so they
     // persist across save/load and can be drafted in peacetime. See its GDD/ADR.
     const bp = useBattlePlans(w);
+    // One strip, rendered into whichever command screen is open.
+    const screenTabs = <ScreenTabs panel={panel} onPanel={setPanel} />;
     useBattlePlanReconciler({
         world: w,
         api,
         mySlot,
         plans: bp.plans,
         onFired: (id, n) =>
-            flash(n ? `Strike launched — ${n} on the way.` : "No units in range to fire.", n ? "info" : undefined),
+            flash(n ? `Strike launched: ${n} on the way.` : "No units in range to fire.", n ? "info" : undefined),
     });
 
     // These helpers are threaded into memoized consumers (the MapMarkers children
@@ -563,7 +595,7 @@ export default function LiveGame({
         // A follow order needs a ship target, not empty water — clear the arming.
         if (following) {
             setFollowing(null);
-            flash("Follow cancelled — click one of your ships.", "info");
+            flash("Follow cancelled. Click one of your ships.", "info");
             return;
         }
         setSelUnit(null);
@@ -804,7 +836,11 @@ export default function LiveGame({
                     label="Objectives"
                     origin="top right"
                     resizeDir={{x: -1, y: 1}}
-                    className="absolute top-[150px] right-4 z-5"
+                    // Docked clear of the whole top unit, command bar plus the
+                    // ticker beneath it, which runs to 197px at its tallest. A
+                    // panel that starts above that line has its header strip
+                    // hidden under the bar at every width the HUD is read at.
+                    className="absolute top-[206px] right-4 z-5"
                     tabAlign="right"
                 >
                     <ObjectivesPanel world={w} api={api} mySlot={mySlot} flash={flash} />
@@ -821,6 +857,7 @@ export default function LiveGame({
                         setMoving(null);
                         setSelUnit(null);
                     }}
+                    head={screenTabs}
                     onClose={() => setPanel(null)}
                 />
             )}
@@ -831,11 +868,12 @@ export default function LiveGame({
                     mySlot={mySlot}
                     online={!!net}
                     players={net?.players}
+                    head={screenTabs}
                     onClose={() => setPanel(null)}
                 />
             )}
             {!hudHidden && panel === "battle" && (
-                <BattlePlanScreen world={w} mySlot={mySlot} bp={bp} onClose={() => setPanel(null)} />
+                <BattlePlanScreen world={w} mySlot={mySlot} bp={bp} head={screenTabs} onClose={() => setPanel(null)} />
             )}
             <AdjustablePanel
                 panel={hud.bottomRight}
@@ -877,17 +915,17 @@ export default function LiveGame({
 
             {moving && (
                 <div
-                    className="absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-[rgba(244,192,42,0.4)] text-text py-2 px-[14px] rounded text-[13px] shadow"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >
                     {UNITS[movingUnit?.type]?.navalSpeed
-                        ? "Set Sail — click an open-ocean destination."
+                        ? "Set Sail: click an open-ocean destination."
                         : UNITS[movingUnit?.type]?.landSpeed
-                          ? "March — click a land destination."
+                          ? "March: click a land destination."
                           : isSea(movingUnit?.type)
-                            ? "Relocating — click in your coastal waters."
-                            : "Relocating — click inside your territory (on land)."}
+                            ? "Relocating: click in your coastal waters."
+                            : "Relocating: click inside your territory (on land)."}
                     <button className={miniButton()} onClick={() => setMoving(null)}>
                         Cancel
                     </button>
@@ -895,11 +933,11 @@ export default function LiveGame({
             )}
             {following && (
                 <div
-                    className="absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-[rgba(244,192,42,0.4)] text-text py-2 px-[14px] rounded text-[13px] shadow"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >
-                    Follow — click one of your ships to keep station on.
+                    Follow: click one of your ships to keep station on.
                     <button className={miniButton()} onClick={() => setFollowing(null)}>
                         Cancel
                     </button>
@@ -907,11 +945,11 @@ export default function LiveGame({
             )}
             {disembarkId && (
                 <div
-                    className="absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-[rgba(244,192,42,0.4)] text-text py-2 px-[14px] rounded text-[13px] shadow"
+                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
                     role="status"
                     aria-live="polite"
                 >
-                    Landing — click a coastal point inside your territory.
+                    Landing: click a coastal point inside your territory.
                     <button className={miniButton()} onClick={() => setDisembarkId(null)}>
                         Cancel
                     </button>
@@ -957,7 +995,7 @@ export default function LiveGame({
             {err && (
                 <div
                     className={cn(
-                        "absolute bottom-[122px] left-1/2 -translate-x-1/2 z-6 bg-[rgba(14,16,19,0.92)] border border-line-soft text-text py-[9px] px-[18px] rounded text-[12.5px] tracking-[0.3px] pointer-events-none backdrop-blur-[8px] shadow-sm motion-safe:animate-[dbPop_200ms_var(--ease-out)]",
+                        "db-notch-sm absolute bottom-[122px] left-1/2 -translate-x-1/2 z-6 bg-panel-2 border border-line-soft text-text py-[9px] px-[18px] text-[12.5px] tracking-[0.3px] pointer-events-none backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]",
                         err.kind === "err" && "bg-[rgba(224,87,79,0.14)] border-danger text-[#ffd7dd]",
                         err.kind === "warn" &&
                             "bg-[rgba(140,255,58,0.12)] border-[rgba(140,255,58,0.55)] text-[#d6ff9e]",
