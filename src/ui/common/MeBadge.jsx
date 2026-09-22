@@ -11,12 +11,12 @@ import {fmtMonthYear, fmtPlaytimeHours, winRatePct} from "../lib/format.js";
 import {useDisclosure} from "../../lib/hooks/useDisclosure.js";
 
 // The commander's identity glyph: their chosen unit icon, or the first letter of
-// their username as a fallback. Gold-on-soft-gold to match the app's accent.
+// their username as a fallback, inside a plain white-bordered circle.
 function AvatarCircle({avatar, initial, size = 30, iconSize = 18, className = ""}) {
     return (
         <span
             className={cn(
-                "grid place-items-center rounded-full bg-gold-soft border border-gold-line text-gold font-display font-bold text-[13px] shrink-0",
+                "grid place-items-center rounded-full bg-transparent border border-accent text-text font-semibold text-[13px] shrink-0",
                 className,
             )}
             style={{width: size, height: size}}
@@ -32,11 +32,11 @@ function AvatarPicker({avatar, onPick, onClose}) {
     return (
         <div className="mt-[10px] pt-[10px] border-t border-line-soft">
             <div className="flex items-baseline justify-between mb-1.5">
-                <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint" id="db-avatar-h">
+                <span className="text-[11px] font-medium text-faint" id="db-avatar-h">
                     Profile Picture
                 </span>
                 <button
-                    className="text-[10px] tracking-[0.5px] uppercase text-dim hover:text-text transition-colors"
+                    className="text-[11px] font-medium text-dim hover:text-text transition-colors"
                     onClick={onClose}
                 >
                     Done
@@ -53,8 +53,8 @@ function AvatarPicker({avatar, onPick, onClose}) {
                     aria-selected={!avatar}
                     aria-label="No picture, showing the username initial"
                     className={cn(
-                        "db-notch-sm grid place-items-center aspect-square border text-[9px] uppercase transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                        !avatar ? "border-gold-line bg-gold-soft text-gold" : "border-line bg-panel text-faint",
+                        "grid place-items-center aspect-square border text-[9.5px] transition-colors duration-[var(--dur-fast)] hover:border-text",
+                        !avatar ? "border-accent bg-accent-soft text-text" : "border-line bg-transparent text-faint",
                     )}
                     onClick={() => onPick(null)}
                 >
@@ -68,10 +68,10 @@ function AvatarPicker({avatar, onPick, onClose}) {
                         aria-selected={avatar === name}
                         aria-label={`Set picture to ${name}`}
                         className={cn(
-                            "db-notch-sm grid place-items-center aspect-square border transition-colors duration-[var(--dur-fast)] hover:border-blue",
+                            "grid place-items-center aspect-square border transition-colors duration-[var(--dur-fast)] hover:border-text",
                             avatar === name
-                                ? "border-gold-line bg-gold-soft text-gold"
-                                : "border-line bg-panel text-dim",
+                                ? "border-accent bg-accent-soft text-text"
+                                : "border-line bg-transparent text-dim",
                         )}
                         onClick={() => onPick(name)}
                     >
@@ -108,7 +108,7 @@ function MeBadgePopover({
     const avatar = profile?.avatar ?? null;
     return (
         <div
-            className="db-mebadge-pop db-hud-panel [--db-tab:96px] absolute top-[calc(100%+8px)] right-0 w-[260px] px-4 py-[14px] motion-safe:animate-[dbPop_150ms_var(--ease-out)]"
+            className="db-mebadge-pop db-hud-panel absolute top-[calc(100%+8px)] right-0 w-[260px] px-4 py-[14px] motion-safe:animate-[dbPop_150ms_var(--ease-out)]"
             ref={ref}
             tabIndex={-1}
             role="dialog"
@@ -134,12 +134,10 @@ function MeBadgePopover({
                 )}
                 <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                        <span className="font-display font-bold text-sm text-text truncate" id={titleId}>
+                        <span className="font-semibold text-sm text-text truncate" id={titleId}>
                             {profile?.username || "—"}
                         </span>
-                        <span className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint shrink-0">
-                            Commander
-                        </span>
+                        <span className="text-[11px] font-medium text-faint shrink-0">Commander</span>
                     </div>
                     <div className="text-faint text-[11px] mt-[2px]">{profile ? `Since ${since || "—"}` : "—"}</div>
                 </div>
@@ -148,38 +146,35 @@ function MeBadgePopover({
                 <AvatarPicker avatar={avatar} onPick={onSetAvatar} onClose={() => setPicking(false)} />
             )}
             <div
-                className="flex flex-wrap gap-x-[10px] gap-y-1 mt-[10px] pt-[10px] border-t border-line-soft font-mono text-[11px] text-dim"
+                className="flex flex-wrap gap-x-[10px] gap-y-1 mt-[10px] pt-[10px] border-t border-line text-[11px] text-dim [&_b]:font-mono [&_b]:tabular-nums [&_b]:font-medium [&_b]:text-text"
                 role="group"
                 aria-label="Career record"
             >
                 <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins unavailable"}>
-                    {stats ? `${stats.wins}W` : "—"}
+                    {stats ? <b>{stats.wins}W</b> : "—"}
                 </span>
                 <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses unavailable"}>
-                    {stats ? `${stats.losses}L` : "—"}
+                    {stats ? <b>{stats.losses}L</b> : "—"}
                 </span>
                 <span
                     title="Total matches played"
                     aria-label={stats ? `${total} matches played` : "Matches unavailable"}
                 >
-                    {stats ? `${total} Matches` : "—"}
+                    {stats ? <b>{total}</b> : "—"} Matches
                 </span>
                 <span title="Win rate" aria-label={stats ? `${winRate} percent win rate` : "Win rate unavailable"}>
-                    {stats ? `${winRate}% Win Rate` : "—"}
+                    {stats ? <b>{winRate}%</b> : "—"} Win rate
                 </span>
                 <span
                     title="Total time in command"
                     aria-label={hours != null ? `${hours} hours playtime` : "Playtime unavailable"}
                 >
-                    {hours != null ? `${hours}h Playtime` : "—"}
+                    {hours != null ? <b>{hours}h</b> : "—"} Playtime
                 </span>
             </div>
             {inGame && players?.length > 0 && (
                 <div className="mt-[10px] pt-[10px] border-t border-line-soft">
-                    <div
-                        className="font-mono text-[10px] tracking-[0.22em] uppercase text-faint mb-1.5"
-                        id="db-mebadge-roster-h"
-                    >
+                    <div className="text-[11px] font-medium text-faint mb-1.5" id="db-mebadge-roster-h">
                         In This War
                     </div>
                     <div role="list" aria-labelledby="db-mebadge-roster-h">
@@ -247,7 +242,7 @@ export default function MeBadge({profile, stats, onSignOut, inGame, players, onS
         <div ref={rootRef} className={cn("z-20", inGame ? "static" : "fixed top-[42px] right-4")}>
             <button
                 className={cn(
-                    "db-notch-sm relative flex items-center gap-2 h-[38px] border border-line bg-panel text-text backdrop-blur-[8px] transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue active:scale-[0.96]",
+                    "relative flex items-center gap-2 h-[38px] border border-line bg-panel text-text backdrop-blur-[8px] transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-text",
                     inGame ? "w-[38px] p-0 justify-center" : "p-0 pr-3",
                 )}
                 onClick={popover.toggle}
@@ -257,7 +252,7 @@ export default function MeBadge({profile, stats, onSignOut, inGame, players, onS
             >
                 <AvatarCircle avatar={profile?.avatar ?? null} initial={initial} className={inGame ? "" : "ml-1"} />
                 {!inGame && (
-                    <span className="font-display text-[12.5px] font-semibold tracking-[0.4px] whitespace-nowrap max-w-[140px] overflow-hidden text-ellipsis">
+                    <span className="text-[12.5px] font-semibold whitespace-nowrap max-w-[140px] overflow-hidden text-ellipsis">
                         {profile?.username || "—"}
                     </span>
                 )}

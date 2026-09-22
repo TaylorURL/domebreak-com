@@ -1,24 +1,31 @@
-// The political map tint shared by the live map (useMapVisualEffects) and the
-// menu attract sim (AttractSim). Both must paint nations identically: only active
-// belligerents wear their flag color, wiped-out nations take the scorched wash,
-// and every other country falls to neutral scenery grey. These assertions lock
-// that contract so the two callers can't silently drift apart.
+// The political map tint shared by the live map (useOwnershipLayer, painted by
+// MapLayers) and the menu attract sim (AttractSim). Both must paint nations
+// identically: a country's fill says where the seat the map belongs to stands
+// with it, a nation wiped out in war falls darker than anything else, and every
+// country outside the roster is neutral scenery. These assertions lock that
+// contract so the two callers can't silently drift apart.
 import {describe, expect, it} from "vitest";
 import {
     buildPoliticalTint,
-    flagColor,
+    LINE,
     NEUTRAL_LINE,
     NEUTRAL_TINT,
+    SOLID,
+    standingInk,
+    standingKey,
+    TINT,
     WIPEOUT_LINE,
     WIPEOUT_TINT,
 } from "../../../src/ui/lib/politicalTint.js";
 
-// A GID_0 -> [r,g,b] table like the bundled colors.json (three sample nations).
-const COLS = {
-    USA: [40, 90, 200],
-    RUS: [200, 60, 60],
-    FRA: [30, 160, 90],
-};
+// A roster in the shape the engine keeps it: slot 0 is the seat the map belongs
+// to, and `relations` is that seat's standing toward everyone else.
+const ROSTER = [
+    {slot: 0, iso: "US", relations: {1: "war", 2: "ally", 3: "peace"}},
+    {slot: 1, iso: "RU"},
+    {slot: 2, iso: "FR"},
+    {slot: 3, iso: "BR"},
+];
 
 // Pull the "match" pairs out of a MapLibre ["match", ["get","GID_0"], k,v,..., default]
 // expression into a lookup, plus the trailing default.
@@ -32,74 +39,74 @@ function matchToMap(expr) {
 }
 
 describe("politicalTint", () => {
-    it("test_only_active_nations_wear_their_flag_color", () => {
-        const {tint} = buildPoliticalTint(COLS, {activeGids: new Set(["USA", "RUS"])});
+    it("test_a_country_is_painted_by_where_you_stand_with_it", () => {
+        const {tint} = buildPoliticalTint({nations: ROSTER, mySlot: 0});
         const {map, dflt} = matchToMap(tint);
-        expect(map.USA).toBe("rgb(40,90,200)");
-        expect(map.RUS).toBe("rgb(200,60,60)");
-        expect(map.FRA).toBeUndefined(); // not active -> falls to the default
-        expect(dflt).toBe(NEUTRAL_TINT);
+        expect(map.USA).toBe(TINT.mine);
+        expect(map.RUS).toBe(TINT.war);
+        expect(map.FRA).toBe(TINT.ally);
+        expect(map.BRA).toBe(TINT.peace);
+        expect(dflt).toBe(NEUTRAL_TINT); // a country outside the roster is scenery
     });
 
-    it("test_wiped_out_nations_take_the_scorched_wash_over_their_flag", () => {
-        const {tint, line} = buildPoliticalTint(COLS, {
-            activeGids: new Set(["USA", "RUS"]),
-            wipedGids: new Set(["RUS"]),
-        });
-        const t = matchToMap(tint).map;
-        const l = matchToMap(line).map;
-        expect(t.USA).toBe("rgb(40,90,200)"); // still fighting -> flag color
-        expect(t.RUS).toBe(WIPEOUT_TINT); // routed -> scorched wash, not its red flag
-        expect(l.RUS).toBe(WIPEOUT_LINE);
+    it("test_a_non_participant_is_scenery_whatever_the_roster_says", () => {
+        const nations = [...ROSTER.slice(0, 3), {slot: 3, iso: "BR", active: false}];
+        const {tint} = buildPoliticalTint({nations, mySlot: 0});
+        expect(matchToMap(tint).map.BRA).toBe(TINT.neutral);
     });
 
-    it("test_all_active_world_keeps_every_flag_color", () => {
-        // No active set -> a full-world roster; every country keeps its flag hue.
-        const {tint} = buildPoliticalTint(COLS, {});
-        const {map} = matchToMap(tint);
-        expect(map.USA).toBe("rgb(40,90,200)");
-        expect(map.RUS).toBe("rgb(200,60,60)");
-        expect(map.FRA).toBe("rgb(30,160,90)");
+    it("test_wiped_out_nations_fall_darker_than_their_standing", () => {
+        const nations = [ROSTER[0], {slot: 1, iso: "RU", wipedOut: true}, ...ROSTER.slice(2)];
+        const {tint, line} = buildPoliticalTint({nations, mySlot: 0});
+        expect(matchToMap(tint).map.USA).toBe(TINT.mine); // still standing
+        expect(matchToMap(tint).map.RUS).toBe(WIPEOUT_TINT); // routed, not its war red
+        expect(matchToMap(line).map.RUS).toBe(WIPEOUT_LINE);
     });
 
-    it("test_borders_blend_toward_neutral_grey", () => {
-        // line = mix(flag, neutral) at 0.6/0.4 — never the raw flag color.
-        const {line} = buildPoliticalTint(COLS, {activeGids: new Set(["USA"])});
+    it("test_borders_take_the_same_standing_as_the_fill", () => {
+        const {line} = buildPoliticalTint({nations: ROSTER, mySlot: 0});
         const {map, dflt} = matchToMap(line);
-        // USA blue [40,90,200] mixed toward [96,100,108]: round(v*0.6 + g*0.4).
-        expect(map.USA).toBe("rgb(62,94,163)");
+        expect(map.USA).toBe(LINE.mine);
+        expect(map.RUS).toBe(LINE.war);
         expect(dflt).toBe(NEUTRAL_LINE);
     });
 
-    it("test_fully_conquered_country_wears_the_conquerors_flag_seamlessly", () => {
-        // FRA fully taken by USA: FRA renders in USA's OWN flag color and border,
-        // exactly as USA's home land — so the annexed country merges seamlessly.
-        const {tint, line} = buildPoliticalTint(COLS, {
-            activeGids: new Set(["USA", "RUS"]),
+    it("test_an_empty_roster_falls_to_neutral_scenery", () => {
+        const {tint, line} = buildPoliticalTint({});
+        expect(tint).toBe(NEUTRAL_TINT);
+        expect(line).toBe(NEUTRAL_LINE);
+    });
+
+    it("test_fully_conquered_country_wears_the_conquerors_standing_seamlessly", () => {
+        // FRA fully taken by the seat's own nation: it renders exactly as that
+        // nation's home land, so the annexed country merges seamlessly.
+        const {tint, line} = buildPoliticalTint({
+            nations: ROSTER,
+            mySlot: 0,
             conquered: new Map([["FRA", "USA"]]),
         });
         const t = matchToMap(tint).map;
         const l = matchToMap(line).map;
-        expect(t.FRA).toBe("rgb(40,90,200)"); // USA's flag, not FRA's own or neutral
-        expect(t.USA).toBe("rgb(40,90,200)"); // identical to the conqueror's home
-        expect(l.FRA).toBe(l.USA); // same blended border as home
+        expect(t.FRA).toBe(TINT.mine); // the conqueror's standing, not its own ally blue
+        expect(t.FRA).toBe(t.USA);
+        expect(l.FRA).toBe(l.USA);
     });
 
-    it("test_conquered_wins_over_the_active_and_wiped_branches", () => {
-        // A taken country is drawn once, as the conqueror — never doubled back to
-        // its native flag, the neutral default, or the wipeout wash.
-        const {tint} = buildPoliticalTint(COLS, {
-            activeGids: new Set(["USA"]),
-            wipedGids: new Set(["RUS"]),
-            conquered: new Map([["RUS", "USA"]]),
-        });
-        const t = matchToMap(tint).map;
-        expect(t.RUS).toBe("rgb(40,90,200)"); // conqueror's flag beats the wipeout wash
+    it("test_conquered_wins_over_the_roster_and_wiped_branches", () => {
+        // A taken country is drawn once, as its conqueror — never doubled back to
+        // its own standing, the neutral default, or the wipeout wash.
+        const nations = [ROSTER[0], {slot: 1, iso: "RU", wipedOut: true}, ...ROSTER.slice(2)];
+        const {tint} = buildPoliticalTint({nations, mySlot: 0, conquered: new Map([["RUS", "USA"]])});
+        expect(matchToMap(tint).map.RUS).toBe(TINT.mine);
     });
 
-    it("test_flagColor_resolves_a_table_entry_and_reports_gaps", () => {
-        expect(flagColor(COLS, "USA")).toBe("rgb(40,90,200)");
-        expect(flagColor(COLS, "ZZZ")).toBeNull(); // missing -> caller uses its fallback
-        expect(flagColor(COLS, null)).toBeNull();
+    it("test_standingKey_and_standingInk_agree_with_the_tables", () => {
+        const me = ROSTER[0];
+        expect(standingKey(ROSTER[1], 0, me)).toBe("war");
+        expect(standingInk(ROSTER[1], 0, me)).toBe(SOLID.war);
+        expect(standingKey(ROSTER[0], 0, me)).toBe("mine");
+        expect(standingInk(ROSTER[2], 0, me)).toBe(SOLID.ally);
+        // No seat at all (a map with no roster behind it) reads everyone as at peace.
+        expect(standingKey(ROSTER[1], undefined, undefined)).toBe("peace");
     });
 });

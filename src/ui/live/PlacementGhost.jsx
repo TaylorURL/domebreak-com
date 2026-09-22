@@ -6,11 +6,11 @@
 // as placement lag. LiveGame drives it imperatively through the ref: update() on
 // each (rAF-coalesced) mousemove, clear() when placement ends.
 //
-// The ring is a dashed accent boundary turning slowly on its own axis, with a
+// The ring is a dashed white boundary turning slowly on its own axis, with a
 // second dashed ring inside it and a bracketed crosshair mark on the exact point
 // under the cursor, so the reach being previewed and the spot being committed to
 // read as two different pieces of information. Validity is carried in the colour:
-// the accent when the spot takes the unit, danger when it does not.
+// white when the spot takes the unit, red when it does not.
 import {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react";
 import {Layer, Marker, Source} from "react-map-gl/maplibre";
 import {COAST_KM, radarRangeOf, UNITS} from "../../game/engine.js";
@@ -37,10 +37,10 @@ const GHOST_TURNS_PER_S = 0.05;
 const SPIN_MS = 50;
 // Inner ring, as a fraction of the reach being previewed.
 const GHOST_INNER_FRAC = 0.45;
-// Accent for a spot that takes the unit, danger for one that does not. Literal
-// hex rather than the tokens: these go into MapLibre paint expressions, which
-// are evaluated in the map's own worker and never see a CSS variable.
-const GHOST_OK = "#f2b544";
+// White for a spot that takes the unit, red for one that does not. Literal hex
+// rather than the tokens: these go into MapLibre paint expressions, which are
+// evaluated in the map's own worker and never see a CSS variable.
+const GHOST_OK = "#ffffff";
 const GHOST_BAD = "#e0574f";
 
 // Match the coverage-ring behavior in useLiveLayers: a true geodesic cap on the

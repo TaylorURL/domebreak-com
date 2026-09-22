@@ -40,22 +40,22 @@ export default function NetErrorOverlay({title, message, details, onRetry, onDis
 
     return (
         <div
-            className="fixed inset-0 z-50 grid place-items-center p-6 bg-[rgba(4,6,9,0.72)] backdrop-blur-[6px] pointer-events-auto"
+            className="fixed inset-0 z-50 grid place-items-center p-6 bg-[rgba(0,0,0,0.76)] backdrop-blur-[6px] pointer-events-auto"
             role="dialog"
             aria-modal="true"
             aria-labelledby="db-neterror-title"
         >
-            <div className="db-notch db-scan db-card-scroll relative w-[min(560px,94vw)] max-h-[86vh] overflow-y-auto grid gap-3 px-7 py-[24px] border border-danger bg-[rgba(20,10,10,0.96)] text-[#ffd7dd] motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+            <div className="db-card-scroll relative w-[min(560px,94vw)] max-h-[86vh] overflow-y-auto grid gap-3 px-7 py-[24px] border border-danger bg-panel-2 text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
                 <div
                     id="db-neterror-title"
-                    className="font-display text-danger text-[22px] font-bold tracking-[2px] uppercase text-center flex items-center justify-center gap-2.5"
+                    className="text-danger text-[20px] font-semibold tracking-[-0.01em] text-center flex items-center justify-center gap-2.5"
                 >
                     <span className="db-led db-led-live" />
                     {title}
                 </div>
                 {message && <p className="text-center text-[13px] text-dim m-0">{message}</p>}
                 {details && (
-                    <pre className="db-card-scroll db-notch-sm text-left text-[11px] leading-[1.55] text-faint bg-sunk border border-line p-3 overflow-auto max-h-[240px] whitespace-pre-wrap font-mono select-text">
+                    <pre className="db-card-scroll text-left text-[11px] leading-[1.55] text-faint bg-sunk border border-line p-3 overflow-auto max-h-[240px] whitespace-pre-wrap font-mono select-text">
                         {details}
                     </pre>
                 )}

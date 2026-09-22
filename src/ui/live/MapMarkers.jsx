@@ -40,9 +40,7 @@ const quantize = (v, steps) => Math.round(v * steps) / steps;
 // elements and the capture badge's fixed screen offset. Constant identity keeps
 // the library Marker memo intact even while the badge/ring reposition.
 //
-// Selection is a bracket box in the accent, the same four-corner mark the rest
-// of the chrome uses, so what is selected on the map reads the way a selected
-// control does everywhere else. The city keeps a ring inside its brackets
+// Selection is a white corner box on the map. The city keeps a ring inside it
 // because a city is a place rather than a thing.
 const SELECTION_MARK = (
     <span className="db-sel-mark" aria-hidden="true">
@@ -66,14 +64,14 @@ const CaptureMarker = memo(function CaptureMarker({lng, lat, pct, col, label}) {
         () => (
             <div className="pointer-events-none flex flex-col items-center gap-[3px]" aria-hidden="true">
                 <div
-                    className="flex items-center gap-1 px-1.5 py-[2px] rounded-full bg-[rgba(8,10,14,0.82)] border backdrop-blur-[3px] font-mono text-[10px] leading-none whitespace-nowrap shadow-[0_1px_3px_rgba(0,0,0,0.55)]"
+                    className="flex items-center gap-1.5 px-1.5 py-[2px] bg-[rgba(0,0,0,0.82)] border backdrop-blur-[3px] text-[10px] leading-[1.5] whitespace-nowrap"
                     style={{borderColor: col, color: col}}
                 >
-                    <b className="font-bold">{pct}%</b>
-                    <span className="uppercase tracking-[0.6px] text-[8px] opacity-90">{label}</span>
+                    <b className="font-mono tabular-nums font-semibold">{pct}%</b>
+                    <span className="font-medium opacity-90">{label}</span>
                 </div>
-                <div className="w-[46px] h-[3px] rounded-full bg-[rgba(255,255,255,0.16)] overflow-hidden">
-                    <i className="block h-full rounded-full" style={{width: `${pct}%`, background: col}} />
+                <div className="w-[46px] h-[3px] bg-[rgba(255,255,255,0.16)] overflow-hidden">
+                    <i className="block h-full" style={{width: `${pct}%`, background: col}} />
                 </div>
             </div>
         ),
@@ -127,7 +125,7 @@ const UnitMarker = memo(function UnitMarker({
                     // targets it so a unit right-click deterministically runs the
                     // UNIT menu instead of racing the map handler for a city
                     // underneath — without it the outcome hangs on event ordering.
-                    "db-unit relative grid place-items-center cursor-pointer [filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)",
+                    "db-unit relative grid place-items-center cursor-pointer [filter:drop-shadow(0_0_3px_rgba(0,0,0,0.9))_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)",
                     selected && "scale-[1.35] transition-transform duration-[140ms] ease-out-db",
                 )}
                 title={label}
@@ -183,9 +181,9 @@ const FalloutMarker = memo(function FalloutMarker({lng, lat, intensity}) {
     );
 });
 
-// One impact fireball. Every prop is fixed for the explosion's whole ~850ms
-// life, so after mount the memo holds outright and the ~15-node fireball never
-// re-reconciles — a MIRV salvo pays for its DOM once, at mount.
+// One detonation. Every prop is fixed for the explosion's whole ~850ms life, so
+// after mount the memo holds outright and the ~15-node burn never re-reconciles
+// — a MIRV salvo pays for its DOM once, at mount.
 const ExplosionMarker = memo(function ExplosionMarker({lng, lat, alt, kind}) {
     const children = useMemo(() => (kind === "kill" ? <KillMark /> : <Explosion kind={kind} />), [kind]);
     const offset = useMemo(() => [0, -alt * 70], [alt]);

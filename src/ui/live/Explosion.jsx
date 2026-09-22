@@ -1,12 +1,12 @@
-// Compact fireball detonation, played in four beats: the flash blows out, the
-// fireball billows, three shock rings expand and thin while the embers fan out
-// under them, and two grey wisps drift off the burn. Every kind is FIRE — kinds
-// differ only in scale/accent (set in CSS), never hue: missiles striking each
-// other read as fire, not some abstract colored puff. Pure transform/opacity
-// animation so many can play at once without jank. Lifetime stays under the
-// 850ms unmount timeout in LiveGame/AttractSim.
+// Compact detonation, played in four beats: the flash blows out, the burn
+// billows, three shock rings expand and thin while the sparks fan out under
+// them, and two grey wisps drift off it. It burns white-hot at the core and
+// falls away through grey; kinds differ only in scale and in the shock ring's
+// accent (set in CSS). Pure transform/opacity animation so many can play at once
+// without jank. Lifetime stays under the 850ms unmount timeout in
+// LiveGame/AttractSim.
 
-// Eight embers on an even fan (golden-angle offset) with per-spark distance and
+// Eight sparks on an even fan (golden-angle offset) with per-spark distance and
 // size variance, precomputed so the spread is lively but stable per mount. They
 // ride out with the shock rings, so the stagger starts where that beat does.
 const SPARKS = Array.from({length: 8}, (_, i) => ({

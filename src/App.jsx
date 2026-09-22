@@ -569,7 +569,7 @@ export default function App() {
                 <TitleBarDrag />
                 {splash}
                 <div className="absolute inset-0 grid place-items-center bg-bg">
-                    <span className="font-display tracking-[6px] uppercase text-[13px] text-dim animate-[dbRowIn_400ms_var(--ease-out)_both]">
+                    <span className="text-[13px] text-dim animate-[dbRowIn_400ms_var(--ease-out)_both]">
                         Connecting…
                     </span>
                 </div>

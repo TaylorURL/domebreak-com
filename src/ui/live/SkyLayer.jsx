@@ -66,20 +66,29 @@ const CORE_BAND_A = [0.9, 0.55, 0.22];
 const VAPOR_BAND_A = [0.22, 0.15, 0.09];
 const INT_VAPOR_BAND_A = [0.2, 0.13, 0.08];
 const INT_CORE_BAND_A = [0.95, 0.6, 0.3];
-// Interceptor contrail tint per firing battery. Same plume treatment as the
-// missiles (see drawTrail), just thinner and in the battery's own colour so a
-// defender's shots read apart from the ICBMs they chase.
-const INT_TRAIL = {thaad: "#a9ecff", cram: "#ffd24a", "": "#8dffbf"};
+// The sky is black and white, and a round is painted by whose it is rather than
+// by what it carries. Yours flies white over the grey plume its warhead names,
+// an ally's flies ally blue, and anything else flies red over a red plume. Every
+// interceptor flies in the one pale blue the map reserves for a defender's shot
+// and a sensor ring. Literal hex rather than tokens: these are canvas fill
+// styles and inline custom properties, written every frame.
+const OWN_FLAME = "#ffffff";
+const OWN_TRAIL = "#9a9a9a";
+const ALLY_FLAME = "#5fa8ff";
+const ALLY_TRAIL = "#8fa4c0";
+const HOSTILE_FLAME = "#e0574f";
+const HOSTILE_TRAIL = "#b8635d";
+const INT_TRAIL = "#9ecbff";
 const INT_TRAIL_W = 1.6;
 // Sprite/trail variant per firing battery type. Most defenses share the default
-// green dart; these read apart — THAAD's cyan exo-dart, the C-RAM's amber gun
+// dart; these read apart by shape — THAAD's bigger exo-dart, the C-RAM's gun
 // tracer, and the laser (drawn as a beam below, so it gets no dart sprite).
 const INT_VARIANT = {thaad: "thaad", cram: "cram", laser: "laser"};
 const intVariant = (t) => INT_VARIANT[t] || "";
-// Directed-energy beam palette: a white-hot core inside a searing red-orange
-// bolt, unmistakable against the green/cyan interceptors.
-const BEAM_CORE = "#fff2ec";
-const BEAM_GLOW = "#ff4d2e";
+// Directed-energy beam: a white-hot core inside a pale-blue bolt, the same ink
+// the darts fly in.
+const BEAM_CORE = "#ffffff";
+const BEAM_GLOW = "#9ecbff";
 
 // #rgb / #rrggbb -> "rgba(r,g,b,a)". Trail colors in the warhead registry are
 // all 6-digit hex; the 3-digit branch is just belt-and-suspenders.
@@ -351,7 +360,7 @@ function drawBeam(ctx, a, b, now) {
     ctx.restore();
 }
 
-// A C-RAM gun tracer: bright amber dashes streaming along the flight path, the
+// A C-RAM gun tracer: pale-blue dashes streaming along the flight path, the
 // dash offset scrolling toward the target so the stream reads as a burst of
 // rounds. `pts` may carry null gaps where the track dips behind the globe.
 function drawTracer(ctx, pts, now) {
@@ -365,10 +374,10 @@ function drawTracer(ctx, pts, now) {
             ctx.beginPath();
             ctx.moveTo(run[0][0], run[0][1]);
             for (let i = 1; i < run.length; i++) ctx.lineTo(run[i][0], run[i][1]);
-            ctx.strokeStyle = rgba(INT_TRAIL.cram, 0.32);
+            ctx.strokeStyle = rgba(INT_TRAIL, 0.32);
             ctx.lineWidth = 3.4;
             ctx.stroke();
-            ctx.strokeStyle = rgba("#fff3c4", 0.95);
+            ctx.strokeStyle = rgba("#ffffff", 0.95);
             ctx.lineWidth = 1.3;
             ctx.stroke();
         }
@@ -412,7 +421,7 @@ function place(el, head, deg, extra) {
 // no React involved, so it runs at the map's paint rate with no reconciliation.
 function update(map, data, canvas, els, tracks) {
     if (!map || !data || !canvas) return;
-    const {projectiles, interceptors, aircraft} = data;
+    const {projectiles, interceptors, aircraft, mySlot, relation} = data;
     // Read the container size BEFORE any style writes: reading clientWidth after
     // writing sprite styles forced a synchronous reflow inside every frame.
     const c = map.getContainer();
@@ -449,25 +458,23 @@ function update(map, data, canvas, els, tracks) {
     const trails = [];
     for (const p of projectiles) {
         const wh = WARHEADS[p.warhead] || WARHEADS.standard;
+        const side = sideOf(p.slot, mySlot, relation);
         // Ground track is immutable per projectile id in solo play; trackFor
         // revalidates the geometry for the online prediction/snapshot case.
         const track = trackFor(tracks, p);
         const {pts, head, deg} = projGeom(p, track, project, occluded, refLng);
-        // Aircraft-launched ordnance reads apart from strategic missiles: a lean
-        // pale-blue streak for an air-to-air missile, a short amber arc for a bomb.
-        const muniTrail =
-            p.muni === "a2a"
-                ? {smoke: "#bfe6ff", core: "#7fd0ff", width: 1.5}
-                : p.muni === "bomb"
-                  ? {smoke: "#ffb454", core: "#ff9a3c", width: 2}
-                  : null;
+        // Aircraft-launched ordnance reads apart from strategic missiles by the
+        // weight of its plume: a thin streak for an air-to-air missile, a short
+        // heavier arc for a bomb.
+        const muniWidth = p.muni === "a2a" ? 1.5 : p.muni === "bomb" ? 2 : null;
         trails.push({
             pts,
-            // Core in the warhead's flame tint, vapor in its smoke tint — the two
-            // colours the registry already carries for the sprite.
-            core: muniTrail?.core ?? wh.flame ?? "#ff8a1a",
-            smoke: muniTrail?.smoke ?? wh.trail ?? "#e3e7ec",
-            width: muniTrail?.width ?? (p.sub ? 1.3 : wh.trailW || 2.4),
+            // Core in the round's flame ink, vapor in its smoke ink — the
+            // warhead's own white over grey for one of yours, ally blue for an
+            // ally's, red over red for anything else.
+            core: side === "own" ? (wh.flame ?? OWN_FLAME) : side === "ally" ? ALLY_FLAME : HOSTILE_FLAME,
+            smoke: side === "own" ? (wh.trail ?? OWN_TRAIL) : side === "ally" ? ALLY_TRAIL : HOSTILE_TRAIL,
+            width: muniWidth ?? (p.sub ? 1.3 : wh.trailW || 2.4),
             coreAlpha: CORE_BAND_A,
             vaporAlpha: VAPOR_BAND_A,
         });
@@ -499,8 +506,8 @@ function update(map, data, canvas, els, tracks) {
         if (pts.length > 1)
             trails.push({
                 pts,
-                core: "#f2f4f6",
-                smoke: "#dfe4ea",
+                core: OWN_FLAME,
+                smoke: OWN_TRAIL,
                 width: 1,
                 coreAlpha: INT_CORE_BAND_A,
                 vaporAlpha: INT_VAPOR_BAND_A,
@@ -518,14 +525,13 @@ function update(map, data, canvas, els, tracks) {
         const {pts, head, deg} = intGeom(it, project, occluded, refLng);
         if (variant === "cram") tracers.push(pts);
         else {
-            const tint = INT_TRAIL[variant] || INT_TRAIL[""];
-            // One colour for both passes: an interceptor's plume is the battery's
-            // own hue throughout, which is what keeps it clear of the warhead
-            // plumes it is flying into.
+            // One colour for both passes: an interceptor's plume is pale blue
+            // throughout, which is what keeps it clear of the warhead plumes it is
+            // flying into.
             trails.push({
                 pts,
-                core: tint,
-                smoke: tint,
+                core: INT_TRAIL,
+                smoke: INT_TRAIL,
                 width: INT_TRAIL_W,
                 coreAlpha: INT_CORE_BAND_A,
                 vaporAlpha: INT_VAPOR_BAND_A,
@@ -560,7 +566,16 @@ function update(map, data, canvas, els, tracks) {
     for (const b of beams) drawBeam(ctx, b.a, b.b, now); // beams sit on top of the plumes
 }
 
-export default function SkyLayer({map, projectiles, interceptors, aircraft}) {
+// Whose round this is, as the key the inks above are read by. With no seat (the
+// attract sim, the landing page's hero) every round is "own" and the sky reads
+// white over grey. With a seat but no relations, anything that is not yours is
+// treated as fired at you.
+function sideOf(slot, mySlot, relation) {
+    if (mySlot == null || slot === mySlot) return "own";
+    return relation?.(slot) === "ally" ? "ally" : "hostile";
+}
+
+export default function SkyLayer({map, projectiles, interceptors, aircraft, mySlot = null, relation = null}) {
     const canvasRef = useRef(null);
     const elsRef = useRef(new Map()); // sprite id -> wrapper <div>
     const dataRef = useRef(null); // latest committed projectiles/interceptors/aircraft
@@ -595,7 +610,14 @@ export default function SkyLayer({map, projectiles, interceptors, aircraft}) {
     // by update(); nothing position-dependent lives in this JSX.
     const sig =
         projectiles
-            .map((p) => `p${p.id}:${WARHEADS[p.warhead] ? p.warhead : "standard"}:${p.sub ? 1 : 0}:${p.muni || ""}`)
+            .map(
+                (p) =>
+                    `p${p.id}:${WARHEADS[p.warhead] ? p.warhead : "standard"}:${p.sub ? 1 : 0}:${p.muni || ""}:${sideOf(
+                        p.slot,
+                        mySlot,
+                        relation,
+                    )}`,
+            )
             .join("|") +
         "#" +
         interceptors.map((it) => `i${it.id}:${intVariant(it.srcType)}`).join("|");
@@ -603,12 +625,20 @@ export default function SkyLayer({map, projectiles, interceptors, aircraft}) {
         const nodes = [];
         for (const p of projectiles) {
             const warhead = WARHEADS[p.warhead] ? p.warhead : "standard";
+            const side = sideOf(p.slot, mySlot, relation);
             nodes.push(
                 <div
                     key={"p" + p.id}
                     ref={setRef("p" + p.id)}
                     className={`absolute left-0 top-0 pointer-events-none z-3 will-change-transform ${p.sub ? "sub" : ""}`}
-                    style={{["--flame"]: (WARHEADS[warhead] || WARHEADS.standard).flame}}
+                    style={{
+                        ["--flame"]:
+                            side === "own"
+                                ? (WARHEADS[warhead] || WARHEADS.standard).flame
+                                : side === "ally"
+                                  ? ALLY_FLAME
+                                  : HOSTILE_FLAME,
+                    }}
                 >
                     <div className={`db-missile ${warhead}${p.muni ? " db-muni-" + p.muni : ""}`}>
                         <span className="db-missile-glow" />
@@ -663,7 +693,7 @@ export default function SkyLayer({map, projectiles, interceptors, aircraft}) {
     // ran this frame and will run again next frame with the data set here —
     // running both doubled every cost exactly when the camera was moving.
     useLayoutEffect(() => {
-        dataRef.current = {projectiles, interceptors, aircraft};
+        dataRef.current = {projectiles, interceptors, aircraft, mySlot, relation};
         if (performance.now() - lastPaintRef.current > PAINT_FRESH_MS) {
             update(map, dataRef.current, canvasRef.current, elsRef.current, tracksRef.current);
         }

@@ -30,10 +30,8 @@ export default class RouteErrorBoundary extends Component {
             <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-bg px-5 text-text">
                 <div aria-hidden className="pointer-events-none absolute inset-0 db-grid" />
                 <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
-                <div
-                    className={cn(panel({frame: "glass"}), "db-seam w-[min(560px,94vw)] p-[26px] text-center sm:p-10")}
-                >
-                    <h1 className="font-display text-[clamp(1.5rem,4vw,2.2rem)] leading-[1.1] font-bold uppercase">
+                <div className={cn(panel({frame: "glass"}), "w-[min(560px,94vw)] p-[26px] text-center sm:p-10")}>
+                    <h1 className="text-[clamp(1.5rem,4vw,2.2rem)] font-semibold leading-[1.1] tracking-[-0.02em]">
                         This page did not load
                     </h1>
                     <p className="mt-4 text-[15px] leading-relaxed text-dim">

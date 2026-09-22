@@ -1,7 +1,7 @@
 import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 
-// Editorial thesis statement — Anduril-style big claim, revealed line by line.
+// Editorial thesis statement — the big claim, revealed line by line.
 const LINES = [
     ["The map is", " alive."],
     ["Every capital,", " every silo,"],
@@ -18,7 +18,7 @@ export default function Manifesto() {
                 <div className="mt-8">
                     {LINES.map((line, i) => (
                         <Reveal key={i} delay={0.1 * i}>
-                            <p className="font-display text-[clamp(1.9rem,6vw,4.2rem)] font-bold uppercase leading-[1.05] tracking-[0.005em]">
+                            <p className="text-[clamp(1.9rem,6vw,4.2rem)] font-semibold leading-[1.05] tracking-[-0.02em]">
                                 <span className="text-text">{line[0]}</span>
                                 <span className="text-faint">{line[1]}</span>
                             </p>

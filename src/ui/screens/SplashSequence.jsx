@@ -1,6 +1,6 @@
 // Boot splash: TaylorURL publisher card, then the solo-developer credit over
-// the boot scan. The publisher plate keeps its light ground because the mark is
-// blue-on-white artwork; the credit beat is the dark tactical one.
+// the boot bar. The publisher plate keeps its light ground because the mark is
+// blue-on-white artwork; the credit beat is black.
 // Skippable at any moment (click or any key) and honors reduced motion with
 // instant cuts instead of fades.
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -36,7 +36,7 @@ export default function SplashSequence({reduceMotion, onDone}) {
         <div
             className={cn(
                 "fixed inset-0 z-[1000] grid place-items-center cursor-pointer",
-                step === 0 ? "bg-[#f4f6f8]" : "bg-[#05080f]",
+                step === 0 ? "bg-[#f4f6f8]" : "bg-bg",
             )}
         >
             {step === 0 ? (
@@ -46,18 +46,14 @@ export default function SplashSequence({reduceMotion, onDone}) {
                         src="/brand/taylorurl-logo.png"
                         alt="TaylorURL"
                     />
-                    <div className="mt-0.5 font-display text-xs font-semibold tracking-[5px] text-[#6a7280]">
-                        A TAYLORURL GAME
-                    </div>
+                    <div className="mt-0.5 text-[13px] font-medium text-[#6a7280]">A TaylorURL game</div>
                 </div>
             ) : (
                 <div className={cardCls} key="credit">
-                    <div className="font-display text-xs font-semibold tracking-[6px] text-dim">MADE SOLO BY</div>
-                    <div className="db-title-glow mt-2.5 font-display text-[34px] font-bold tracking-[10px] text-text">
-                        TRENTON TAYLOR
-                    </div>
+                    <div className="text-[13px] font-medium text-dim">Made solo by</div>
+                    <div className="mt-2.5 text-[34px] font-semibold tracking-[-0.01em] text-text">Trenton Taylor</div>
                     <div
-                        className="db-boot-bar w-[190px] h-[3px] mt-[26px] mx-auto bg-[rgba(255,255,255,0.08)] overflow-hidden"
+                        className="db-boot-bar w-[190px] h-[3px] mt-[26px] mx-auto bg-line overflow-hidden"
                         aria-hidden="true"
                     >
                         <i />
@@ -65,7 +61,7 @@ export default function SplashSequence({reduceMotion, onDone}) {
                 </div>
             )}
             <div
-                className="absolute bottom-5 left-0 right-0 text-center font-mono text-[10px] tracking-[2px] text-[rgba(128,136,148,0.55)]"
+                className="absolute bottom-5 left-0 right-0 text-center text-[11px] font-medium text-faint"
                 role="button"
                 tabIndex={0}
                 aria-label="Skip intro"

@@ -11,7 +11,10 @@ export const WARHEAD_ICON = {
 };
 
 // Offensive munitions. Strikes consume a warhead of the loaded type; each has
-// its own production cost/time, damage multiplier, and (for effect) flame color.
+// its own production cost/time, damage multiplier, and (for effect) the ink and
+// weight of the plume it leaves. A round of yours flies white over grey; a round
+// fired at you is repainted red by SkyLayer, so what tells the arsenal apart in
+// flight is the silhouette and the weight of the plume, never a hue.
 export const WARHEADS = {
     standard: {
         name: "Conventional",
@@ -21,8 +24,8 @@ export const WARHEADS = {
         prodCost: 30,
         prodTime: 4,
         blastKm: 70, // ground-zero blast radius; units inside take proximity-scaled damage
-        flame: "#ff8a1a", // exhaust/glow tint (SkyLayer --flame); trail is the smoke-plume color
-        trail: "#e3e7ec",
+        flame: "#ffffff", // exhaust/glow ink (SkyLayer --flame); trail is the smoke-plume ink
+        trail: "#9a9a9a",
         trailW: 2.4,
         desc: "Conventional single warhead. Cheap and quick to build.",
     },
@@ -40,8 +43,8 @@ export const WARHEADS = {
         subDmgFrac: 0.25, // each sub-warhead carries this fraction of the bus damage
         primaryShare: 0.5, // share of subs that stay on the primary target; the rest fan out
         blastKm: 0, // area comes from the MIRV pattern (splash), not a single blast
-        flame: "#ffd23f", // warm gold — a scattering-bomblet hue, kept clear of THAAD's cyan interceptor
-        trail: "#f2e4b0",
+        flame: "#f4f4f4",
+        trail: "#8e8e8e",
         trailW: 2.2,
         desc: "MIRV bus that splits into 8 warheads on reentry; half strike the target, half fan out to nearby targets.",
     },
@@ -55,8 +58,8 @@ export const WARHEADS = {
         blastKm: 90, // kinetic terminal impact — a tight, hard-hitting blast
         evasion: 0.32, // maneuvering glide body; added to the projectile's intercept-evasion
         speedMult: 2.0, // boost-glide overspeed — multiplies the firing platform's projectile speed (2x other missiles)
-        flame: "#b98cff",
-        trail: "#cdb8ff", // thin ionization streak — a glide body, not a rocket plume
+        flame: "#ffffff",
+        trail: "#c8c8c8", // thin ionization streak — a glide body, not a rocket plume
         trailW: 1.7,
         desc: "Maneuvering kinetic glide body, the fastest round in the arsenal and very hard to intercept. The Hypersonic Battery's signature round.",
     },
@@ -68,8 +71,8 @@ export const WARHEADS = {
         prodCost: 130,
         prodTime: 11,
         blastKm: 170, // vast fireball — a wide blast on top of the lingering fallout cloud
-        flame: "#ff3b6b",
-        trail: "#ffcdd6", // heavy, dense plume off a big booster
+        flame: "#ffffff",
+        trail: "#b4b4b4", // heavy, dense plume off a big booster
         trailW: 3.0,
         desc: "City-killer yield. Expensive and slow to produce.",
     },
@@ -83,8 +86,8 @@ export const WARHEADS = {
         prodCost: 55,
         prodTime: 6,
         blastKm: 100,
-        flame: "#ffb24d",
-        trail: "#e3e7ec",
+        flame: "#f4f4f4",
+        trail: "#9a9a9a",
         trailW: 2.6,
         desc: "Road-mobile short-range ballistic missile with a heavy single warhead. Fired by the TEL.",
     },
@@ -105,8 +108,8 @@ export const WARHEADS = {
         subDmgFrac: 0.6, // each thermo sub carries this fraction of the bus damage
         primaryShare: 0.34, // ~1 of 3 subs stays on the primary; the rest fan to other cities
         blastKm: 120,
-        flame: "#ff3b6b",
-        trail: "#ffcdd6",
+        flame: "#ffffff",
+        trail: "#b4b4b4",
         trailW: 3.0,
         desc: "Multi-warhead thermonuclear bus that splits into three city-killers on reentry, each leaving fallout.",
     },

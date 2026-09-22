@@ -103,29 +103,23 @@ function useVisitorPlatform() {
 
 function PlatformCard({platform, version, mine}) {
     return (
-        <article className={cn(panel(), "flex h-full flex-col gap-3.5 bg-bg-2 p-6", mine && "border-gold-line")}>
-            <span
-                className={cn(
-                    "db-notch-sm flex h-14 w-14 shrink-0 items-center justify-center border border-gold-line bg-gold-soft text-gold",
-                )}
-            >
+        <article className={cn(panel(), "flex h-full flex-col gap-3.5 bg-bg-2 p-6", mine && "border-line-2")}>
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center border border-line text-dim">
                 <GameIcon name={platform.icon} size={30} />
             </span>
 
             <div>
-                <h2 className="font-display text-[18px] font-bold uppercase tracking-[0.06em] text-text">
+                <h2 className="text-[18px] font-semibold tracking-[-0.01em] text-text">
                     {platform.os}
-                    <span className="mt-1 block font-sans text-[13px] font-normal normal-case leading-[20px] tracking-normal text-dim">
-                        {platform.arch}
-                    </span>
+                    <span className="mt-1 block text-[13px] font-normal leading-[20px] text-dim">{platform.arch}</span>
                 </h2>
             </div>
 
-            <p className="font-mono text-[10px] uppercase leading-[14px] tracking-[0.22em] text-faint">
+            <p className="text-[12.5px] leading-[18px] text-faint">
                 {platform.sub} · {platform.note}
             </p>
 
-            {version && <span className={cn(chip({tone: "subtle", shape: "notch"}), "w-fit")}>v{version}</span>}
+            {version && <span className={cn(chip({tone: "subtle"}), "w-fit")}>v{version}</span>}
 
             <div className="mt-auto border-t border-hair pt-3.5">
                 <a
@@ -173,8 +167,8 @@ export default function DownloadPage({onSignIn, onShowShortcuts}) {
                     <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
                     <div className="relative mx-auto max-w-[1280px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow framed>Download</Eyebrow>
-                            <h1 className="mt-5 max-w-3xl font-display text-[clamp(2rem,5vw,3.6rem)] font-bold uppercase leading-[1.02] text-text">
+                            <Eyebrow>Download</Eyebrow>
+                            <h1 className="mt-5 max-w-3xl text-[clamp(2rem,5vw,3.6rem)] font-semibold leading-[1.04] tracking-[-0.02em] text-text">
                                 Get <span className="text-dim">DomeBreak</span>
                                 {version ? ` v${version}` : ""}
                             </h1>
@@ -189,30 +183,22 @@ export default function DownloadPage({onSignIn, onShowShortcuts}) {
                 <div className="mx-auto max-w-[1280px] px-5 pb-24 sm:px-8">
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
                         {ordered.map((p, i) => (
-                            <Reveal
-                                key={p.id}
-                                delay={Math.min(i * 0.06, 0.24)}
-                                className={cn("db-brackets relative h-full", p.id !== mine && "db-brackets-hover")}
-                            >
+                            <Reveal key={p.id} delay={Math.min(i * 0.06, 0.24)} className="relative h-full">
                                 <PlatformCard platform={p} version={version} mine={p.id === mine} />
                             </Reveal>
                         ))}
                     </div>
 
                     <Reveal>
-                        <div className={cn(panel(), "db-tab-rule mt-12 bg-bg-2 p-6")}>
-                            <h3 className="font-display text-[12px] font-semibold uppercase tracking-[0.22em] text-dim">
-                                First launch
-                            </h3>
+                        <div className={cn(panel(), "mt-12 bg-bg-2 p-6")}>
+                            <h3 className="text-[15px] font-semibold text-text">First launch</h3>
                             <p className="mt-3 text-[13px] leading-relaxed text-dim">
                                 DomeBreak is not code-signed, so your OS asks you to confirm the first time you open it.
                                 It is a one-time step per install.
                             </p>
                             <dl className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
                                 <div className="border-t border-hair pt-3">
-                                    <dt className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-text">
-                                        macOS
-                                    </dt>
+                                    <dt className="text-[13px] font-semibold text-text">macOS</dt>
                                     <dd className="mt-1 text-[13px] leading-relaxed text-dim">
                                         Drag DomeBreak to Applications and open it. If macOS says it can't verify the
                                         developer, go to System Settings → Privacy &amp; Security, scroll down, and
@@ -221,9 +207,7 @@ export default function DownloadPage({onSignIn, onShowShortcuts}) {
                                     </dd>
                                 </div>
                                 <div className="border-t border-hair pt-3">
-                                    <dt className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-text">
-                                        Windows
-                                    </dt>
+                                    <dt className="text-[13px] font-semibold text-text">Windows</dt>
                                     <dd className="mt-1 text-[13px] leading-relaxed text-dim">
                                         Run the installer. If Windows SmartScreen warns about an unknown publisher,
                                         click
@@ -235,7 +219,7 @@ export default function DownloadPage({onSignIn, onShowShortcuts}) {
                         </div>
                     </Reveal>
 
-                    <p className="mt-10 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
+                    <p className="mt-10 text-center text-[12.5px] text-faint">
                         All versions ·{" "}
                         <a
                             href="https://download.domebreak.com/"

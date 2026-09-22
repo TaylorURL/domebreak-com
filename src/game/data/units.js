@@ -188,7 +188,7 @@ export const UNITS = {
         canAttack: true,
         // Offensive reach: how far out a target may be for the strip to launch a
         // bomber sortie against it. Distinct from `range` (the runway footprint).
-        // Drawn as the amber strike ring when the strip is selected.
+        // Drawn as the strike ring when the strip is selected.
         sortieKm: 4200,
     },
     // Ground forces. The Army Base is the land Airstrip: fields the helicopter wing,

@@ -109,7 +109,7 @@ export default function SearchingScreen({onMatched, onCancel, reduceMotion, preQ
                         <div role="status" aria-live="polite">
                             <p className="db-searching-label text-sm text-text m-0">Searching for commanders…</p>
                             <p
-                                className="db-searching-elapsed font-mono text-xl text-gold mt-2 tracking-[2px]"
+                                className="db-searching-elapsed font-mono tabular-nums text-xl font-semibold text-text mt-2"
                                 aria-label={`Elapsed time ${mm} minutes ${ss} seconds`}
                             >
                                 {mm}:{ss}
@@ -117,13 +117,13 @@ export default function SearchingScreen({onMatched, onCancel, reduceMotion, preQ
                         </div>
                         <div aria-live="assertive">
                             {err && (
-                                <div className="db-friends-err db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 text-left">
+                                <div className="db-friends-err text-danger bg-[rgba(224,87,79,0.12)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 text-left">
                                     <p className="m-0">Matchmaking is unavailable right now. Try again in a moment.</p>
                                     {/* The server's own words are what a bug report needs and what
                                         nobody reading the screen does, so they sit one click down,
                                         the way the net-error dialog keeps its dump. */}
                                     <details className="mt-1.5">
-                                        <summary className="cursor-pointer font-display text-[10px] uppercase tracking-[0.18em] text-dim">
+                                        <summary className="cursor-pointer text-[11px] font-medium text-dim">
                                             Details
                                         </summary>
                                         <pre className="db-card-scroll m-0 mt-1.5 max-h-[96px] overflow-auto whitespace-pre-wrap font-mono text-[10.5px] leading-[1.5] text-faint select-text">

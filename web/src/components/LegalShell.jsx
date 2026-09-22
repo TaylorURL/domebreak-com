@@ -23,13 +23,16 @@ export default function LegalShell({eyebrow, title, intro, updated, sections, on
 
                     <div className="relative mx-auto max-w-[820px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow framed>{eyebrow}</Eyebrow>
-                            <h1 className="mt-5 font-display text-[clamp(2rem,5vw,3.2rem)] font-bold uppercase leading-[1.04] text-text">
+                            <Eyebrow>{eyebrow}</Eyebrow>
+                            <h1 className="mt-5 text-[clamp(2rem,5vw,3.2rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-text">
                                 {title}
                             </h1>
                             <p className="mt-5 text-[15px] leading-relaxed text-dim">{intro}</p>
-                            <p className="db-notch-sm mt-6 inline-flex items-center gap-2 border border-line bg-bg-2 px-3 py-[7px] font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
-                                Last updated <time dateTime={updated.iso}>{updated.label}</time>
+                            <p className="mt-6 inline-flex items-center gap-2 border border-line bg-bg-2 px-3 py-[7px] text-[12.5px] text-faint">
+                                Last updated{" "}
+                                <time className="font-mono tabular-nums text-dim" dateTime={updated.iso}>
+                                    {updated.label}
+                                </time>
                             </p>
                         </Reveal>
                     </div>
@@ -37,13 +40,13 @@ export default function LegalShell({eyebrow, title, intro, updated, sections, on
 
                 <section className="relative pb-24 sm:pb-28">
                     <div className="mx-auto max-w-[820px] px-5 sm:px-8">
-                        {/* Each section opens on its own hairline under a short
-                            amber tab, so a long page of prose reads as a stack of
-                            filed clauses rather than one column. */}
+                        {/* Each section opens on its own hairline, so a long page
+                            of prose reads as a stack of filed clauses rather than
+                            one column. */}
                         <div className="flex flex-col gap-12">
                             {sections.map((s) => (
-                                <article key={s.heading} className="db-section-tab relative border-t border-hair pt-8">
-                                    <h2 className="font-display text-[15px] font-semibold uppercase tracking-[0.16em] text-text">
+                                <article key={s.heading} className="relative border-t border-line pt-8">
+                                    <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-text">
                                         {s.heading}
                                     </h2>
                                     <div className="mt-4 flex flex-col gap-4">

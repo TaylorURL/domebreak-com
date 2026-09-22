@@ -7,13 +7,18 @@
 // action listed here is never matched against a literal key code elsewhere.
 // A handful of controls sit deliberately outside that surface and are matched
 // literally in the input hooks — Escape (close whatever is open), Tab (hold for
-// the scoreboard), ? / F1 (controls reference), and the 1–5 keys that jump
-// straight to a speed level.
+// the scoreboard), ? / F1 (controls reference), and the 1-8 keys that place the
+// unit sitting in that command-deck hotbar slot.
 
 // Rebindable actions, in the order and grouping shown by the Settings editor.
+// The Command group is the dock, top to bottom.
 export const KEY_ACTIONS = [
-    {id: "production", label: "Production Menu", group: "Command"},
-    {id: "diplomacy", label: "Diplomacy Menu", group: "Command"},
+    {id: "production", label: "Build", group: "Command"},
+    {id: "battle", label: "Plan", group: "Command"},
+    {id: "diplomacy", label: "Talks", group: "Command"},
+    {id: "nation", label: "Nation", group: "Command"},
+    {id: "goals", label: "Goals", group: "Command"},
+    {id: "log", label: "Log", group: "Command"},
     {id: "pause", label: "Pause / Resume", group: "Time"},
     {id: "speedUp", label: "Speed Up", group: "Time"},
     {id: "speedDown", label: "Slow Down", group: "Time"},
@@ -27,8 +32,12 @@ export const KEY_ACTIONS = [
 
 // Default binding for each action (KeyboardEvent.code values).
 export const DEFAULT_KEYS = {
-    production: "KeyE",
-    diplomacy: "KeyR",
+    production: "KeyB",
+    battle: "KeyP",
+    diplomacy: "KeyT",
+    nation: "KeyN",
+    goals: "KeyG",
+    log: "KeyL",
     pause: "Space",
     speedUp: "Equal",
     speedDown: "Minus",
@@ -55,7 +64,7 @@ export function keyToken(e) {
 // Human-readable label for a key code, for the Settings editor and on-screen hints.
 export function keyLabel(code) {
     if (!code) return "—";
-    if (code.startsWith("Key")) return code.slice(3); // KeyE → E
+    if (code.startsWith("Key")) return code.slice(3); // KeyB → B
     if (code.startsWith("Digit")) return code.slice(5); // Digit1 → 1
     if (code.startsWith("Numpad")) return "Num " + code.slice(6);
     const named = {

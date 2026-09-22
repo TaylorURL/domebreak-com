@@ -58,12 +58,12 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                         return (
                             <div
                                 key={slot}
-                                className="db-saverow db-notch-sm flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line"
+                                className="db-saverow flex items-center gap-2 py-2.5 px-3 bg-bg-2 border border-line"
                                 role="listitem"
                                 aria-label={summary}
                             >
                                 <div className="db-saveinfo flex-1 flex flex-col min-w-0">
-                                    <b className="text-sm">Slot {slot}</b>
+                                    <b className="text-sm font-semibold">Slot {slot}</b>
                                     <span
                                         className={cn(
                                             "text-[11px] whitespace-nowrap overflow-hidden text-ellipsis",
@@ -112,12 +112,12 @@ export default function SaveLoadPanel({mode, onSave, onLoad, onClose}) {
                     })}
                     {auto && mode === "load" && (
                         <div
-                            className="db-saverow db-notch-sm flex items-center gap-2 py-2.5 px-3 bg-btn-bg border border-line"
+                            className="db-saverow flex items-center gap-2 py-2.5 px-3 bg-bg-2 border border-line"
                             role="listitem"
                             aria-label={`Autosave: ${fmt(auto.meta)}`}
                         >
                             <div className="db-saveinfo flex-1 flex flex-col min-w-0">
-                                <b className="text-sm">Autosave</b>
+                                <b className="text-sm font-semibold">Autosave</b>
                                 <span
                                     className={cn(
                                         "text-[11px] whitespace-nowrap overflow-hidden text-ellipsis",

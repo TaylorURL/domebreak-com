@@ -6,13 +6,15 @@
 import {createPersistedStore} from "../../lib/storage.js";
 import {clamp} from "../../lib/math.js";
 
-// The adjustable regions. Order drives the layout-menu listing.
+// The adjustable regions. Order drives the layout-menu listing. The dock and the
+// drawer it opens are fixed furniture and are not listed here: the drawer is the
+// only way into five of the six command screens, so it stays where the dock is.
 export const HUD_PANELS = [
-    {id: "sidebar", label: "Nation Panel"},
-    {id: "topbar", label: "Command Bar"},
-    {id: "objectives", label: "Objectives"},
-    {id: "bottomRight", label: "Map & War Bar"},
-    {id: "prodQueue", label: "Production Queue"},
+    {id: "strip", label: "Status Strip"},
+    {id: "tracker", label: "Objective Tracker"},
+    {id: "deck", label: "Command Deck"},
+    {id: "log", label: "Event Log"},
+    {id: "layers", label: "Layer Toggles"},
     // Online-only: the match chat. Present in the layout store for everyone so a
     // saved arrangement is stable, but the layout menu only lists it in multiplayer
     // (see HudLayoutMenu's `panels` prop) since it doesn't render in solo play.
