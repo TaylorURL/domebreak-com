@@ -29,6 +29,13 @@ function snapToEdge(left, top, w, h, dx, dy, vw, vh) {
     return {dx: dx + (vw - M - right), dy};
 }
 
+// The nearest position that keeps a rect of this size wholly in view along one
+// axis, flush to either end. The full-width panels are docked against an edge,
+// so the edge margin has no part in it.
+function inView(near, size, extent) {
+    return Math.max(0, Math.min(near, extent - size));
+}
+
 // Bring a rect fully on-screen along one axis: returns the delta to add to the
 // current offset so the panel sits within [M, extent - M]; pins to the leading
 // edge when the panel is larger than the viewport.
@@ -48,6 +55,11 @@ function onScreenDelta(near, size, extent) {
 // state. The caller supplies the panel's docked position via `className` and the
 // toolbar's horizontal edge via `tabAlign`.
 //
+// `edgeSnap={false}` is for a panel that runs the full width of the screen: it
+// already spans both side edges, so the horizontal snap has nothing to pull it
+// to and the margin would only push it off the right. Such a panel travels up
+// and down and stays in view that way; the horizontal offset is left alone.
+//
 // Reachability: the toolbar is opened by CLICKING a small adjust handle that sits
 // at the panel edge (revealed on hover, so it stays out of the way during play).
 // Once open it is PINNED — it stays put no matter where the pointer goes, so the
@@ -65,6 +77,7 @@ export default function AdjustablePanel({
     contentClass,
     tabAlign = "left",
     clickThrough = false,
+    edgeSnap = true,
     label,
     children,
 }) {
@@ -143,14 +156,23 @@ export default function AdjustablePanel({
                 offset + onScreenDelta(startEdge + (offset - base), size, extent);
             let latest = {dx: baseDx, dy: baseDy};
             const move = (ev) => {
-                const dx = clampAxis(baseDx + (ev.clientX - startX), baseDx, rect.left, w, vw);
-                const dy = clampAxis(baseDy + (ev.clientY - startY), baseDy, rect.top, h, vh);
+                let dx, dy;
+                if (edgeSnap) {
+                    dx = clampAxis(baseDx + (ev.clientX - startX), baseDx, rect.left, w, vw);
+                    dy = clampAxis(baseDy + (ev.clientY - startY), baseDy, rect.top, h, vh);
+                } else {
+                    // A full-width panel travels vertically only, flush to the top
+                    // or the bottom rather than inset by the edge margin.
+                    dx = baseDx + (ev.clientX - startX);
+                    dy = baseDy + (inView(rect.top + (ev.clientY - startY), h, vh) - rect.top);
+                }
                 latest = {dx, dy};
                 setLive(latest);
             };
             const up = () => {
                 window.removeEventListener("pointermove", move);
                 window.removeEventListener("pointerup", up);
+                if (!edgeSnap) return commit(latest);
                 const left = rect.left + (latest.dx - baseDx);
                 const top = rect.top + (latest.dy - baseDy);
                 commit(snapToEdge(left, top, w, h, latest.dx, latest.dy, vw, vh));
@@ -158,7 +180,7 @@ export default function AdjustablePanel({
             window.addEventListener("pointermove", move);
             window.addEventListener("pointerup", up);
         },
-        [panel.dx, panel.dy, commit],
+        [panel.dx, panel.dy, commit, edgeSnap],
     );
 
     // Grab-to-resize: project pointer travel onto the region's outward axis so
@@ -196,8 +218,10 @@ export default function AdjustablePanel({
             const el = rootRef.current;
             if (!el) return;
             const r = el.getBoundingClientRect();
-            const ax = onScreenDelta(r.left, r.width, window.innerWidth);
-            const ay = onScreenDelta(r.top, r.height, window.innerHeight);
+            const ax = edgeSnap ? onScreenDelta(r.left, r.width, window.innerWidth) : 0;
+            const ay = edgeSnap
+                ? onScreenDelta(r.top, r.height, window.innerHeight)
+                : inView(r.top, r.height, window.innerHeight) - r.top;
             if (Math.abs(ax) > 0.5 || Math.abs(ay) > 0.5) {
                 onChangeRef.current({dx: panel.dx + ax, dy: panel.dy + ay});
             }
@@ -206,14 +230,14 @@ export default function AdjustablePanel({
         window.addEventListener("resize", clampIn);
         return () => window.removeEventListener("resize", clampIn);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [panel.scale]);
+    }, [panel.scale, edgeSnap]);
 
     if (panel.hidden) return null;
 
     const eff = live ? {...panel, ...live} : panel;
     const visible = open || !!live;
     const gripBtn =
-        "db-notch-sm w-6 h-6 grid place-items-center text-dim transition-[color,background] duration-[var(--dur-fast)] ease-out-db hover:text-accent hover:bg-accent-soft active:scale-[0.94] focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]";
+        "w-6 h-6 grid place-items-center text-dim transition-[color,background] duration-[var(--dur-fast)] ease-out-db hover:text-accent hover:bg-accent-soft focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]";
     const alignJustify =
         tabAlign === "center" ? "justify-center" : tabAlign === "right" ? "justify-end" : "justify-start";
     // Drop below the panel only when there's no room above; the small offset (pt/pb)
@@ -259,7 +283,7 @@ export default function AdjustablePanel({
             <div className={cn("absolute left-0 right-0 z-30 flex pointer-events-none", alignJustify, vertCls)}>
                 {visible ? (
                     <div
-                        className="db-hud-panel db-hud-solid relative pointer-events-auto flex items-center gap-1 px-1.5 py-1 select-none [--db-tab:0px] motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
+                        className="db-hud-panel db-hud-solid relative pointer-events-auto flex items-center gap-1 px-1.5 py-1 select-none motion-safe:animate-[dbPop_120ms_var(--ease-out)]"
                         role="toolbar"
                         aria-label={`${label} layout controls`}
                     >
@@ -332,7 +356,7 @@ export default function AdjustablePanel({
                     <button
                         type="button"
                         className={cn(
-                            "db-notch-sm pointer-events-auto flex items-center gap-1 h-[19px] px-[7px] bg-panel-2/95 border border-line backdrop-blur-[10px] text-dim transition-[opacity,color,border-color] duration-[var(--dur-fast)] hover:text-accent hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                            "pointer-events-auto flex items-center gap-1 h-[19px] px-[7px] bg-panel-solid border border-line text-dim transition-[opacity,color,border-color] duration-[var(--dur-fast)] hover:text-text hover:border-line-2 focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
                             hovered ? "opacity-100" : "opacity-0 focus-visible:opacity-100",
                         )}
                         onClick={openToolbar}
@@ -340,9 +364,7 @@ export default function AdjustablePanel({
                         title={`Adjust ${label}: move, resize, fade, or hide`}
                     >
                         <Icon name="sliders" size={12} />
-                        <span className="font-display text-[8.5px] tracking-[0.14em] uppercase leading-none">
-                            Adjust
-                        </span>
+                        <span className="text-[10px] font-medium leading-none">Adjust</span>
                     </button>
                 )}
             </div>

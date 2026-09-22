@@ -12,18 +12,15 @@ import {
     vitalityOf,
 } from "../../game/engine.js";
 import {fmtGdp, fmtNet, fmtPop} from "../lib/format.js";
-import Flag from "../common/Flag.jsx";
+import {DrawerScreen} from "../screens/ScreenFrame.jsx";
 import Icon from "../common/Icon.jsx";
 import Meter from "../common/Meter.jsx";
 import PopTrend from "../common/PopTrend.jsx";
+import {input} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 
-// The panel's label type: the same mono micro-caps the HUD panel header uses, so
-// every readout inside it is annotated the same way.
-const KICKER = "font-mono text-[9px] tracking-[0.18em] uppercase text-faint";
-
 // A territory's readiness band from its city vitality (hp share). Drives the
-// status pill colour and label; a dead holding reads "Lost".
+// status pill and its lamp; a dead holding reads "Lost".
 function statusOf(c) {
     if (!c.alive) return {key: "lost", label: "Lost"};
     const v = vitalityOf(c);
@@ -32,15 +29,28 @@ function statusOf(c) {
     return {key: "critical", label: "Critical"};
 }
 
-// Left-docked command panel: our nation at a glance — population, GDP, industry
-// (living structures vs the pop-driven ceiling), net points — over a live,
-// scrollable roster of every state we hold and its current status. Reads engine
-// queries only; never mutates. Clicking a territory flies the camera to it.
-export default function NationPanel({world, mySlot, myNation, onFocus}) {
-    const [collapsed, setCollapsed] = useState(false);
+// One figure in the strip under the header.
+function Stat({label, value}) {
+    return (
+        <div className="flex flex-col gap-[3px] min-w-0 px-3 py-[9px] border-r border-b border-line [&:nth-child(2n)]:border-r-0">
+            <span className="font-mono tabular-nums text-[14px] font-semibold leading-none text-text inline-flex items-center gap-1">
+                {value}
+            </span>
+            <span className="text-[10px] leading-none text-faint truncate">{label}</span>
+        </div>
+    );
+}
 
-    // Recomputed each tick (world.time advances) so population, vitality, and
-    // the territory roster stay live as cities take damage or fall.
+// Nation — your own nation in the dock's drawer: population, GDP, industry
+// (living structures against the pop-driven ceiling) and net points over a
+// live, searchable roster of every state you hold and its current status.
+// Reads engine queries only; never mutates. Clicking a territory flies the
+// camera to it.
+export default function NationPanel({world, mySlot, myNation, onFocus, onClose}) {
+    const [q, setQ] = useState("");
+
+    // Recomputed each tick (world.time advances) so population, vitality and the
+    // territory roster stay live as cities take damage or fall.
     const view = useMemo(() => {
         const mine = world.cities.filter((c) => c.slot === mySlot);
         const living = mine.filter((c) => c.alive);
@@ -75,15 +85,20 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
     if (!myNation) return null;
     const indUsed = view.indCount + view.indPending;
     const indFrac = view.indCap > 0 ? Math.min(1, indUsed / view.indCap) : 0;
+    const needle = q.trim().toLowerCase();
+    const rows = needle
+        ? view.rows.filter(
+              (c) => c.name.toLowerCase().includes(needle) || (c.state || "").toLowerCase().includes(needle),
+          )
+        : view.rows;
 
-    // Status pill tone per readiness band. Each carries its own lamp colour, so a
-    // roster row states its condition twice — once as a lit dot a glance catches,
-    // once as the word behind it.
-    const pillClass = {
-        secure: "text-dim border-line",
-        strained: "text-accent border-accent-line",
-        critical: "text-red border-[rgba(224,87,79,0.5)]",
-        lost: "text-faint border-line",
+    // Status lamp per readiness band, so a roster row states its condition twice:
+    // once as a lit dot a glance catches, once as the word behind it.
+    const pillTone = {
+        secure: "text-dim",
+        strained: "text-dim",
+        critical: "text-red",
+        lost: "text-faint",
     };
     const pillLed = {
         secure: "db-led-ok",
@@ -93,151 +108,108 @@ export default function NationPanel({world, mySlot, myNation, onFocus}) {
     };
 
     return (
-        <aside
-            className="db-hud-panel relative w-[246px] max-h-[calc(100vh-132px)] flex flex-col pointer-events-auto overflow-hidden [--db-tab:118px] motion-safe:animate-[dbDropIn_300ms_var(--ease-drawer)]"
-            aria-label="Nation status"
-        >
-            <header className="flex items-center gap-[10px] px-3 py-[9px]">
-                <Flag iso={myNation.iso} className="w-[26px] h-[18px] shadow-[0_0_0_1px_var(--line)] flex-none" />
-                <div className="flex flex-col leading-[1.15] min-w-0 flex-1">
-                    <span className="font-display text-[15px] font-bold normal-case tracking-normal text-text whitespace-nowrap overflow-hidden text-ellipsis">
-                        {myNation.name}
-                    </span>
-                    <span className="text-[9px] tracking-[0.2em]">Your Command</span>
-                </div>
-                <button
-                    className="db-notch-sm w-6 h-6 grid place-items-center border border-line bg-transparent text-dim flex-none transition-[border-color,color] duration-[var(--dur-fast)] ease-out-db hover:text-accent hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
-                    onClick={() => setCollapsed((v) => !v)}
-                    title={collapsed ? "Expand" : "Collapse"}
-                    aria-label={collapsed ? "Expand nation panel" : "Collapse nation panel"}
-                    aria-expanded={!collapsed}
-                >
-                    <Icon name="chevron-down" size={13} className={cn(collapsed && "-rotate-90")} />
-                </button>
-            </header>
-
-            {!collapsed && (
+        <DrawerScreen
+            title={myNation.name}
+            labelledBy="db-drawer-nation"
+            caption={
                 <>
-                    <div className="grid grid-cols-2 gap-px bg-hair border-b border-hair">
-                        <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className={KICKER}>Population</span>
-                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text inline-flex items-center gap-[4px]">
-                                {fmtPop(view.pop)}
-                                <PopTrend rate={view.popRate} base={view.pop} className="text-[11px]" />
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className={KICKER}>GDP</span>
-                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text">
-                                {fmtGdp(view.gdp)}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className={KICKER}>Net</span>
-                            <span
-                                className={cn(
-                                    "font-mono text-[14px] font-semibold tabular-nums text-text",
-                                    view.net < 0 && "text-red",
-                                )}
-                            >
-                                {fmtNet(view.net, 1)}/s
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-0.5 px-3 py-[9px] bg-panel">
-                            <span className={KICKER}>Territories</span>
-                            <span className="font-mono text-[14px] font-semibold tabular-nums text-text">
-                                {view.heldCount}
-                                <span className="text-faint font-normal text-[11px]">/{view.totalCount}</span>
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        className="px-3 py-[10px] border-b border-hair"
-                        title={`${view.indCount} standing${view.indPending ? ` + ${view.indPending} in production` : ""} of ${view.indCap} industry slots (factories, ports, refineries, tech parks). Cap grows with population. Combined output +${view.indOut.toFixed(1)} pts/s.`}
-                    >
-                        <div className="flex items-baseline justify-between mb-[6px]">
-                            <span className={cn(KICKER, "tracking-[0.1em] whitespace-nowrap")}>
-                                Industry (used / cap)
-                            </span>
-                            <span className="font-mono text-[10.5px] tabular-nums text-dim whitespace-nowrap">
-                                {indUsed}
-                                <span className="text-faint">/{view.indCap}</span> · +{view.indOut.toFixed(1)}/s
-                            </span>
-                        </div>
-                        <Meter
-                            frac={indFrac}
-                            className="h-[6px] bg-line-soft [--db-seg-gap:var(--sunk)]"
-                            fillClass="bg-accent duration-[400ms]"
-                            ariaLabel="Industry slots used"
-                        />
-                    </div>
-
-                    <div className={cn(KICKER, "px-3 pt-[9px] pb-[5px]")}>Territories</div>
-                    <div className="db-scroll flex-1 overflow-y-auto px-[6px] pb-2">
-                        {view.rows.map((c) => {
-                            const st = statusOf(c);
-                            const v = vitalityOf(c);
-                            return (
-                                <button
-                                    key={c.id}
-                                    className={cn(
-                                        "db-notch-sm flex items-center justify-between gap-2 w-full px-2 py-[7px] border border-transparent bg-transparent text-left cursor-pointer transition-[background,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
-                                        !c.alive && "opacity-55",
-                                    )}
-                                    onClick={() => onFocus?.(c)}
-                                    title={`Focus ${c.name}`}
-                                >
-                                    <span className="flex flex-col leading-[1.2] min-w-0">
-                                        <span className="flex items-center gap-1 text-[12.5px] text-text max-w-[132px]">
-                                            {!!c.cap && (
-                                                <Icon
-                                                    name="star"
-                                                    size={9}
-                                                    className="text-accent flex-none"
-                                                    title="Capital"
-                                                />
-                                            )}
-                                            <span className="whitespace-nowrap overflow-hidden text-ellipsis">
-                                                {c.name}
-                                            </span>
-                                        </span>
-                                        {c.state && (
-                                            <span className="text-[10px] text-faint whitespace-nowrap overflow-hidden text-ellipsis max-w-[132px]">
-                                                {c.state}
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span className="flex flex-col items-end gap-[3px] flex-none">
-                                        <span className="font-mono text-[11px] tabular-nums text-dim inline-flex items-center gap-[3px]">
-                                            {c.alive ? fmtPop((c.pop || 0) * v) : "—"}
-                                            {c.alive && view.standing && (c.pop || 0) > 0 && c.hp < c.maxHp && (
-                                                <PopTrend
-                                                    up
-                                                    title="Rebuilding: population recovers as the city heals"
-                                                    className="text-[9px]"
-                                                />
-                                            )}
-                                        </span>
-                                        <span
-                                            className={cn(
-                                                "db-notch-sm inline-flex items-center gap-[5px] font-mono text-[9px] tracking-[0.14em] uppercase px-[6px] py-[2px] border border-line text-dim",
-                                                pillClass[st.key],
-                                            )}
-                                        >
-                                            <span className={cn("db-led", pillLed[st.key])} aria-hidden="true" />
-                                            {st.label}
-                                        </span>
-                                    </span>
-                                </button>
-                            );
-                        })}
-                        {view.rows.length === 0 && (
-                            <div className="px-3 py-3 text-center text-faint text-xs">No territories held.</div>
-                        )}
-                    </div>
+                    <b>{view.heldCount}</b> of <b>{view.totalCount}</b> territories
                 </>
-            )}
-        </aside>
+            }
+            onClose={onClose}
+        >
+            <div className="grid grid-cols-2">
+                <Stat
+                    label="Population"
+                    value={
+                        <>
+                            {fmtPop(view.pop)}
+                            <PopTrend rate={view.popRate} base={view.pop} className="text-[11px]" />
+                        </>
+                    }
+                />
+                <Stat label="GDP" value={fmtGdp(view.gdp)} />
+                <Stat label="Net" value={`${fmtNet(view.net, 1)}/s`} />
+                <Stat label="Territories" value={`${view.heldCount}/${view.totalCount}`} />
+            </div>
+
+            <div
+                className="px-4 py-[11px] border-b border-line"
+                title={`${view.indCount} standing${view.indPending ? ` + ${view.indPending} in production` : ""} of ${view.indCap} industry slots (factories, ports, refineries, tech parks). The cap grows with population. Combined output +${view.indOut.toFixed(1)} pts/s.`}
+            >
+                <div className="flex items-baseline justify-between gap-2 mb-[7px]">
+                    <span className="db-sec">Industry (used / cap)</span>
+                    <span className="font-mono text-[11px] tabular-nums text-dim whitespace-nowrap">
+                        {indUsed}
+                        <span className="text-faint">/{view.indCap}</span> · +{view.indOut.toFixed(1)}/s
+                    </span>
+                </div>
+                <Meter frac={indFrac} ariaLabel="Industry slots used" />
+            </div>
+
+            <div className="px-4 pt-3 pb-1">
+                <input
+                    className={cn(input(), "px-3 py-2 text-[12.5px]")}
+                    placeholder="Search territories"
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    aria-label="Search territories"
+                />
+            </div>
+
+            <div className="px-2 pb-3">
+                {rows.map((c) => {
+                    const st = statusOf(c);
+                    const v = vitalityOf(c);
+                    return (
+                        <button
+                            key={c.id}
+                            className={cn(
+                                "flex items-center justify-between gap-2 w-full px-2 py-[8px] border border-transparent text-left transition-[background-color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-line-2",
+                                !c.alive && "opacity-55",
+                            )}
+                            onClick={() => onFocus?.(c)}
+                            title={`Focus ${c.name}`}
+                        >
+                            <span className="flex flex-col leading-[1.25] min-w-0">
+                                <span className="flex items-center gap-1 text-[12.5px] text-text min-w-0">
+                                    {!!c.cap && (
+                                        <Icon name="star" size={10} className="text-text flex-none" title="Capital" />
+                                    )}
+                                    <span className="truncate">{c.name}</span>
+                                </span>
+                                {c.state && <span className="text-[10px] text-faint truncate">{c.state}</span>}
+                            </span>
+                            <span className="flex items-center gap-[10px] flex-none">
+                                <span className="font-mono text-[11px] tabular-nums text-dim inline-flex items-center gap-[3px]">
+                                    {c.alive ? fmtPop((c.pop || 0) * v) : "—"}
+                                    {c.alive && view.standing && (c.pop || 0) > 0 && c.hp < c.maxHp && (
+                                        <PopTrend
+                                            up
+                                            title="Rebuilding: population recovers as the city heals"
+                                            className="text-[9px]"
+                                        />
+                                    )}
+                                </span>
+                                <span
+                                    className={cn(
+                                        "inline-flex items-center gap-[5px] w-[76px] text-[10.5px] px-[6px] py-[2px] border border-line",
+                                        pillTone[st.key],
+                                    )}
+                                >
+                                    <span className={cn("db-led", pillLed[st.key])} aria-hidden="true" />
+                                    {st.label}
+                                </span>
+                            </span>
+                        </button>
+                    );
+                })}
+                {rows.length === 0 && (
+                    <div className="px-3 py-3 text-center text-faint text-[12px]">
+                        {view.rows.length === 0 ? "No territories held." : "No territory matches that."}
+                    </div>
+                )}
+            </div>
+        </DrawerScreen>
     );
 }

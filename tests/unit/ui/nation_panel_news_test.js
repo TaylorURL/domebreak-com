@@ -7,7 +7,7 @@ import React from "react";
 import {renderToStaticMarkup} from "react-dom/server";
 import {createWorld} from "../../../src/game/engine.js";
 import NationPanel from "../../../src/ui/hud/NationPanel.jsx";
-import {headline} from "../../../src/ui/lib/newsHeadline.js";
+import {headline, unitPhrase} from "../../../src/ui/lib/newsHeadline.js";
 
 // A two-nation world; slot 0 is the player with four cities spanning every
 // status band, plus two factories so industry count is non-zero.
@@ -123,6 +123,22 @@ describe("NewsTicker headline mapping", () => {
         const h = headline({type: "built", kind: "unit", slot: 1, unit: "battery"}, w, 0);
         expect(h.text).toContain("SAM Battery");
         expect(h.tone).toBe("info");
+    });
+
+    it("test_construction_article_follows_the_name_sound", () => {
+        const of = (unit) => headline({type: "built", kind: "unit", slot: 1, unit}, w, 0).text;
+        expect(of("radar")).toContain("deploys an Early Warning Radar");
+        expect(of("aegis")).toContain("deploys an Aegis Ashore");
+        expect(of("launcher")).toContain("deploys a TEL");
+        expect(of("battery")).toContain("deploys a SAM Battery");
+        expect(of("infantry")).toContain("deploys Infantry"); // a mass noun takes none
+    });
+
+    it("test_unit_phrase_reads_the_first_sound_not_the_first_letter", () => {
+        expect(unitPhrase("Oil Refinery")).toBe("an Oil Refinery");
+        expect(unitPhrase("THAAD Battery")).toBe("a THAAD Battery");
+        expect(unitPhrase("C-RAM")).toBe("a C-RAM");
+        expect(unitPhrase("Artillery")).toBe("Artillery");
     });
 
     it("test_own_construction_is_good", () => {

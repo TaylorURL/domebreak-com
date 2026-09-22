@@ -11,7 +11,7 @@ function Avatar({avatar, name, size = 26}) {
     if (avatar) {
         return (
             <span
-                className="flex shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft text-gold"
+                className="flex shrink-0 items-center justify-center border border-line-2 bg-accent-soft text-text"
                 style={{width: size, height: size}}
             >
                 <GameIcon name={avatar} size={size * 0.6} />
@@ -20,7 +20,7 @@ function Avatar({avatar, name, size = 26}) {
     }
     return (
         <span
-            className="flex shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft font-display text-[12px] font-bold text-gold"
+            className="flex shrink-0 items-center justify-center border border-line-2 bg-accent-soft text-[12px] font-semibold text-text"
             style={{width: size, height: size}}
         >
             {(name || "?").slice(0, 1).toUpperCase()}
@@ -32,9 +32,7 @@ function Stat({value, label}) {
     return (
         <div>
             <div className="font-mono text-[15px] font-semibold text-text tabular-nums">{value}</div>
-            <div className="mt-1 font-display text-[9px] font-semibold uppercase tracking-[0.16em] text-faint">
-                {label}
-            </div>
+            <div className="mt-1 text-[11px] text-faint">{label}</div>
         </div>
     );
 }
@@ -71,14 +69,12 @@ export default function AccountMenu() {
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2 db-notch-sm border border-line bg-field py-2 pl-2 pr-2 text-text transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue active:scale-[0.98]"
+                className="flex items-center gap-2 border border-line bg-field p-2 text-text transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:border-line-2"
                 aria-haspopup="menu"
                 aria-expanded={open}
             >
                 <Avatar avatar={profile?.avatar} name={name} />
-                <span className="hidden max-w-[120px] truncate font-display text-[12px] font-semibold tracking-[0.04em] sm:inline">
-                    {name}
-                </span>
+                <span className="hidden max-w-[120px] truncate text-[12.5px] font-semibold sm:inline">{name}</span>
                 <ChevronDown
                     size={13}
                     className={cn("text-faint transition-transform duration-200", open && "rotate-180")}
@@ -94,16 +90,13 @@ export default function AccountMenu() {
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         transition={{duration: 0.16, ease: [0.23, 1, 0.32, 1]}}
                         style={{transformOrigin: "top right"}}
-                        className={cn(
-                            panel({frame: "glass"}),
-                            "db-seam absolute right-0 top-[calc(100%+8px)] w-[280px]",
-                        )}
+                        className={cn(panel({frame: "glass"}), "absolute right-0 top-[calc(100%+8px)] w-[280px]")}
                     >
                         <div className="flex items-center gap-3 border-b border-hair p-4">
                             <Avatar avatar={profile?.avatar} name={name} size={38} />
                             <div className="min-w-0">
-                                <div className="truncate font-display text-[14px] font-bold text-text">{name}</div>
-                                <div className="font-mono text-[10.5px] uppercase tracking-[0.12em] text-faint">
+                                <div className="truncate text-[14px] font-semibold text-text">{name}</div>
+                                <div className="text-[12px] text-faint">
                                     {profile?.created_at ? `Member since ${monthYear(profile.created_at)}` : "Player"}
                                 </div>
                             </div>
@@ -123,7 +116,7 @@ export default function AccountMenu() {
                                     href="#/admin"
                                     role="menuitem"
                                     onClick={() => setOpen(false)}
-                                    className="flex w-full items-center gap-3 db-notch-sm border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-gold-line hover:bg-gold-soft hover:text-gold"
+                                    className="flex w-full items-center gap-3 border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-line-2 hover:bg-accent-soft hover:text-text"
                                 >
                                     <ShieldCheck size={15} />
                                     <span>Admin Panel</span>
@@ -135,7 +128,7 @@ export default function AccountMenu() {
                                     setOpen(false);
                                     signOut();
                                 }}
-                                className="flex w-full items-center gap-3 db-notch-sm border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
+                                className="flex w-full items-center gap-3 border border-transparent px-3 py-2 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
                             >
                                 <LogOut size={15} />
                                 <span>Sign Out</span>

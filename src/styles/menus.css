@@ -1,41 +1,24 @@
 /* Menu-surface rules: the .db-card modal surface and its header strip, the
-   overflow regions a card scrolls, the splash boot scan, the matchmaking radar,
-   and the keyframes those use.
+   overflow regions a card scrolls, the range slider and the switch a settings
+   row is built from, the splash boot bar, the matchmaking radar, and the
+   keyframes those use.
 
    Imported by src/index.css, which owns the tokens, the shared chrome
    utilities and the shared keyframes these rules read. Everything here sits
    inside the @layer vfx block so it keeps sitting above Tailwind's utilities. */
 
 @layer vfx {
-    /* The modal card. Same tactical shell as .db-hud-panel, one size up: the
-       8px notch rather than the 5px one, the heavier --panel-2 glass a dialog
-       needs to hold its own over a live globe, a --line hairline, and the gold
-       seam along the top edge. Scanlines and the notch itself ride on the
-       .db-scan and .db-notch utilities the card() variant carries, so the only
-       thing that has to live here is the seam and the header strip.
-
-       A clipped surface paints nothing outside its own edge, so the card has no
-       drop shadow; the hairline and the seam are what separate it. */
+    /* The modal card. The same surface as .db-hud-panel one weight heavier: the
+       --panel-2 glass a dialog needs to hold its own over a live globe, a
+       --line hairline and square corners. No shadow and no seam; the hairline
+       is what separates it from the map. */
     .db-card {
         background: var(--panel-2);
-        backdrop-filter: blur(14px) saturate(1.15);
+        backdrop-filter: blur(14px);
     }
 
-    /* The gold seam: a 1px rule along the top edge, starting where the corner
-       cut lets the edge begin so it never runs off into the chamfer. */
-    .db-card::before {
-        content: "";
-        position: absolute;
-        left: 8px;
-        right: 0;
-        top: 0;
-        height: 1px;
-        background: linear-gradient(90deg, var(--accent), var(--accent-line) 62%, transparent);
-        pointer-events: none;
-    }
-
-    /* The card's header strip: the display title and its sentence-case
-       subtitle over a hairline that separates them from the body. */
+    /* The card's header strip: the title and its sentence-case subtitle over a
+       hairline that separates them from the body. */
     .db-card-head {
         display: flex;
         align-items: flex-start;
@@ -46,13 +29,13 @@
         border-bottom: 1px solid var(--hair);
     }
 
-    /* Overflow regions inside a card. The dark thumb matches .db-scroll in
+    /* Overflow regions inside a card. The thumb matches .db-scroll in
        styles/hud.css, so a list reads the same wherever it is docked. */
     .db-country-list,
     .db-newgame,
     .db-card-scroll {
         scrollbar-width: thin;
-        scrollbar-color: #575f6a transparent;
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
     }
 
     .db-country-list::-webkit-scrollbar,
@@ -65,14 +48,13 @@
     .db-country-list::-webkit-scrollbar-track,
     .db-newgame::-webkit-scrollbar-track,
     .db-card-scroll::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.035);
+        background: transparent;
     }
 
     .db-country-list::-webkit-scrollbar-thumb,
     .db-newgame::-webkit-scrollbar-thumb,
     .db-card-scroll::-webkit-scrollbar-thumb {
-        background: #575f6a;
-        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
         border: 3px solid transparent;
         background-clip: padding-box;
     }
@@ -80,13 +62,14 @@
     .db-country-list::-webkit-scrollbar-thumb:hover,
     .db-newgame::-webkit-scrollbar-thumb:hover,
     .db-card-scroll::-webkit-scrollbar-thumb:hover {
-        background: #78818d;
+        background: rgba(255, 255, 255, 0.36);
         background-clip: padding-box;
     }
 
     /* Range sliders inside a card and in the settings panel. accent-color alone
        leaves the track at the UA default, which is a pale grey bar on a dark
-       surface; this sinks the track and lights the thumb amber. */
+       surface; this sinks the track to the hairline and squares a white thumb
+       onto it. */
     .db-range {
         appearance: none;
         -webkit-appearance: none;
@@ -96,50 +79,86 @@
     }
 
     .db-range::-webkit-slider-runnable-track {
-        height: 6px;
-        border-radius: 999px;
-        background: var(--sunk);
-        border: 1px solid var(--line);
+        height: 4px;
+        background: var(--line);
     }
 
     .db-range::-moz-range-track {
-        height: 6px;
-        border-radius: 999px;
-        background: var(--sunk);
-        border: 1px solid var(--line);
+        height: 4px;
+        background: var(--line);
     }
 
     .db-range::-webkit-slider-thumb {
         appearance: none;
         -webkit-appearance: none;
-        width: 14px;
+        width: 6px;
         height: 14px;
         margin-top: -5px;
-        border-radius: 50%;
         background: var(--accent);
-        border: 1px solid var(--accent-ink);
-        box-shadow: 0 0 8px rgba(242, 181, 68, 0.45);
+        border: 0;
     }
 
     .db-range::-moz-range-thumb {
-        width: 13px;
-        height: 13px;
-        border: 1px solid var(--accent-ink);
-        border-radius: 50%;
+        width: 6px;
+        height: 14px;
+        border: 0;
+        border-radius: 0;
         background: var(--accent);
     }
 
     .db-range:disabled::-webkit-slider-thumb {
         background: var(--faint);
-        box-shadow: none;
     }
 
     .db-range:disabled::-moz-range-thumb {
         background: var(--faint);
     }
 
-    /* Boot scan bar: the splash's loading rule and the match boot curtain's.
-       An amber sweep across a sunk track. */
+    /* The switch a settings row is toggled with: a hairline box with a knob
+       that is dim on the left and white on the right. */
+    .db-switch {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        flex: none;
+        border: 1px solid var(--line-2);
+        background: var(--sunk);
+        transition: border-color var(--dur-fast) var(--ease-out);
+    }
+
+    .db-switch i {
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        width: 16px;
+        height: 16px;
+        background: var(--dim);
+        transition:
+            transform 150ms var(--ease-out),
+            background 150ms var(--ease-out);
+    }
+
+    .db-switch.on {
+        border-color: var(--accent);
+    }
+
+    .db-switch.on i {
+        transform: translateX(18px);
+        background: var(--accent);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-switch i {
+            transition: none;
+        }
+    }
+
+    [data-reduce-motion="true"] .db-switch i {
+        transition: none;
+    }
+
+    /* Boot bar: the splash's loading rule and the match boot curtain's. A white
+       sweep across a sunk track. */
     .db-boot-bar i {
         display: block;
         width: 46%;
@@ -171,13 +190,13 @@
         width: 128px;
         height: 128px;
         border-radius: 50%;
-        border: 1px solid rgba(127, 212, 255, 0.35);
+        border: 1px solid rgba(158, 203, 255, 0.3);
         background:
-            radial-gradient(circle, rgba(127, 212, 255, 0.06) 0%, transparent 70%),
+            radial-gradient(circle, rgba(158, 203, 255, 0.05) 0%, transparent 70%),
             repeating-radial-gradient(
                 circle,
                 transparent 0 20px,
-                rgba(127, 212, 255, 0.18) 20px 21px,
+                rgba(158, 203, 255, 0.16) 20px 21px,
                 transparent 21px 22px
             );
     }
@@ -187,7 +206,7 @@
         position: absolute;
         inset: -1px;
         border-radius: 50%;
-        border: 1px dashed rgba(127, 212, 255, 0.2);
+        border: 1px dashed rgba(158, 203, 255, 0.18);
     }
 
     .db-radar::after {
@@ -197,9 +216,9 @@
         border-radius: 50%;
         background: conic-gradient(
             from 0deg,
-            rgba(127, 212, 255, 0.28) 0deg,
-            rgba(127, 212, 255, 0.1) 22deg,
-            rgba(127, 212, 255, 0.04) 46deg,
+            rgba(158, 203, 255, 0.24) 0deg,
+            rgba(158, 203, 255, 0.09) 22deg,
+            rgba(158, 203, 255, 0.04) 46deg,
             transparent 78deg
         );
         animation: dbRadarSweep 4s linear infinite;

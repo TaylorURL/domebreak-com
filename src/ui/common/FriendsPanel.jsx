@@ -149,7 +149,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
         const isLeader = party.leader === meId;
         const me = members.find((m) => m.user_id === meId);
         return (
-            <div className="db-notch-sm px-[10px] py-2 bg-btn-bg border border-line">
+            <div className="px-[10px] py-2 bg-bg-2 border border-line">
                 <div role="list" aria-labelledby="db-party-roster-h">
                     {members.map((m) => (
                         <div
@@ -162,7 +162,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 <span
                                     className={cn(
                                         "inline-block w-2 h-2 rounded-full shrink-0",
-                                        m.ready ? "bg-[#46d38a] shadow-[0_0_6px_rgba(70,211,138,0.9)]" : "bg-line",
+                                        m.ready ? "bg-good" : "bg-line",
                                     )}
                                     aria-hidden="true"
                                 />
@@ -208,7 +208,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                     className={cn(
                                         miniButton(),
                                         "flex-1 capitalize",
-                                        party.join_mode === mode && "border-accent-line text-accent",
+                                        party.join_mode === mode && "border-accent bg-accent-soft text-text",
                                     )}
                                     disabled={partyBusy}
                                     aria-pressed={party.join_mode === mode}
@@ -227,7 +227,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 Launch Private
                             </button>
                             <button
-                                className={cn(miniButton(), "flex-1 border-accent-line text-accent")}
+                                className={cn(miniButton(), "flex-1 border-accent")}
                                 disabled={partyBusy}
                                 onClick={() => partyAct(partyCtl.queuePublic)}
                             >
@@ -280,7 +280,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                 </div>
                 <div aria-live="assertive">
                     {addErr && (
-                        <p className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger px-3 py-2 text-[12.5px] mt-[10px] mb-0">
+                        <p className="text-danger bg-[rgba(224,87,79,0.12)] border border-danger px-3 py-2 text-[12.5px] mt-[10px] mb-0">
                             {addErr}
                         </p>
                     )}
@@ -311,7 +311,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, incoming request`}
                                     >
@@ -354,7 +354,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, pending request`}
                                     >
@@ -400,7 +400,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, ${online ? "online" : "offline"}`}
                                     >

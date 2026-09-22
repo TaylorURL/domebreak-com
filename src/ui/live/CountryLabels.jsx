@@ -8,6 +8,9 @@ import {safeMap} from "../lib/mapSafe.js";
 // neutral/unplayed nations are unnamed background geography. Level of detail:
 // only the largest belligerents show when zoomed right out; smaller ones fade in
 // as you zoom, and all fade away once you zoom in close.
+//
+// Your own nation reads white, every other power dim. The only thing behind a
+// label is a tight black drop so a name stays legible over pale land.
 const HIDE_ZOOM = 4.4;
 
 export default function CountryLabels({map, labels}) {
@@ -53,7 +56,7 @@ export default function CountryLabels({map, labels}) {
         out.push(
             <div
                 key={L.iso}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 font-display font-bold tracking-[0.5px] whitespace-nowrap [text-shadow:0_0_6px_#060708,0_0_3px_#060708,0_1px_2px_#000] ${L.mine ? "text-accent" : "text-[#f2f4f6]"}`}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap tracking-[-0.01em] [text-shadow:0_1px_2px_rgba(0,0,0,0.9)] ${L.mine ? "font-semibold text-text" : "font-medium text-dim"}`}
                 style={{left: p.x, top: p.y, fontSize: size, opacity: fade * (L.mine ? 1 : 0.85)}}
             >
                 {L.name}

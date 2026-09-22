@@ -44,9 +44,9 @@ export default function ContextMenu({x, y, title, items, onClose}) {
                     onClose();
                 }}
             />
-            {/* The panel is clipped to its notch, so the lift that separates it from
-                the map is cast by this wrapper instead — drop-shadow reads the child's
-                alpha and follows the cut corners. */}
+            {/* The lift that separates the menu from the map is cast by this
+                wrapper rather than the panel, so a drop-shadow reads the child's
+                alpha and follows its outline. */}
             <div
                 className="db-hud-lift fixed z-41"
                 style={{
@@ -56,13 +56,13 @@ export default function ContextMenu({x, y, title, items, onClose}) {
             >
                 <div
                     ref={menuRef}
-                    className="db-ctx db-hud-panel db-hud-solid relative min-w-[190px] overflow-hidden p-[5px] [--db-tab:0px] motion-safe:animate-[dbCtxIn_120ms_var(--ease-out)]"
+                    className="db-ctx db-hud-panel db-hud-solid relative min-w-[196px] overflow-hidden p-1 motion-safe:animate-[dbCtxIn_120ms_var(--ease-out)]"
                     role="menu"
                     aria-label={title || "Actions"}
                     onKeyDown={onKeyDown}
                 >
                     {title && (
-                        <div className="font-mono text-[9px] tracking-[0.22em] uppercase text-faint px-2 pt-[6px] pb-[6px] mb-[3px] border-b border-hair whitespace-nowrap overflow-hidden text-ellipsis">
+                        <div className="px-[9px] pt-[6px] pb-[7px] mb-1 border-b border-hair text-[11px] font-medium text-faint whitespace-nowrap overflow-hidden text-ellipsis">
                             {title}
                         </div>
                     )}
@@ -73,9 +73,8 @@ export default function ContextMenu({x, y, title, items, onClose}) {
                             <button
                                 key={i}
                                 className={cn(
-                                    "db-notch-sm flex justify-between gap-[10px] w-full text-left px-[9px] py-2 border border-transparent bg-transparent text-text text-[13px] transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-accent-soft enabled:hover:border-accent-line enabled:hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
-                                    it.danger &&
-                                        "enabled:hover:bg-[rgba(224,87,79,0.14)] enabled:hover:border-danger enabled:hover:text-danger",
+                                    "flex justify-between gap-[10px] w-full text-left px-[9px] py-2 bg-transparent text-text text-[13px] transition-[background-color,color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-accent-soft focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                                    it.danger && "text-red enabled:hover:bg-[rgba(224,87,79,0.12)]",
                                     it.disabled && "opacity-40",
                                 )}
                                 disabled={it.disabled}
@@ -87,7 +86,9 @@ export default function ContextMenu({x, y, title, items, onClose}) {
                                 }}
                             >
                                 {it.label}
-                                {it.sub && <span className="text-dim font-mono text-[11px]">{it.sub}</span>}
+                                {it.sub && (
+                                    <span className="font-mono tabular-nums text-[11px] text-dim">{it.sub}</span>
+                                )}
                             </button>
                         ),
                     )}

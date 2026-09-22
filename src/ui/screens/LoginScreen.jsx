@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {signIn, signUp} from "../../account/api.js";
-import {button, input, label} from "../lib/variants.js";
+import {button, input, label, segment, segmentItem} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 
 // Full-screen auth gate. Shares the exact command-rail shell as StartMenu and
@@ -63,24 +63,21 @@ export default function LoginScreen() {
         // Command rail: identical structural shell to StartMenu so the live
         // attract globe owns the center of the screen, uncovered.
         <div className="absolute inset-0 z-10 block overflow-hidden p-0">
-            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(4,6,9,0.42)_82%,rgba(4,6,9,0.72)_100%)]" />
+            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(0,0,0,0.5)_82%,rgba(0,0,0,0.8)_100%)]" />
             <aside
                 className="absolute top-0 left-0 bottom-0 w-96 max-w-[88vw] flex flex-col overflow-y-auto pt-[46px] pr-[46px] pb-[26px] pl-10 text-left pointer-events-none animate-[dbRailIn_520ms_var(--ease-out-db)_both] motion-reduce:animate-none
-                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(7,9,13,0.82)_0%,rgba(7,9,13,0.58)_52%,rgba(7,9,13,0)_100%)] before:backdrop-blur-[9px] before:[backdrop-filter:blur(9px)_saturate(1.1)] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]
-                after:content-[''] after:absolute after:top-5 after:left-5 after:w-4 after:h-4 after:border-t after:border-l after:border-line-soft"
+                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.64)_52%,rgba(0,0,0,0)_100%)] before:backdrop-blur-[9px] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]"
             >
                 <div className="mb-[30px]">
-                    <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-led db-led-live" />
+                    <div className="flex items-center gap-2 mb-4 text-[11px] font-medium text-faint">
+                        <span className="db-led db-led-warn" />
                         Authorization Required
                     </div>
-                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
+                    <h1 className="font-semibold text-[46px] tracking-[0.08em] leading-[44px] text-dim">
                         DOME
-                        <span className="db-title-glow block text-text">BREAK</span>
+                        <span className="block text-text">BREAK</span>
                     </h1>
-                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
-                        Global Missile Command
-                    </p>
+                    <p className="text-dim text-[13px] mt-3 mb-0">Global missile command</p>
                 </div>
 
                 <form
@@ -94,23 +91,14 @@ export default function LoginScreen() {
 
                     {/* Segmented mode switch: both options are visible up front, so
                         signing up is never hidden behind a link under the form. */}
-                    <div
-                        className="db-notch-sm flex gap-1 mb-[22px] p-1 border border-line-soft bg-[rgba(9,11,15,0.55)]"
-                        role="tablist"
-                        aria-label="Authentication mode"
-                    >
+                    <div className={cn(segment(), "mb-[22px] flex")} role="tablist" aria-label="Authentication mode">
                         <button
                             type="button"
                             role="tab"
                             aria-selected={mode === "signin"}
                             disabled={busy}
                             onClick={() => selectMode("signin")}
-                            className={cn(
-                                "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
-                                mode === "signin"
-                                    ? "text-accent bg-accent-soft border-accent-line"
-                                    : "text-faint border-transparent enabled:hover:text-text",
-                            )}
+                            className={cn(segmentItem({on: mode === "signin"}), "flex-1 h-9 font-sans text-[12px]")}
                         >
                             Sign In
                         </button>
@@ -120,12 +108,7 @@ export default function LoginScreen() {
                             aria-selected={mode === "signup"}
                             disabled={busy}
                             onClick={() => selectMode("signup")}
-                            className={cn(
-                                "db-notch-sm flex-1 py-[9px] font-display text-[11px] font-semibold tracking-[2px] uppercase transition-[color,background,border-color] duration-[var(--dur-fast)] ease-out-db border",
-                                mode === "signup"
-                                    ? "text-accent bg-accent-soft border-accent-line"
-                                    : "text-faint border-transparent enabled:hover:text-text",
-                            )}
+                            className={cn(segmentItem({on: mode === "signup"}), "flex-1 h-9 font-sans text-[12px]")}
                         >
                             Create Account
                         </button>
@@ -183,7 +166,7 @@ export default function LoginScreen() {
                     <div aria-live="assertive">
                         {error && (
                             <p
-                                className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger px-3 py-2 text-[12.5px] mt-3.5 mb-0"
+                                className="text-danger bg-[rgba(224,87,79,0.12)] border border-danger px-3 py-2 text-[12.5px] mt-3.5 mb-0"
                                 id="db-login-err"
                             >
                                 {error}
@@ -199,7 +182,7 @@ export default function LoginScreen() {
                         {busy ? "Standing by…" : mode === "signin" ? "Sign In" : "Create Account"}
                     </button>
 
-                    <p className="text-faint text-[11px] leading-[1.5] tracking-[0.3px] mt-4 mb-0">
+                    <p className="text-faint text-[11px] leading-[1.5] mt-4 mb-0">
                         {mode === "signin"
                             ? "Your account carries your callsign, match history, and career stats across every deployment."
                             : "One free account. There is no confirmation email, so you deploy the moment you enlist."}

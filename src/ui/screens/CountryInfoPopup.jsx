@@ -7,7 +7,7 @@
 // uses.
 import ScreenFrame from "./ScreenFrame.jsx";
 import Flag from "../common/Flag.jsx";
-import {colorForSlot, DIPLOMACY} from "../../game/data/constants.js";
+import {DIPLOMACY} from "../../game/data/constants.js";
 import {miniButton} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import {fmtGdp, fmtPop} from "../lib/format.js";
@@ -23,7 +23,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
     if (!n) {
         return (
             <ScreenFrame title="Unknown Power" onClose={onClose}>
-                <p className="font-mono text-[12px] text-dim">This power is no longer in the roster.</p>
+                <p className="text-[12.5px] text-dim">This power is no longer in the roster.</p>
             </ScreenFrame>
         );
     }
@@ -46,9 +46,11 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
     const human = isHuman(n.slot);
     const seatLabel = isMe ? "You" : human ? "Player" : "AI";
-    const seatCls = isMe ? "text-accent-ink bg-accent border-accent" : human ? "text-[#5fa8ff] border-[#3f5a80]" : "";
+    const seatCls = isMe ? "text-accent-ink bg-accent border-accent" : human ? "text-text border-line-2" : "";
     const commander = isMe ? "You" : human ? usernameOf.get(n.slot) || "Commander" : null;
 
+    // Where you stand with this power, in the one word and the one colour it
+    // earns: red at war, green allied, and nothing at all for the rest.
     const standing = isMe
         ? {label: "Home", tone: "text-dim"}
         : neutral
@@ -58,8 +60,8 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
             : rel === "war"
               ? {label: "At War", tone: "text-red", led: "db-led-live"}
               : rel === "ally"
-                ? {label: "Allied", tone: "text-[#5fa8ff]", led: "db-led-sensor"}
-                : {label: "At Peace", tone: "text-good", led: "db-led-ok"};
+                ? {label: "Allied", tone: "text-good", led: "db-led-ok"}
+                : {label: "At Peace", tone: "text-dim"};
 
     const call = (fn, ok) => {
         const r = fn();
@@ -71,7 +73,6 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
     const canAct = !isMe && !neutral && !eliminated;
     const graceSec = world.rules?.playerGraceSec ?? DIPLOMACY.playerGraceSec;
     const graceActive = graceSec > 0 && (world.time ?? 0) < graceSec;
-    const borderColor = n.color || colorForSlot(n.slot);
 
     return (
         <ScreenFrame
@@ -80,26 +81,25 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
             onClose={onClose}
         >
             <div className="flex flex-col gap-5">
-                <div className="db-notch db-brackets relative flex items-center gap-4 p-4 bg-sunk border border-line rounded-none">
-                    <span
-                        className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border-2 rounded-none [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
-                        style={{borderColor}}
-                    >
+                <div className="flex items-center gap-4 p-4 bg-sunk border border-line">
+                    <span className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border border-line-2 [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
                         <Flag iso={n.iso} />
                     </span>
                     <div className="flex flex-col gap-[6px] min-w-0">
-                        <b className="font-display font-semibold text-[18px] tracking-[0.02em]">{n.name}</b>
+                        <b className="text-[18px] font-semibold tracking-[-0.01em]">{n.name}</b>
                         <div className="flex items-center gap-[8px] flex-wrap">
                             <span
                                 className={cn(
-                                    "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-sm text-dim whitespace-nowrap",
+                                    "inline-block px-[10px] py-[3px] text-[11px] font-medium border border-line text-dim whitespace-nowrap",
                                     seatCls,
                                 )}
                             >
                                 {seatLabel}
                             </span>
                             {commander && !isMe && <span className="text-[12px] text-dim">{commander}</span>}
-                            <span className={cn("inline-flex items-center gap-2 font-mono text-[11px]", standing.tone)}>
+                            <span
+                                className={cn("inline-flex items-center gap-2 text-[12px] font-medium", standing.tone)}
+                            >
                                 {standing.led && <i className={cn("db-led", standing.led)} aria-hidden="true" />}
                                 {standing.label}
                             </span>
@@ -115,11 +115,9 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                 </div>
 
                 <div className="flex flex-col gap-[8px]">
-                    <span className="pb-1.5 border-b border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
-                        Diplomacy
-                    </span>
+                    <span className="pb-1.5 border-b border-hair text-[11px] font-medium text-faint">Diplomacy</span>
                     {!canAct ? (
-                        <p className="font-mono text-[11.5px] text-dim">
+                        <p className="text-[12px] leading-[1.5] text-dim">
                             {isMe
                                 ? "This is your own power, so there is nothing to negotiate."
                                 : neutral
@@ -129,7 +127,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                     ) : rel === "war" ? (
                         <div className="flex flex-wrap gap-[8px]">
                             {online ? (
-                                <span className="font-mono text-[11px] text-faint">
+                                <span className="text-[12px] text-faint">
                                     Peace terms are single-player only for now.
                                 </span>
                             ) : (
@@ -186,9 +184,9 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
 function StatCell({label, value}) {
     return (
-        <div className="db-notch-sm flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded-none">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-faint">{label}</span>
-            <b className="font-mono text-lg">{value}</b>
+        <div className="flex flex-col-reverse gap-[3px] px-[14px] py-3 bg-sunk border border-line">
+            <span className="text-[10.5px] text-faint">{label}</span>
+            <b className="font-mono tabular-nums text-lg font-semibold leading-[1.2]">{value}</b>
         </div>
     );
 }

@@ -1,4 +1,4 @@
-// Animated epicenter of a radioactive fallout cloud: a pulsing sickly-green glow,
+// Animated epicenter of a radioactive fallout cloud: a pulsing grey glow,
 // expanding contamination rings, and a trefoil core. The real damage footprint is
 // the geographic haze fill in useLiveLayers; this is the living centerpiece that
 // sits on top of it. `intensity` (0..1) fades the whole thing in and out in step

@@ -3,8 +3,11 @@ import {GAME_SPEEDS} from "../../game/data/constants.js";
 import {DEFAULT_KEYS, KEY_ACTIONS, keyLabel, keyToken, resolveKeys} from "../../game/platform/keybindings.js";
 import {useModal} from "../hooks/useModal.js";
 import {useWindowEvent} from "../../lib/hooks/useWindowEvent.js";
-import {button, card, miniButton, overlay, menuTitle} from "../lib/variants.js";
+import {button, card, miniButton, overlay, menuTitle, segment, segmentItem} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+
+// One settings row: a label on the left, its control on the right.
+const ROW = "flex items-center justify-between gap-3.5 my-3 text-sm text-dim";
 
 export default function SettingsPanel({settings, onChange, onClose}) {
     const set = (k, v) => onChange({...settings, [k]: v});
@@ -41,6 +44,8 @@ export default function SettingsPanel({settings, onChange, onClose}) {
     );
     useWindowEvent("keydown", captureKey, {capture: true, enabled: !!capturing});
 
+    // The editor lists whatever the keybinding registry holds, grouped the way
+    // it groups them, so an action added there appears here with no edit.
     const groups = [...new Set(KEY_ACTIONS.map((a) => a.group))];
 
     return (
@@ -60,18 +65,15 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                 <div className="db-card-head">
                     <div className={menuTitle({sm: true})}>Settings</div>
                 </div>
-                <div className="db-set-row flex items-center justify-between gap-3.5 my-3 text-sm text-dim">
+                <div className={cn("db-set-row", ROW)}>
                     <span>Default Speed</span>
-                    <div className="flex gap-1" role="radiogroup" aria-label="Default speed">
+                    <div className={segment()} role="radiogroup" aria-label="Default speed">
                         {GAME_SPEEDS.map((s) => (
                             <button
                                 key={s}
                                 role="radio"
                                 aria-checked={settings.speed === s}
-                                className={cn(
-                                    "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                    settings.speed === s && "active bg-accent-soft text-accent border-accent-line",
-                                )}
+                                className={segmentItem({on: settings.speed === s})}
                                 onClick={() => set("speed", s)}
                             >
                                 {s}×
@@ -79,25 +81,19 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         ))}
                     </div>
                 </div>
-                <div className="db-set-row flex items-center justify-between gap-3.5 my-3 text-sm text-dim">
+                <div className={cn("db-set-row", ROW)}>
                     <span>Default View</span>
-                    <div className="flex gap-1" role="radiogroup" aria-label="Default view">
+                    <div className={segment()} role="radiogroup" aria-label="Default view">
                         <button
-                            className={cn(
-                                "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                settings.globe && "active bg-accent-soft text-accent border-accent-line",
-                            )}
+                            className={cn(segmentItem({on: !!settings.globe}), "font-sans")}
                             role="radio"
-                            aria-checked={settings.globe}
+                            aria-checked={!!settings.globe}
                             onClick={() => set("globe", true)}
                         >
                             Globe
                         </button>
                         <button
-                            className={cn(
-                                "db-notch-sm min-w-[40px] py-1.5 px-2 border border-line bg-btn-bg text-dim font-mono text-xs transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                !settings.globe && "active bg-accent-soft text-accent border-accent-line",
-                            )}
+                            className={cn(segmentItem({on: !settings.globe}), "font-sans")}
                             role="radio"
                             aria-checked={!settings.globe}
                             onClick={() => set("globe", false)}
@@ -106,7 +102,7 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         </button>
                     </div>
                 </div>
-                <div className="db-set-row flex items-center justify-between gap-3.5 my-3 text-sm text-dim">
+                <div className={cn("db-set-row", ROW)}>
                     <span>Music Volume</span>
                     <div className="db-set-slider flex items-center gap-2.5">
                         <input
@@ -114,14 +110,16 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                             min="0"
                             max="100"
                             aria-label="Music volume"
-                            className="db-range w-[120px] accent-accent"
+                            className="db-range w-[120px]"
                             value={Math.round((settings.musicVol ?? 0.5) * 100)}
                             onChange={(e) => set("musicVol", +e.target.value / 100)}
                         />
-                        <b>{Math.round((settings.musicVol ?? 0.5) * 100)}%</b>
+                        <b className="font-mono tabular-nums text-text text-xs w-[38px] text-right">
+                            {Math.round((settings.musicVol ?? 0.5) * 100)}%
+                        </b>
                     </div>
                 </div>
-                <div className="db-set-row flex items-center justify-between gap-3.5 my-3 text-sm text-dim">
+                <div className={cn("db-set-row", ROW)}>
                     <span>Effects Volume</span>
                     <div className="db-set-slider flex items-center gap-2.5">
                         <input
@@ -129,34 +127,28 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                             min="0"
                             max="100"
                             aria-label="Effects volume"
-                            className="db-range w-[120px] accent-accent"
+                            className="db-range w-[120px]"
                             value={Math.round((settings.sfxVol ?? 0.8) * 100)}
                             onChange={(e) => set("sfxVol", +e.target.value / 100)}
                         />
-                        <b>{Math.round((settings.sfxVol ?? 0.8) * 100)}%</b>
+                        <b className="font-mono tabular-nums text-text text-xs w-[38px] text-right">
+                            {Math.round((settings.sfxVol ?? 0.8) * 100)}%
+                        </b>
                     </div>
                 </div>
-                <div className="db-set-row flex items-center justify-between gap-3.5 my-3 text-sm text-dim">
+                <div className={cn("db-set-row", ROW)}>
                     <span>Reduce Motion</span>
                     <button
-                        className={cn(
-                            "db-toggle w-11 h-6 rounded-full border border-line bg-sunk relative transition-colors duration-[var(--dur-fast)]",
-                            settings.reduceMotion && "on bg-accent-soft border-accent-line",
-                        )}
+                        className={cn("db-switch", settings.reduceMotion && "on")}
                         aria-pressed={settings.reduceMotion}
                         aria-label="Reduce motion"
                         onClick={() => set("reduceMotion", !settings.reduceMotion)}
                     >
-                        <span
-                            className={cn(
-                                "absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-dim transition-[transform,background] duration-150 ease-out-db",
-                                settings.reduceMotion && "translate-x-5 bg-accent",
-                            )}
-                        />
+                        <i />
                     </button>
                 </div>
 
-                <div className="db-set-head flex items-center justify-between gap-3 mt-[22px] mb-1.5 pt-4 border-t border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
+                <div className="db-set-head flex items-center justify-between gap-3 mt-[22px] mb-1.5 pt-4 border-t border-hair text-[11px] font-medium text-dim">
                     <span>Controls</span>
                     <button
                         className={miniButton()}
@@ -171,19 +163,14 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                 <div className="db-keybinds flex flex-col gap-2.5">
                     {groups.map((g) => (
                         <div key={g} className="db-keygroup">
-                            <div className="db-keygroup-h font-mono text-[10px] tracking-[0.22em] uppercase text-faint mt-2.5 mb-1">
-                                {g}
-                            </div>
+                            <div className="db-keygroup-h text-[11px] font-medium text-faint mt-2.5 mb-1">{g}</div>
                             {KEY_ACTIONS.filter((a) => a.group === g).map((a) => (
-                                <div
-                                    key={a.id}
-                                    className="db-set-row db-keyrow flex items-center justify-between gap-3.5 my-1.5 text-sm text-dim"
-                                >
+                                <div key={a.id} className={cn("db-set-row db-keyrow", ROW, "my-1.5")}>
                                     <span>{a.label}</span>
                                     <button
                                         className={cn(
-                                            "db-key db-notch-sm min-w-[92px] py-1.5 px-2.5 border border-line bg-btn-bg text-text font-mono text-xs text-center transition-colors duration-[var(--dur-fast)] hover:border-blue",
-                                            capturing === a.id && "capturing border-accent bg-accent-soft text-accent",
+                                            "db-key min-w-[92px] py-1.5 px-2.5 border border-line-2 bg-transparent text-text font-mono text-xs text-center transition-colors duration-[var(--dur-fast)] hover:border-text",
+                                            capturing === a.id && "capturing border-accent bg-accent-soft",
                                         )}
                                         aria-live={capturing === a.id ? "polite" : undefined}
                                         aria-busy={capturing === a.id ? "true" : undefined}
@@ -196,8 +183,10 @@ export default function SettingsPanel({settings, onChange, onClose}) {
                         </div>
                     ))}
                 </div>
-                <div className="db-menu-hint mt-3.5 font-mono text-[11px] text-dim tracking-[0.02em]">
-                    Esc: Cancel / Menu · 1-5: Jump to speed level (fixed)
+                <div className="db-menu-hint mt-3.5 text-[11px] text-dim">
+                    <span className="font-mono">Esc</span> cancels, or opens the menu.{" "}
+                    <span className="font-mono">1</span> to <span className="font-mono">8</span> place the unit in that
+                    hotbar slot.
                 </div>
 
                 <div className="flex justify-end mt-[18px] pt-4 border-t border-hair">

@@ -1,15 +1,18 @@
 import {colorForSlot} from "../../game/data/constants.js";
 
+// The player's bookmarked map points, listed under the objective tracker in the
+// right-hand column. Clicking a row flies the camera there. Positioned by the
+// column it sits in, so it never places itself.
 export default function PinnedBar({pins, onGo, onRemove}) {
     if (!pins.length) return null;
     return (
-        <div className="db-hud-panel absolute top-[88px] right-4 z-5 w-[190px] [--db-tab:62px]">
-            <header className="flex items-center px-[10px] h-[26px]">Pinned</header>
+        <div className="db-hud-panel relative w-[190px] pointer-events-auto">
+            <header className="flex items-center px-[10px] h-[30px]">Pinned</header>
             <div className="px-[8px] py-[6px]">
                 {pins.map((p) => (
                     <div key={p.key} className="flex items-center gap-1">
                         <button
-                            className="db-notch-sm flex-1 flex items-center gap-[7px] bg-transparent border border-transparent text-text text-left text-xs px-[5px] py-1 whitespace-nowrap overflow-hidden text-ellipsis transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-accent-line hover:text-accent focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
+                            className="flex-1 flex items-center gap-[7px] bg-transparent border border-transparent text-text text-left text-xs px-[5px] py-1 whitespace-nowrap overflow-hidden text-ellipsis transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db hover:bg-accent-soft hover:border-line-2 focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]"
                             onClick={() => onGo(p)}
                             title="Fly To"
                             aria-label={`Fly to ${p.label}`}

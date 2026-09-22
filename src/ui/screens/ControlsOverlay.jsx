@@ -7,16 +7,16 @@ import {cn} from "../lib/cn.js";
 // In-game command reference. Reads the live key bindings so rebinds show through,
 // and lays out every control the map surface responds to — including the ones
 // nothing else advertises, like camera pan and shift-click to bulk-order or
-// place several. Toggle with the ? key or the corner button; Esc or ? closes it.
+// place several. Toggle with the ? key or the dock's Settings item; Esc or ? closes it.
 
-// A single keycap. `mouse` renders a wider, sentence-case pill for pointer
-// actions (L-Click, Scroll) so they read apart from keyboard keys.
+// A single keycap. `mouse` renders a wider pill for pointer actions (L-Click,
+// Scroll) so they read apart from keyboard keys.
 function Key({children, mouse}) {
     return (
         <span
             className={cn(
-                "db-kbd db-notch-sm min-w-[22px] h-[23px] py-0 px-[7px] inline-flex items-center justify-center border border-line border-b-2 bg-btn-bg text-text font-mono text-[11.5px] leading-none whitespace-nowrap",
-                mouse && "mouse text-dim text-[10.5px] tracking-[0.01em]",
+                "min-w-[22px] h-[23px] py-0 px-[7px] inline-flex items-center justify-center border border-line-2 bg-sunk text-text font-mono text-[11.5px] leading-none whitespace-nowrap",
+                mouse && "mouse text-dim text-[10.5px]",
             )}
         >
             {children}
@@ -51,10 +51,14 @@ export default function ControlsOverlay({keys, onClose}) {
 
     const groups = [
         {
-            h: "Command Screens",
+            h: "Command Drawers",
             rows: [
-                {label: "Production", combo: [cap(keyLabel(K.production))]},
-                {label: "Diplomacy", combo: [cap(keyLabel(K.diplomacy))]},
+                {label: "Build", combo: [cap(keyLabel(K.production))]},
+                {label: "Plan", combo: [cap(keyLabel(K.battle))]},
+                {label: "Talks", combo: [cap(keyLabel(K.diplomacy))]},
+                {label: "Nation", combo: [cap(keyLabel(K.nation))]},
+                {label: "Goals", combo: [cap(keyLabel(K.goals))]},
+                {label: "Log", combo: [cap(keyLabel(K.log))]},
                 {label: "Players (hold to show)", combo: [cap("Tab")]},
             ],
         },
@@ -63,7 +67,7 @@ export default function ControlsOverlay({keys, onClose}) {
             rows: [
                 {label: "Pause / resume", combo: [cap(keyLabel(K.pause))]},
                 {label: "Slow down · speed up", combo: [cap(keyLabel(K.speedDown)), cap(keyLabel(K.speedUp))]},
-                {label: "Jump to speed level", combo: [cap("1"), cap("2"), cap("3"), cap("4"), cap("5")]},
+                {label: "Set a speed directly", combo: [mouse("Strip control")]},
             ],
         },
         {
@@ -81,12 +85,13 @@ export default function ControlsOverlay({keys, onClose}) {
                 {label: "Pan (drag)", combo: [mouse("L-Drag")]},
                 {label: "Zoom in · out", combo: [cap(keyLabel(K.zoomIn)), cap(keyLabel(K.zoomOut))]},
                 {label: "Zoom (scroll)", combo: [mouse("Scroll")]},
-                {label: "Globe / flat view", combo: [mouse("Top-bar toggle")]},
+                {label: "Globe / flat view", combo: [mouse("Layer row")]},
             ],
         },
         {
             h: "Units & Orders",
             rows: [
+                {label: "Place a hotbar unit", combo: [cap("1"), cap("2"), cap("…"), cap("8")]},
                 {label: "Select friendly unit", combo: [mouse("L-Click")]},
                 {label: "Unit / city orders", combo: [mouse("R-Click")]},
                 {label: "Sail selected ship", combo: [mouse("R-Click"), mouse("open water")], chord: false},
@@ -100,6 +105,7 @@ export default function ControlsOverlay({keys, onClose}) {
                 {label: "Place several without reselecting", combo: [cap("Shift"), mouse("L-Click")], chord: true},
                 {label: "Order ×5 (munitions / aircraft)", combo: [cap("Shift"), mouse("Click")], chord: true},
                 {label: "Cancel targeting · back out", combo: [cap("Esc")]},
+                {label: "Close the open drawer", combo: [cap("Esc")]},
                 {label: "Pause menu", combo: [cap("Esc")]},
                 {label: "This reference", combo: [cap("?")]},
             ],
@@ -125,8 +131,8 @@ export default function ControlsOverlay({keys, onClose}) {
                         <div className={menuTitle({sm: true})} id="db-controls-title">
                             Controls
                         </div>
-                        <div className="db-controls-sub font-mono text-[10px] tracking-[0.22em] uppercase text-dim mt-1.5">
-                            Command reference · rebind keys in Settings
+                        <div className="db-controls-sub text-[12px] text-dim mt-1.5">
+                            Command reference. Rebind any key in Settings.
                         </div>
                     </div>
                     <button className={iconButton()} onClick={onClose} title="Close (Esc)" aria-label="Close controls">
@@ -136,7 +142,7 @@ export default function ControlsOverlay({keys, onClose}) {
                 <div className="db-controls-grid grid grid-cols-1 sm:grid-cols-2 gap-x-[34px] gap-y-1 mb-5">
                     {groups.map((g) => (
                         <div className="db-ctrl-group [break-inside:avoid]" key={g.h}>
-                            <div className="db-ctrl-group-h font-mono text-[10px] tracking-[0.22em] uppercase text-accent mt-3.5 mb-1.5 pb-[5px] border-b border-hair">
+                            <div className="db-ctrl-group-h text-[12px] font-semibold text-text mt-3.5 mb-1.5 pb-[5px] border-b border-hair">
                                 {g.h}
                             </div>
                             {g.rows.map((r) => (

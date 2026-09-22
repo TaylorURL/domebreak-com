@@ -39,10 +39,10 @@ export default function CountUp({value, duration = 1.4, format = (n) => Math.rou
     return (
         <span ref={ref} className="block">
             {figure}
-            {/* The track owns the segment gaps; only the amber fill moves. */}
+            {/* The track owns the segment gaps; only the white fill moves. */}
             <span className="db-seg mt-4 block h-[6px] w-full bg-line-soft [--db-seg-gap:var(--bg)]">
                 <span
-                    className="block h-full bg-gold"
+                    className="block h-full bg-accent"
                     style={{width: `${Math.round((reduce ? 1 : progress) * 100)}%`}}
                 />
             </span>

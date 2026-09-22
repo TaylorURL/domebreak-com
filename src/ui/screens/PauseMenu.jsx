@@ -46,8 +46,11 @@ export default function PauseMenu({onResume, onSave, onLoad, onSettings, onQuit,
                     </button>
                 </div>
                 {!over && (
-                    <div className="mt-3.5 font-mono text-[11px] text-dim tracking-[0.02em]">
-                        E: Production · R: Diplomacy · Space: Pause · ?: Controls · Esc: Menu · Rebind all in Settings
+                    <div className="mt-3.5 text-[11px] text-dim">
+                        <span className="font-mono">B</span> Build · <span className="font-mono">P</span> Plan ·{" "}
+                        <span className="font-mono">T</span> Talks · <span className="font-mono">Space</span> Pause ·{" "}
+                        <span className="font-mono">?</span> Controls · <span className="font-mono">Esc</span> Menu.
+                        Rebind them all in Settings.
                     </div>
                 )}
             </div>

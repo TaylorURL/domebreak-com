@@ -1,30 +1,35 @@
-// Per-participant map colors, up to 16 slots. Slot 0 (the local commander) is
-// white so "you" reads as the friendly force; hostiles keep distinct hues.
+// Per-participant identity colors, up to 16 slots, for the places a commander is
+// named away from the map: the lobby roster, the chat, the diplomacy list and the
+// battle plan. Slot 0 (the local commander) is near-white; the rest are muted
+// tones spaced far enough apart in hue and lightness to tell two commanders
+// apart in a list. Anything drawn on the map takes its ink from where you stand
+// with a nation instead: yours white, allied blue, hostile red, neutral grey.
 export const SLOT_COLOR = {
-    0: "#f0f3f7",
-    1: "#ff5d5d",
-    2: "#f4c02a",
-    3: "#46d38a",
-    4: "#b57bff",
-    5: "#ff9f43",
-    6: "#2ee6d6",
-    7: "#ff6ec7",
-    8: "#8ed14a",
-    9: "#5c7cfa",
-    10: "#ff8a5c",
-    11: "#c0e05a",
-    12: "#e05a9c",
-    13: "#5ad1e0",
-    14: "#d98cff",
-    15: "#ffd05a",
+    0: "#e8e8e8",
+    1: "#8686c1",
+    2: "#886bb3",
+    3: "#a4b36b",
+    4: "#a1b3ce",
+    5: "#b36b6b",
+    6: "#6bb388",
+    7: "#b3cea1",
+    8: "#c19d86",
+    9: "#b36ba4",
+    10: "#a1cec5",
+    11: "#c1b586",
+    12: "#6ba4b3",
+    13: "#c5a1ce",
+    14: "#6bb36b",
+    15: "#c1869d",
 };
 export const MAX_SLOTS = 16;
 
-// Per-nation colors. Slots 0–15 use the hand-tuned palette above; every slot
+// Per-nation colors. Slots 0 to 15 use the hand-tuned palette above; every slot
 // beyond it (the roster runs to ~222 nations) gets a deterministic color via
-// golden-angle hue spacing so adjacent slots stay tellable apart.
-const COLOR_S = 68,
-    COLOR_L = 62;
+// golden-angle hue spacing at the same muted saturation, so adjacent slots stay
+// tellable apart.
+const COLOR_S = 32,
+    COLOR_L = 64;
 
 export function colorForSlot(slot) {
     const hand = SLOT_COLOR[slot];
@@ -314,7 +319,7 @@ export const BATTLE_PLAN = {
     autoBuildIntervalSec: 4, // min game-seconds between auto-resupply queue actions per plan
     // Per-plan preview arc/target colors, cycled by plan index — chosen distinct
     // from the faction hues (white/red/blue/grey) so a plan never reads as a nation.
-    planColors: ["#f0a63c", "#4fd1c5", "#c084fc", "#f472b6", "#60a5fa", "#a3e635", "#fb923c", "#e879f9"],
+    planColors: ["#ffffff", "#c2c2c2", "#9ecbff", "#8f8f8f", "#c9b7d9", "#a9c9b8", "#d8c0a8", "#6f6f6f"],
     // Target categories for the Battle Planning screen. A plan selects attacker unit
     // TYPES and these target CATEGORIES (type → type), never individual map units; the
     // solver maps each at-war enemy entity to a category. `city` (types:null) = enemy

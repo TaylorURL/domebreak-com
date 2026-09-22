@@ -1,5 +1,4 @@
 import Flag from "../common/Flag.jsx";
-import {colorForSlot} from "../../game/data/constants.js";
 import {overlay, card, menuTitle, iconButton} from "../lib/variants.js";
 import Icon from "../common/Icon.jsx";
 import {cn} from "../lib/cn.js";
@@ -42,7 +41,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
     };
     const seatOf = (n) => {
         if (n.slot === mySlot) return {label: "You", cls: "text-accent-ink bg-accent border-accent"};
-        if (isHuman(n.slot)) return {label: "Player", cls: "text-[var(--ally)] border-[rgba(95,168,255,0.45)]"};
+        if (isHuman(n.slot)) return {label: "Player", cls: "text-text border-line-2"};
         return {label: "AI", cls: ""};
     };
     const commanderOf = (n) => {
@@ -68,8 +67,8 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                         <div className={menuTitle({sm: true})} id="db-players-title">
                             Players
                         </div>
-                        <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim mt-1.5">
-                            Every active power in this match · release Tab to close
+                        <div className="text-[12px] text-dim mt-1.5">
+                            Every active power in this match. Release Tab to close.
                         </div>
                     </div>
                     <button
@@ -85,25 +84,25 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                     <div
                         className={cn(
                             rowGrid,
-                            "sticky top-0 z-[1] bg-panel-solid border-b border-line font-mono text-[10px] tracking-[0.22em] uppercase text-faint",
+                            "sticky top-0 z-[1] bg-panel-solid border-b border-line text-[11px] font-medium text-faint",
                         )}
                         role="row"
                     >
-                        <span className="text-right font-mono text-xs text-faint" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             #
                         </span>
                         <span role="columnheader">Power</span>
                         <span role="columnheader">Commander</span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Cities
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Forces
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Pop
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             GDP
                         </span>
                         <span role="columnheader">Standing</span>
@@ -144,20 +143,17 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                     {i + 1}
                                 </span>
                                 <span className="flex items-center gap-[11px] min-w-0" role="rowheader">
-                                    <span
-                                        className="flex-none w-[30px] h-[20px] grid place-items-center overflow-hidden border rounded-[3px] [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
-                                        style={{borderColor: n.color || colorForSlot(n.slot)}}
-                                    >
+                                    <span className="flex-none w-[30px] h-[20px] grid place-items-center overflow-hidden border border-line [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
                                         <Flag iso={n.iso} />
                                     </span>
-                                    <b className="font-display font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <b className="font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">
                                         {n.name}
                                     </b>
                                 </span>
                                 <span className="flex items-center gap-[8px] min-w-0" role="cell">
                                     <span
                                         className={cn(
-                                            "inline-block px-[8px] py-[2px] font-mono text-[9.5px] tracking-[0.5px] border border-line rounded-full text-dim whitespace-nowrap",
+                                            "inline-block px-[8px] py-[2px] text-[10.5px] font-medium border border-line rounded-none text-dim whitespace-nowrap",
                                             s.cls,
                                         )}
                                     >
@@ -193,15 +189,15 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                 </span>
                                 <span role="cell">
                                     {isMe ? (
-                                        <span className="font-mono text-[11px] text-dim">Home</span>
+                                        <span className="text-[11.5px] text-dim">Home</span>
                                     ) : !n.alive ? (
-                                        <span className="font-mono text-[11px] text-dim">Eliminated</span>
+                                        <span className="text-[11.5px] text-dim">Eliminated</span>
                                     ) : r === "war" ? (
-                                        <span className="font-mono text-[11px] text-red">At War</span>
+                                        <span className="text-[11.5px] text-danger">At War</span>
                                     ) : r === "ally" ? (
-                                        <span className="font-mono text-[11px] text-[var(--ally)]">Allied</span>
+                                        <span className="text-[11.5px] text-text">Allied</span>
                                     ) : (
-                                        <span className="font-mono text-[11px] text-good">At Peace</span>
+                                        <span className="text-[11.5px] text-dim">At Peace</span>
                                     )}
                                 </span>
                             </div>

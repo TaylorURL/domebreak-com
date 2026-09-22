@@ -19,7 +19,7 @@ import {cn} from "../lib/cn.js";
 // living world (every other country is world AI, as in single player).
 
 const RAIL_PAD = 360; // left projection padding so the globe clears the rail
-const MINE_COLOR = "#f2b544"; // the amber accent for YOUR own claimed nation — unmistakable vs the grey map
+const MINE_COLOR = "#ffffff"; // white for YOUR own claimed nation — unmistakable against the grey map
 
 // Average lng/lat of a nation's cities — a good-enough centroid to fly the globe
 // to when the player claims that country.
@@ -174,7 +174,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
             for (const mem of members) {
                 const gid = toGid3(mem.iso);
                 if (!gid) continue; // dedupe by GID_0 (match labels must be unique)
-                // YOUR nation glows vivid gold; opponents keep their slot color.
+                // Your own pick is white; opponents keep their slot colour.
                 picks[gid] = me?.id === mem.userId ? MINE_COLOR : SLOT_COLOR[mem.slot] || "#8ecae6";
             }
             // Paint the optimistic pick immediately, before the server echo lands.
@@ -347,40 +347,40 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                 />
             </div>
             <div
-                className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(4,6,9,0.42)_82%,rgba(4,6,9,0.72)_100%)]"
+                className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(0,0,0,0.5)_82%,rgba(0,0,0,0.8)_100%)]"
                 aria-hidden="true"
             />
 
             <aside
                 className="absolute top-0 left-0 bottom-0 z-[2] w-96 max-w-[84vw] flex flex-col pt-[46px] pr-[46px] pb-[22px] pl-10 text-left pointer-events-none animate-[dbRailIn_520ms_var(--ease-out-db)_both] motion-reduce:animate-none
-                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(7,9,13,0.82)_0%,rgba(7,9,13,0.58)_52%,rgba(7,9,13,0)_100%)] before:backdrop-blur-[9px] before:[backdrop-filter:blur(9px)_saturate(1.1)] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]
-                after:content-[''] after:absolute after:top-5 after:left-5 after:w-4 after:h-4 after:border-t after:border-l after:border-line-soft"
+                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.64)_52%,rgba(0,0,0,0)_100%)] before:backdrop-blur-[9px] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]"
             >
                 <div className="mb-[34px]">
-                    <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-led db-led-live" />
-                        Matchmaking · War Room
+                    <div className="flex items-center gap-2 mb-4 text-[11px] font-medium text-faint">
+                        <span className="db-led db-led-warn" />
+                        Matchmaking
                     </div>
-                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
+                    <h1 className="font-semibold text-[46px] tracking-[0.08em] leading-[44px] text-dim">
                         WAR
-                        <span className="db-title-glow block text-text">ROOM</span>
+                        <span className="block text-text">ROOM</span>
                     </h1>
-                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
-                        {humans} commander{humans !== 1 ? "s" : ""} in the war room
+                    <p className="text-dim text-[13px] mt-3 mb-0">
+                        <span className="font-mono tabular-nums">{humans}</span> commander
+                        {humans !== 1 ? "s" : ""} in the war room
                     </p>
                 </div>
 
                 {revertErr && (
-                    <p className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 pointer-events-auto">
+                    <p className="text-danger bg-[rgba(224,87,79,0.12)] border border-danger py-2 px-3 text-[12.5px] mt-2.5 pointer-events-auto">
                         War server unreachable. Try again.
                     </p>
                 )}
 
                 <div className="pointer-events-none flex flex-col gap-[5px] mb-4">
-                    <span className="font-mono text-[10px] tracking-[2.5px] uppercase text-faint">Your Nation</span>
+                    <span className="text-[11px] font-medium text-faint">Your Nation</span>
                     <span
                         className={cn(
-                            "flex items-center gap-[9px] font-sans text-[19px] font-bold text-text [&_.db-flag]:w-[26px] [&_.db-flag]:rounded-[3px] [&_img]:w-[26px] [&_img]:rounded-[3px]",
+                            "flex items-center gap-[9px] text-[19px] font-semibold text-text [&_.db-flag]:w-[26px] [&_img]:w-[26px]",
                             !myIso && "text-[13px] font-medium text-faint",
                         )}
                     >
@@ -406,9 +406,9 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                             <div
                                 key={m.userId ?? `p-${m.slot}`}
                                 className={cn(
-                                    "db-notch-sm flex items-center gap-[9px] py-2 px-[11px] border border-line-soft bg-[rgba(9,11,15,0.5)] transition-colors duration-[var(--dur-fast)] [&_.db-flag]:w-[22px] [&_.db-flag]:rounded-[2px] [&_.db-flag]:shrink-0 [&_img]:w-[22px] [&_img]:rounded-[2px] [&_img]:shrink-0",
-                                    r && "border-accent-line bg-accent-soft",
-                                    own && !r && "border-accent-line bg-[rgba(9,11,15,0.72)]",
+                                    "flex items-center gap-[9px] py-2 px-[11px] border border-line bg-bg-2 transition-colors duration-[var(--dur-fast)] [&_.db-flag]:w-[22px] [&_.db-flag]:shrink-0 [&_img]:w-[22px] [&_img]:shrink-0",
+                                    r && "border-accent bg-accent-soft",
+                                    own && !r && "border-line-2",
                                 )}
                                 role="listitem"
                                 aria-label={`${m.username || "Commander"}${own ? " (you)" : ""}, ${m.iso || "no nation"}, ${r ? "ready" : "not ready"}`}
@@ -424,8 +424,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                 </span>
                                 <span
                                     className={cn(
-                                        "inline-flex items-center gap-1 font-mono text-[10px] tracking-[1px] uppercase shrink-0",
-                                        r ? "text-accent" : "text-faint",
+                                        "inline-flex items-center gap-1 text-[11px] font-medium shrink-0",
+                                        r ? "text-text" : "text-faint",
                                     )}
                                 >
                                     {r && <Icon name="check" size={10} strokeWidth={2.4} />}
@@ -439,10 +439,8 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                 {/* Ready tally + your-ready state + live activity feed. */}
                 <div className="pointer-events-none mb-3 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                        <span className="font-mono text-[10px] tracking-[2.5px] uppercase text-faint">Ready</span>
-                        <span
-                            className={cn("font-mono text-[12px] tracking-[1px]", allReady ? "text-accent" : "text-dim")}
-                        >
+                        <span className="text-[11px] font-medium text-faint">Ready</span>
+                        <span className={cn("font-mono tabular-nums text-[12px]", allReady ? "text-text" : "text-dim")}>
                             {readyCount} / {members.length}
                         </span>
                     </div>
@@ -454,7 +452,7 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                                     key={m.userId ?? m.slot}
                                     className={cn(
                                         "h-[6px] flex-1 transition-colors duration-[var(--dur)] motion-reduce:transition-none",
-                                        r ? "bg-accent" : "bg-line-soft",
+                                        r ? "bg-accent" : "bg-line",
                                     )}
                                 />
                             );
@@ -462,15 +460,15 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     </div>
                     <span
                         className={cn(
-                            "db-notch-sm self-start inline-flex items-center gap-1.5 font-mono text-[10px] tracking-[1.5px] uppercase px-2 py-1 border transition-colors duration-[var(--dur-fast)]",
-                            ready ? "text-accent border-accent-line bg-accent-soft" : "text-faint border-line",
+                            "self-start inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 border transition-colors duration-[var(--dur-fast)]",
+                            ready ? "text-text border-accent bg-accent-soft" : "text-faint border-line",
                         )}
                     >
                         {ready && <Icon name="check" size={10} strokeWidth={2.4} />}
                         {ready ? "You are ready" : "You are not ready"}
                     </span>
                     <span
-                        className={cn("text-[12px] leading-snug", starting || allReady ? "text-accent" : "text-dim")}
+                        className={cn("text-[12px] leading-snug", starting || allReady ? "text-text" : "text-dim")}
                         role="status"
                         aria-live="polite"
                     >
@@ -495,40 +493,33 @@ export default function LobbyScreen({lobbyId, me, connecting, onLaunch, onLeft, 
                     <button
                         type="button"
                         className={cn(
-                            "db-notch-sm w-full flex items-center justify-between gap-2 px-3 py-2 border border-line-soft bg-[rgba(9,11,15,0.5)] text-left transition-colors duration-[var(--dur-fast)] hover:border-line",
-                            rulesOpen && "border-accent-line bg-accent-soft",
+                            "w-full flex items-center justify-between gap-2 px-3 py-2 border border-line bg-bg-2 text-left transition-colors duration-[var(--dur-fast)] hover:border-line-2",
+                            rulesOpen && "border-accent bg-accent-soft",
                         )}
                         onClick={() => setRulesOpen((o) => !o)}
                         aria-expanded={rulesOpen}
                         aria-controls="db-lobby-rules"
                     >
                         <span className="flex flex-col">
-                            <span className="font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                                Game Rules
-                            </span>
+                            <span className="text-[11px] font-medium text-faint">Game Rules</span>
                             <span className="text-[12px] text-dim">
                                 {rules.activeCount} nations · {rules.startPoints} pts ·{" "}
                                 {Math.round(rules.dominationPopFrac * 100)}% dom · {rules.playerGraceSec}s grace
                             </span>
                         </span>
-                        <span
-                            className={cn(
-                                "font-mono text-[11px] text-dim transition-transform",
-                                rulesOpen && "rotate-90",
-                            )}
-                        >
-                            &rsaquo;
-                        </span>
+                        <Icon
+                            name="chevron-down"
+                            size={14}
+                            className={cn("text-dim transition-transform", rulesOpen && "rotate-180")}
+                        />
                     </button>
                     {rulesOpen && (
                         <div
                             id="db-lobby-rules"
-                            className="db-card-scroll db-notch-sm max-h-[46vh] overflow-y-auto border border-line-soft bg-[rgba(9,11,15,0.6)] p-3"
+                            className="db-card-scroll max-h-[46vh] overflow-y-auto border border-line bg-bg-2 p-3"
                         >
                             <GameRulesForm mode="mp" rules={rules} onChange={onRulesChange} />
-                            <p className="mt-2 font-mono text-[10px] text-faint tracking-[1px] uppercase">
-                                Shared with the whole war room.
-                            </p>
+                            <p className="mt-2 text-[11px] text-faint">Shared with the whole war room.</p>
                         </div>
                     )}
                     <button

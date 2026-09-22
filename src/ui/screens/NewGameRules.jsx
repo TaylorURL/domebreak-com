@@ -1,5 +1,6 @@
 import {useState} from "react";
 import Flag from "../common/Flag.jsx";
+import Icon from "../common/Icon.jsx";
 import GameRulesForm from "./GameRulesForm.jsx";
 import AiNationPicker from "./AiNationPicker.jsx";
 import {DEFAULT_RULES, normalizeRules} from "../../game/sim/gameRules.js";
@@ -20,7 +21,7 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
     const setAiPicks = (next) => setRules((r) => normalizeRules({...r, aiPicks: next}));
     return (
         <div className="absolute inset-0 z-10 grid place-items-center overflow-auto p-6">
-            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_130%_95%_at_50%_42%,transparent_42%,rgba(4,6,9,0.32)_76%,rgba(4,6,9,0.6)_100%)]" />
+            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_130%_95%_at_50%_42%,transparent_45%,rgba(0,0,0,0.85)_100%)]" />
             <div className={cn(card(), "w-[min(520px,94vw)] text-left max-h-[92vh] overflow-auto")}>
                 <div className="db-card-head">
                     <div>
@@ -32,15 +33,8 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                 </div>
                 {nation && (
                     <div className="mb-4 flex items-center gap-2">
-                        <span className="font-display uppercase tracking-[1.5px] text-[11px] font-semibold text-faint">
-                            Commander
-                        </span>
-                        <span
-                            className={cn(
-                                chip({subtle: true}),
-                                "inline-flex items-center gap-1.5 normal-case tracking-normal",
-                            )}
-                        >
+                        <span className="text-[11px] font-medium text-faint">Commander</span>
+                        <span className={cn(chip({subtle: true}), "inline-flex items-center gap-1.5")}>
                             <Flag iso={nation.iso} />
                             <span className="truncate">{nation.name}</span>
                         </span>
@@ -51,29 +45,27 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                     <button
                         type="button"
                         className={cn(
-                            "db-notch-sm w-full flex items-center justify-between gap-2 px-3 py-2 border border-line-soft bg-sunk text-left transition-colors duration-[var(--dur-fast)] hover:border-line",
-                            aiOpen && "border-accent-line bg-accent-soft",
+                            "w-full flex items-center justify-between gap-2 px-3 py-2 border border-line bg-sunk text-left transition-colors duration-[var(--dur-fast)] hover:border-line-2",
+                            aiOpen && "border-accent bg-accent-soft",
                         )}
                         onClick={() => setAiOpen((o) => !o)}
                         aria-expanded={aiOpen}
                         aria-controls="db-newgame-ai-nations"
                     >
                         <span className="flex flex-col">
-                            <span className="font-display uppercase tracking-[1.5px] text-[11px] font-semibold text-faint">
-                                AI Nations
-                            </span>
+                            <span className="text-[11px] font-medium text-faint">AI Nations</span>
                             <span className="text-[12px] text-dim">
                                 {aiPicks.length ? `${aiPicks.length} pinned` : "Random"}
                             </span>
                         </span>
-                        <span
-                            className={cn("font-mono text-[11px] text-dim transition-transform", aiOpen && "rotate-90")}
-                        >
-                            &rsaquo;
-                        </span>
+                        <Icon
+                            name="chevron-down"
+                            size={14}
+                            className={cn("text-dim transition-transform", aiOpen && "rotate-180")}
+                        />
                     </button>
                     {aiOpen && (
-                        <div id="db-newgame-ai-nations" className="db-notch-sm border border-line-soft bg-sunk p-3">
+                        <div id="db-newgame-ai-nations" className="border border-line bg-sunk p-3">
                             <p className="mt-0 mb-2.5 text-[11px] leading-snug text-dim">
                                 Pin the nations you want to fight. Pinned nations always join the war; any remaining
                                 Active Nations slots are filled at random. Leave empty for a fully random cast.

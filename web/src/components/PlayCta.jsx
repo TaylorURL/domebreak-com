@@ -5,9 +5,9 @@ import {button} from "../lib/variants.js";
 
 // Primary "Play Free" call to action — the site's main conversion. Routes to
 // the download page (the account gate lives there). It is the primary button of
-// the shared control vocabulary: the amber fill on the notched silhouette, with
-// the one sheen sweep it takes on hover. One component so every headline CTA
-// reads the same, and so there is only ever one of them in a view.
+// the shared control vocabulary: a white fill with black ink. One component so
+// every headline CTA reads the same, and so there is only ever one of them in a
+// view.
 export default function PlayCta({className, size = "lg", onClick}) {
     return (
         <button

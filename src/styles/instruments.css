@@ -8,4 +8,148 @@
    Tailwind's utilities. */
 
 @layer vfx {
+    /* The instrument control. A secondary button by default: transparent over
+       whatever it floats on, one --line-2 hairline, white Inter at 600. The
+       border brightens to white under a pointer, and the active state is the
+       accent itself, white fill on black text, so an order that is holding
+       reads as a state rather than as a label. */
+    .db-ibtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--line-2);
+        background: transparent;
+        color: var(--text);
+        font:
+            600 12.5px var(--sans),
+            sans-serif;
+        white-space: nowrap;
+        transition:
+            border-color var(--dur-fast) var(--ease-out),
+            background-color var(--dur-fast) var(--ease-out),
+            color var(--dur-fast) var(--ease-out);
+    }
+
+    .db-ibtn:enabled:hover,
+    .db-ibtn:not(button):hover {
+        border-color: var(--accent);
+    }
+
+    .db-ibtn.sm {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 12px;
+    }
+
+    .db-ibtn.on,
+    .db-ibtn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-ink);
+    }
+
+    .db-ibtn.on:enabled:hover,
+    .db-ibtn.primary:enabled:hover {
+        background: var(--accent-hi);
+        border-color: var(--accent-hi);
+    }
+
+    .db-ibtn.danger {
+        border-color: rgba(224, 87, 79, 0.45);
+        color: var(--red);
+    }
+
+    .db-ibtn.danger:enabled:hover {
+        border-color: var(--red);
+        background: rgba(224, 87, 79, 0.12);
+    }
+
+    .db-ibtn.ghost {
+        border-color: transparent;
+        color: var(--dim);
+    }
+    .db-ibtn.ghost:enabled:hover {
+        border-color: transparent;
+        color: var(--text);
+    }
+
+    .db-ibtn.ghost:enabled:hover {
+        border-color: transparent;
+        color: var(--text);
+    }
+
+    .db-ibtn:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    /* A stat box: one mono figure over its label, inside a hairline. Three of
+       them sit across the selection card; the country dossier uses the same
+       box at its own size. `ok` is the one place a figure carries colour, for
+       a unit that is ready to fire. */
+    .db-statbox {
+        border: 1px solid var(--line);
+        padding: 7px 9px;
+        min-width: 0;
+    }
+
+    .db-statbox b {
+        display: block;
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .db-statbox span {
+        font-size: 10.5px;
+        color: var(--faint);
+    }
+
+    .db-statbox.ok b {
+        color: var(--good);
+    }
+
+    .db-statbox.dim b {
+        color: var(--dim);
+    }
+
+    /* Section label inside an instrument: Inter, sentence weight, no tracking.
+       The heading over the payload picker, the hangar and the leadership
+       block. */
+    .db-kicker {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--faint);
+        margin-bottom: 6px;
+    }
+
+    /* The war outcome card's edge rule: red when it announces a war or a
+       defeat, white for everything else. Three pixels on the leading edge,
+       drawn inside the panel's own hairline. */
+    .db-edge-rule {
+        position: relative;
+    }
+
+    .db-edge-rule::before {
+        content: "";
+        position: absolute;
+        left: -1px;
+        top: -1px;
+        bottom: -1px;
+        width: 3px;
+        background: var(--accent);
+    }
+
+    .db-edge-rule.danger::before {
+        background: var(--red);
+    }
 }

@@ -78,16 +78,13 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
     const canDismiss = forced ? phase === "error" || !canSelfUpdate : !busy;
     return (
         <div
-            className="fixed inset-0 z-50 grid place-items-center p-6 bg-[rgba(4,6,9,0.72)] backdrop-blur-[6px] pointer-events-auto"
+            className="fixed inset-0 z-50 grid place-items-center p-6 bg-[rgba(0,0,0,0.76)] backdrop-blur-[6px] pointer-events-auto"
             role="dialog"
             aria-modal="true"
             aria-labelledby="db-update-title"
         >
-            <div className="db-notch db-scan relative w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-accent-line bg-[rgba(18,16,8,0.96)] text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
-                <div
-                    id="db-update-title"
-                    className="font-display text-accent text-[22px] font-bold tracking-[2px] uppercase text-center"
-                >
+            <div className="relative w-[min(520px,94vw)] grid gap-3 px-7 py-[24px] border border-line bg-panel-2 text-text motion-safe:animate-[dbPop_220ms_var(--ease-out)]">
+                <div id="db-update-title" className="text-[20px] font-semibold tracking-[-0.01em] text-center">
                     {forced ? "Update Required" : "Update Available"}
                 </div>
                 <p className="text-center text-[13px] text-dim m-0">
@@ -104,7 +101,7 @@ export default function UpdateOverlay({currentVersion, latestVersion, forced = f
                 )}
                 {busy && (
                     <div
-                        className="db-seg h-1.5 overflow-hidden bg-[rgba(255,255,255,0.1)] [--db-seg-gap:rgba(18,16,8,0.96)]"
+                        className="h-1 overflow-hidden bg-line"
                         role="progressbar"
                         aria-valuemin={0}
                         aria-valuemax={100}

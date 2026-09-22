@@ -24,6 +24,17 @@ import {
     vitalityOf,
 } from "../../game/engine.js";
 
+// Where you stand with a power, as one word and the one colour it earns: red
+// for a power at war with you, green for an ally, and nothing at all for the
+// rest.
+function standing(slot, mySlot, relation) {
+    if (slot === mySlot) return ["Yours", undefined];
+    const rel = relation(slot);
+    if (rel === "war") return ["At War", "text-red"];
+    if (rel === "ally") return ["Allied", "text-good"];
+    return ["At Peace", undefined];
+}
+
 export default function HoverPopups({
     hover,
     hoverEnt,
@@ -66,12 +77,10 @@ export default function HoverPopups({
                     }
                     const cities = w.cities.filter((c) => c.slot === nation.slot && c.alive);
                     const pop = populationOf(w, nation.slot);
+                    const [word, tone] = standing(nation.slot, mySlot, relation);
                     const rows = [
-                        [
-                            "Status",
-                            nation.slot === mySlot ? "Yours" : relation(nation.slot) === "war" ? "At War" : "At Peace",
-                        ],
-                        ["Standing", cities.length ? "Active" : "Eliminated"],
+                        ["Standing", word, tone],
+                        ["Status", cities.length ? "Active" : "Eliminated"],
                         ["Population", fmtPop(pop)],
                         ["GDP", fmtGdp(gdpOf(w, nation.slot))],
                         ["States", cities.length],
@@ -98,8 +107,10 @@ export default function HoverPopups({
                         footer = null;
                     if (hover.kind === "unit") {
                         const def = UNITS[hoverEnt.type];
+                        const [word, tone] = standing(hoverEnt.slot, mySlot, relation);
                         rows = [
                             ["Owner", nationName(hoverEnt.slot)],
+                            ["Standing", word, tone],
                             ["Class", def.kind],
                         ];
                         if (def.kind === "industry") {
@@ -112,7 +123,7 @@ export default function HoverPopups({
                             rows.push(["Armament", armOf(hoverEnt.type, hoverEnt.slot)]);
                         if (def.navalSpeed)
                             rows.push(["Speed", `${def.navalSpeed} kn${hoverEnt.dest ? " · Sailing" : ""}`]);
-                        if (def.airSpeed) rows.push(["Air Spd", `${def.airSpeed} kn`]);
+                        if (def.airSpeed) rows.push(["Air speed", `${def.airSpeed} kn`]);
                         if (def.radarKm) rows.push(["Radar", `${def.radarKm} km`]);
                         if (def.wing)
                             rows.push([
@@ -131,30 +142,24 @@ export default function HoverPopups({
                             </>
                         );
                     } else {
+                        const [word, tone] = standing(hoverEnt.slot, mySlot, relation);
                         rows = [
                             ["Nation", nationName(hoverEnt.slot)],
                             ["State", hoverEnt.state || "—"],
                             ["Population", fmtPop(hoverEnt.pop * vitalityOf(hoverEnt))],
                             ["Economy", hoverEnt.econ ? (hoverEnt.econ * 100).toFixed(1) + "%" : "—"],
                             ["HP", `${Math.max(0, Math.round(hoverEnt.hp))}/${hoverEnt.maxHp}`],
-                            [
-                                "Status",
-                                hoverEnt.slot === mySlot
-                                    ? "Yours"
-                                    : relation(hoverEnt.slot) === "war"
-                                      ? "At War"
-                                      : "At Peace",
-                            ],
+                            ["Standing", word, tone],
                         ];
                         // Radioactive contamination: only shown when the city sits under an
                         // active fallout cloud. Reports the live loss rate and roughly how
-                        // long the hazard lingers.
+                        // long the hazard lingers — a live danger, so it reads red.
                         const fo = falloutDoseAt(w, hoverEnt.lng, hoverEnt.lat);
                         if (fo.remain > 0)
                             rows.push([
                                 "Fallout",
                                 `−${(fo.dose * FALLOUT.dmgPerSec).toFixed(1)} hp/s · ~${Math.ceil(fo.remain)}s`,
-                                "text-[#a6ff5c]",
+                                "text-red",
                             ]);
                         header = (
                             <>
@@ -168,7 +173,7 @@ export default function HoverPopups({
                         footer = (
                             <Meter
                                 frac={vitalityOf(hoverEnt)}
-                                fillClass={vitalityOf(hoverEnt) <= 0.35 ? "bg-danger" : "bg-good"}
+                                fillClass={vitalityOf(hoverEnt) <= 0.35 ? "bg-danger" : "bg-accent"}
                                 className="mt-2"
                             />
                         );
@@ -197,18 +202,18 @@ function NeutralReadout({x, y, header, wiped}) {
     const top = Math.min(Math.max(60, y - 14), window.innerHeight - 170);
     return (
         <div
-            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] pt-0 px-[13px] pb-3")}
-            style={{left, top, "--db-tab": "86px"}}
+            className={cn(popoverCard(), "fixed z-6 min-w-[212px] max-w-[252px] px-[13px] pt-0 pb-3")}
+            style={{left, top}}
             aria-hidden="true"
         >
-            <div className="flex items-center gap-2 -mx-[13px] px-[13px] py-[9px] border-b border-hair font-display font-bold text-[13.5px] tracking-[0.02em]">
+            <div className="flex items-center gap-2 -mx-[13px] px-[13px] py-[9px] border-b border-hair text-[13.5px] font-semibold">
                 {header}
             </div>
-            <div className="db-notch-sm mt-[11px] inline-flex items-center gap-[7px] px-[8px] py-[3px] rounded-none border border-line-soft font-mono text-[9px] tracking-[0.18em] uppercase text-dim">
-                <i className="db-led text-faint shadow-none" aria-hidden="true" />
+            <div className="mt-[11px] inline-flex items-center gap-[7px] px-[8px] py-[3px] border border-line text-[11px] text-dim">
+                <i className="db-led text-faint" aria-hidden="true" />
                 <span>{wiped ? "Wiped Out" : "Neutral Territory"}</span>
             </div>
-            <p className="mt-[9px] text-[11.5px] leading-[1.45] text-dim">
+            <p className="mt-[9px] mb-0 text-[11.5px] leading-[1.45] text-dim">
                 {wiped
                     ? "Beaten below the surrender line and knocked out of the war. Its remnant land now lies open."
                     : "Sitting the war out, neutral from first shot to last."}

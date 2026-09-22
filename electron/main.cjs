@@ -126,11 +126,11 @@ async function createWindow() {
         minWidth: 1024,
         minHeight: 680,
         icon: ICON,
-        backgroundColor: "#05080f",
+        backgroundColor: "#000000",
         title: "DomeBreak",
         titleBarStyle: "hidden",
         trafficLightPosition: {x: 14, y: 18},
-        titleBarOverlay: {color: "#05080f", symbolColor: "#9ba1ab", height: 34},
+        titleBarOverlay: {color: "#000000", symbolColor: "#a3a3a3", height: 34},
         webPreferences: {
             contextIsolation: true,
             preload: path.join(__dirname, "preload.cjs"),

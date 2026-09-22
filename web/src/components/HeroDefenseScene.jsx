@@ -40,17 +40,18 @@ const LAT_AMP = 0.9,
     LAT_PERIOD_S = 38;
 
 // MapLibre paint properties take a literal colour, not a custom property, so
-// the scene carries the theme's own values rather than reading them. Each one
-// is the token it is named after: sensor cyan for everything the defence grid
-// owns, the neutral line and text greys for the rest of the world.
-const DEFENDER = "#7fd4ff"; // --cyan: US units, cities highlight, defense rings
-const RADAR_TINT = "#7fd4ff"; // --cyan: radar coverage, dashed and dimmer than the rings
-const US_TINT = "#2f7fb0"; // homeland wash — light enough that terrain reads through
-const US_LINE = "#7fd4ff"; // --cyan: glowing national border
-const NEUTRAL_TINT = "#6b7580"; // --faint: nations colors.json has no entry for
-const NEUTRAL_LINE = "#2b3037"; // --line: their borders, one step down from the wash
-const BACKDROP_CITY = "#6b7580"; // --faint: every other nation's cities, unlit
-const CITY_HALO = "#f2f4f6"; // --text: ring around the homeland's own cities
+// the scene carries the theme's own values rather than reading them. The board
+// is black and white: pale blue is the sensor colour and belongs to the
+// coverage rings alone, and everything else is one of the greys the page is
+// already set in.
+const SENSOR = "#9ecbff"; // --cyan: the coverage rings and the interceptors flying
+const DEFENDER = "#f4f4f4"; // --text: US units and the homeland's own cities
+const US_TINT = "#3f3f3f"; // homeland wash — light enough that terrain reads through
+const US_LINE = "#f4f4f4"; // --text: the national border
+const NEUTRAL_TINT = "#5e5e5e"; // --faint: nations colors.json has no entry for
+const NEUTRAL_LINE = "#1f1f1f"; // --line over black: their borders, one step down from the wash
+const BACKDROP_CITY = "#5e5e5e"; // --faint: every other nation's cities, unlit
+const CITY_HALO = "#f4f4f4"; // --text: ring around the homeland's own cities
 // National tint opacity: the US washed a touch stronger than its neighbors. Flat
 // values (not a zoom ramp) because the hero holds a fixed close zoom — and MapLibre
 // forbids a zoom expression nested inside the per-nation match anyway.
@@ -362,9 +363,9 @@ function Scene({onReady, still}) {
         };
     }, []);
 
-    // Paint the political map the way the live game does — every nation washed in
-    // its own flag color from colors.json — then lift the US out as the highlighted
-    // defender with a brighter wash and a glowing border. Also nudge the terrain
+    // Paint the political map: every nation washed at the weight its own flag
+    // colour carries, read off colors.json and taken to grey, then the US lifted
+    // out of it with a stronger wash and a white border. Also nudge the terrain
     // relief up a touch so the close-in view reads at full game fidelity. `cols`
     // may be null before colors.json loads; the US emphasis still applies.
     const paintMap = (m, cols) => {
@@ -372,13 +373,16 @@ function Scene({onReady, still}) {
             const tint = [];
             const line = [];
             if (cols) {
-                const mix = (v, g) => Math.round(v * 0.6 + g * 0.4); // borders muted toward neutral
+                // Rec. 709 luminance, held inside a narrow band so a dark flag
+                // and a bright one both read as a wash rather than as ink.
+                const grey = (c, lo, hi) => {
+                    const l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+                    const v = Math.round(lo + l * (hi - lo));
+                    return `rgb(${v},${v},${v})`;
+                };
                 for (const [gid, c] of Object.entries(cols)) {
-                    tint.push(gid, gid === "USA" ? US_TINT : `rgb(${c[0]},${c[1]},${c[2]})`);
-                    line.push(
-                        gid,
-                        gid === "USA" ? US_LINE : `rgb(${mix(c[0], 96)},${mix(c[1], 100)},${mix(c[2], 108)})`,
-                    );
+                    tint.push(gid, gid === "USA" ? US_TINT : grey(c, 56, 132));
+                    line.push(gid, gid === "USA" ? US_LINE : grey(c, 38, 86));
                 }
             } else {
                 tint.push("USA", US_TINT);
@@ -679,12 +683,12 @@ function Scene({onReady, still}) {
                 {/* Radar coverage — the game's dashed picket (drawn under defense
                     rings so the tighter engagement bubbles read on top). */}
                 <Source id="hero-radar" type="geojson" data={radarFC}>
-                    <Layer id="radar-fill" type="fill" paint={{"fill-color": RADAR_TINT, "fill-opacity": 0.04}} />
+                    <Layer id="radar-fill" type="fill" paint={{"fill-color": SENSOR, "fill-opacity": 0.04}} />
                     <Layer
                         id="radar-ring"
                         type="line"
                         paint={{
-                            "line-color": RADAR_TINT,
+                            "line-color": SENSOR,
                             "line-width": 0.9,
                             "line-opacity": 0.4,
                             "line-dasharray": [3, 3],
@@ -694,11 +698,11 @@ function Scene({onReady, still}) {
 
                 {/* Defense engagement rings — the game's solid battery footprints. */}
                 <Source id="hero-defense" type="geojson" data={defenseFC}>
-                    <Layer id="defense-fill" type="fill" paint={{"fill-color": DEFENDER, "fill-opacity": 0.05}} />
+                    <Layer id="defense-fill" type="fill" paint={{"fill-color": SENSOR, "fill-opacity": 0.05}} />
                     <Layer
                         id="defense-ring"
                         type="line"
-                        paint={{"line-color": DEFENDER, "line-width": 0.9, "line-opacity": 0.45}}
+                        paint={{"line-color": SENSOR, "line-width": 0.9, "line-opacity": 0.45}}
                     />
                 </Source>
 
@@ -745,7 +749,7 @@ function Scene({onReady, still}) {
                                 className="inline-flex"
                                 style={{transform: `rotate(${a.heading}deg) scale(${(0.7 + a.alt * 0.3).toFixed(3)})`}}
                             >
-                                <UnitIcon name={UNIT_ICON.interceptor} color={DEFENDER} size={16} />
+                                <UnitIcon name={UNIT_ICON.interceptor} color={SENSOR} size={16} />
                             </span>
                         </div>
                     </Marker>
