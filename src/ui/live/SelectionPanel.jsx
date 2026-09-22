@@ -634,7 +634,7 @@ export default function SelectionPanel({
                         )}
                         {selectedUnit.targetId ? (
                             <button className={button()} onClick={() => api.commandAttack(selectedUnit.id, null)}>
-                                Hold fire
+                                Hold Fire
                             </button>
                         ) : (
                             <button
