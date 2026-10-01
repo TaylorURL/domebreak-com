@@ -43,7 +43,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                 </div>
 
                                 <h1 className="mt-4 text-[clamp(1.6rem,4vw,2.3rem)] font-semibold leading-[1.06] tracking-[-0.02em] text-text">
-                                    {checking ? "One moment" : "Create a free account"}
+                                    {checking ? "One moment" : "Download DomeBreak with a free account"}
                                 </h1>
                                 <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">
                                     {checking

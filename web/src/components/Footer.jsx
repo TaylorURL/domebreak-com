@@ -94,7 +94,7 @@ export default function Footer({onShowShortcuts}) {
                         <div className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 border border-line px-3 py-2 text-[12px] text-faint">
                             <span className="flex items-center gap-2">
                                 <span className="db-led db-led-accent" />
-                                Now Live · Free to Play
+                                Now live · Free to play
                             </span>
                             <span className="flex items-center gap-2">
                                 <span className="db-led db-led-accent" />

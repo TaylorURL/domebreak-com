@@ -341,7 +341,7 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                 <Stat
                     icon="map"
                     value={<span aria-live="polite">{powers}</span>}
-                    label="Powers in the war"
+                    label="Powers in the War"
                     className="max-[1681px]:hidden"
                 />
                 {lead && (
@@ -363,8 +363,8 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                                 {lead.atCities.map((c) => (
                                     <Line key={c.name} label={c.name} value={c.n} />
                                 ))}
-                                {lead.sheltered > 0 && <Line label="In the bunker" value={lead.sheltered} />}
-                                {lead.inTransit > 0 && <Line label="In transit" value={lead.inTransit} />}
+                                {lead.sheltered > 0 && <Line label="In the Bunker" value={lead.sheltered} />}
+                                {lead.inTransit > 0 && <Line label="In Transit" value={lead.inTransit} />}
                                 {lead.lost > 0 && <Line label="Killed" value={lead.lost} tone="danger" />}
                                 {!lead.atCities.length && !lead.sheltered && !lead.inTransit && !lead.lost && (
                                     <div className="text-faint">No leaders located.</div>

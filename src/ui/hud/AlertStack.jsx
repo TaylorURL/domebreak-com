@@ -165,7 +165,7 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
               (lead.sites.length > 3 ? ` and ${lead.sites.length - 3} more cities` : "")
             : "the field";
         const infra = !lead.hasBunker
-            ? "Build a Leadership Bunker to shelter your command."
+            ? "Build a Leadership Bunker to shelter your leaders."
             : !lead.hasAirstrip
               ? "Build an Airstrip to fly the airlift."
               : null;
@@ -180,8 +180,8 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
                     title={exposed ? "Leadership is exposed" : "Leadership is sheltered"}
                     body={
                         exposed
-                            ? infra || `Your command sits in ${where}. A strike there decapitates you.`
-                            : "Your command is buttoned up in the bunker. Release them to restore full command."
+                            ? infra || `Your leaders sit in ${where}. A strike there decapitates you.`
+                            : "Your leaders are buttoned up in the bunker. Release them to restore full command."
                     }
                     action={
                         exposed ? (
@@ -242,7 +242,7 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
                 tone="warn"
                 icon="shield"
                 title="Grace period ended"
-                body="Wars may now be declared."
+                body="Any power can now declare war."
                 dismissLabel="Dismiss the grace notice"
                 onDismiss={() => drop("grace-end")}
             />,

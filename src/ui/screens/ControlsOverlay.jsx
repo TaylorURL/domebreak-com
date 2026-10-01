@@ -67,7 +67,7 @@ export default function ControlsOverlay({keys, onClose}) {
             rows: [
                 {label: "Pause / resume", combo: [cap(keyLabel(K.pause))]},
                 {label: "Slow down · speed up", combo: [cap(keyLabel(K.speedDown)), cap(keyLabel(K.speedUp))]},
-                {label: "Set a speed directly", combo: [mouse("Strip control")]},
+                {label: "Set a speed directly", combo: [mouse("Status Strip")]},
             ],
         },
         {
@@ -85,7 +85,7 @@ export default function ControlsOverlay({keys, onClose}) {
                 {label: "Pan (drag)", combo: [mouse("L-Drag")]},
                 {label: "Zoom in · out", combo: [cap(keyLabel(K.zoomIn)), cap(keyLabel(K.zoomOut))]},
                 {label: "Zoom (scroll)", combo: [mouse("Scroll")]},
-                {label: "Globe / flat view", combo: [mouse("Layer row")]},
+                {label: "Globe / flat view", combo: [mouse("Layer Toggles")]},
             ],
         },
         {

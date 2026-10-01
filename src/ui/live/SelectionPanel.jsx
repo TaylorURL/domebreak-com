@@ -430,7 +430,7 @@ function Hangar({unit, w, myNation, mySlot, api, labelOf, teamColor, flash}) {
     const rotaryPatrol = !!UNITS[PATROL_FIGHTER[unit.type]]?.rotary;
     const craftWord = rotaryPatrol ? "Helo" : "Aircraft";
     const patrolTitle = rotaryPatrol ? "Helicopter Patrol" : "Fighter Patrol";
-    const patrolTerm = rotaryPatrol ? "Patrol" : "CAP";
+    const patrolTerm = rotaryPatrol ? "patrol" : "CAP";
     const hasAwacs = hangarCapOf(unit.type, "awacs") > 0;
     const cur = myNation?.prod?.current;
     const curHere = cur?.item?.forBase === unit.id ? cur : null;
@@ -611,8 +611,8 @@ function Leadership({w, mySlot, api, flash}) {
                 rows={[
                     ["Surviving", `${lead.pct}%`, lead.exposed ? "text-red" : undefined],
                     ["Sheltered", `${leadPct(lead.sheltered)}%`],
-                    ["In cities", `${leadPct(lead.atCity)}%`],
-                    ["In transit", `${leadPct(lead.inTransit)}%`],
+                    ["In Cities", `${leadPct(lead.atCity)}%`],
+                    ["In Transit", `${leadPct(lead.inTransit)}%`],
                 ]}
             />
             <div className="flex gap-1.5 mt-2.5">
