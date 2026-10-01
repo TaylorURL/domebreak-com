@@ -7,10 +7,12 @@ import {cva} from "class-variance-authority";
  * renders one primitive class as Tailwind utilities + the `@theme` tokens in
  * index.css.
  *
- * The design is black and white. A control is a rectangle with a hairline.
- * White is the accent, so the one emphatic control on a screen is a white fill
- * with black text and everything beside it is a transparent box with a
- * `--line-2` border. Red belongs to a destructive action and nothing else.
+ * The design is black and white with one blue. A control is a rectangle with
+ * a hairline. TaylorURL blue is the accent, so the one emphatic control on a
+ * screen is a blue fill with white text and everything beside it is a
+ * transparent box with a `--line-2` border. A disabled primary drops its fill
+ * so it can never be mistaken for the live one. Red belongs to a destructive
+ * action and nothing else.
  *
  * All class strings are static/literal (no runtime concatenation) so Tailwind's
  * JIT scanner can see every utility that renders.
@@ -31,7 +33,7 @@ export const button = cva(
             variant: {
                 default: "bg-transparent border-line-2 text-text not-disabled:hover:border-text",
                 primary:
-                    "bg-accent border-accent text-accent-ink not-disabled:hover:bg-accent-hi not-disabled:hover:border-accent-hi [--db-ring:var(--accent-ink)]",
+                    "bg-accent-fill border-accent-fill text-accent-ink not-disabled:hover:bg-accent-fill-hi not-disabled:hover:border-accent-fill-hi disabled:bg-btn-bg disabled:border-line-2 disabled:text-dim [--db-ring:var(--accent-ink)]",
                 ghost: "bg-transparent border-transparent text-dim not-disabled:hover:text-text",
                 danger: "bg-transparent border-danger text-danger not-disabled:hover:bg-[rgba(224,87,79,0.12)]",
             },
@@ -84,7 +86,7 @@ export const menuButton = cva(
             variant: {
                 default: "bg-transparent border-line-2 text-text not-disabled:hover:border-text",
                 primary:
-                    "bg-accent border-accent text-accent-ink not-disabled:hover:bg-accent-hi not-disabled:hover:border-accent-hi [--db-ring:var(--accent-ink)]",
+                    "bg-accent-fill border-accent-fill text-accent-ink not-disabled:hover:bg-accent-fill-hi not-disabled:hover:border-accent-fill-hi disabled:bg-btn-bg disabled:border-line-2 disabled:text-dim [--db-ring:var(--accent-ink)]",
                 back: "bg-transparent border-transparent text-dim mt-1 not-disabled:hover:text-text",
                 danger: "bg-transparent border-danger text-danger not-disabled:hover:bg-[rgba(224,87,79,0.12)]",
                 section:
@@ -97,7 +99,7 @@ export const menuButton = cva(
 
 /**
  * The segmented control: one hairline box holding a row of choices, divided by
- * hairlines, with the chosen one filled white. `segment` is the box and
+ * hairlines, with the chosen one filled blue. `segment` is the box and
  * `segmentItem` is a choice inside it.
  */
 export const segment = cva("inline-flex border border-line-2 rounded-none");
@@ -107,7 +109,7 @@ export const segmentItem = cva(
     {
         variants: {
             on: {
-                true: "bg-accent text-accent-ink",
+                true: "bg-accent-fill text-accent-ink",
                 false: "bg-transparent text-dim hover:text-text",
             },
         },
@@ -160,8 +162,13 @@ export const card = cva(
 // on top and swallow the card's wheel/click events. The backdrop is
 // pointer-events-none, so it steals no events except over the card, which
 // re-enables them.
+//
+// In the desktop build the window is dragged by whatever the page marks as a
+// drag region, and the status strip is one. Electron reads those regions from
+// the DOM, not from what is painted on top, so the overlay marks itself no-drag
+// or a card reaching up over the strip would have a dead band across its top.
 export const overlay = cva(
-    "fixed inset-0 z-40 flex pointer-events-none before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[rgba(0,0,0,0.66)] before:pointer-events-none",
+    "fixed inset-0 z-40 flex pointer-events-none [-webkit-app-region:no-drag] before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[rgba(0,0,0,0.66)] before:pointer-events-none",
     {
         variants: {
             placement: {
@@ -176,7 +183,7 @@ export const overlay = cva(
 
 /** A text field: sunk ground, hairline box, square corners. */
 export const input = cva(
-    "w-full bg-sunk border border-line text-text rounded-none px-[14px] py-3 text-[14px] outline-none placeholder:text-faint transition-[border-color] duration-150 ease-out-db focus:border-text",
+    "w-full bg-sunk border border-line text-text rounded-none px-[14px] py-3 text-[14px] outline-none placeholder:text-faint transition-[border-color] duration-150 ease-out-db focus:border-accent",
     {
         variants: {
             mono: {

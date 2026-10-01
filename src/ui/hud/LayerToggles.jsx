@@ -1,4 +1,5 @@
 import Icon from "../common/Icon.jsx";
+import HudTooltip from "./HudTooltip.jsx";
 import {cn} from "../lib/cn.js";
 
 // Every overlay the map can wear, in the order the row reads. The label is the
@@ -27,31 +28,32 @@ export default function LayerToggles({layers, onToggle, globe, onGlobe}) {
             aria-label="Map layers"
         >
             {LAYERS.map((l) => (
-                <button
-                    type="button"
-                    key={l.id}
-                    className={cn(BTN, layers[l.id] && ON)}
-                    aria-pressed={!!layers[l.id]}
-                    aria-label={`${l.label} layer, ${layers[l.id] ? "on" : "off"}`}
-                    title={l.label}
-                    onClick={() => onToggle(l.id)}
-                >
-                    <Icon name={l.icon} size={18} />
-                </button>
+                <HudTooltip key={l.id} label={l.label}>
+                    <button
+                        type="button"
+                        className={cn(BTN, layers[l.id] && ON)}
+                        aria-pressed={!!layers[l.id]}
+                        aria-label={`${l.label} layer, ${layers[l.id] ? "on" : "off"}`}
+                        onClick={() => onToggle(l.id)}
+                    >
+                        <Icon name={l.icon} size={18} />
+                    </button>
+                </HudTooltip>
             ))}
             {onGlobe && (
                 <>
                     <span className="w-px h-6 mx-1 bg-line" aria-hidden="true" />
-                    <button
-                        type="button"
-                        className={cn(BTN, globe && ON)}
-                        aria-pressed={!!globe}
-                        aria-label={globe ? "Globe view, on" : "Globe view, off"}
-                        title="Globe View"
-                        onClick={onGlobe}
-                    >
-                        <Icon name="globe" size={18} />
-                    </button>
+                    <HudTooltip label="Globe View">
+                        <button
+                            type="button"
+                            className={cn(BTN, globe && ON)}
+                            aria-pressed={!!globe}
+                            aria-label={globe ? "Globe view, on" : "Globe view, off"}
+                            onClick={onGlobe}
+                        >
+                            <Icon name="globe" size={18} />
+                        </button>
+                    </HudTooltip>
                 </>
             )}
         </div>

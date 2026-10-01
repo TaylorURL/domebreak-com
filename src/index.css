@@ -5,12 +5,13 @@
    surface is drawn with. The rules for one region of the UI live in one file
    under styles/ and are imported below, so a rule is only ever in one place.
 
-   Design language: black and white. A black ground, white text and a white
-   accent, hairline borders, square corners, Inter for words and JetBrains Mono
-   for numbers. Colour appears only where it means something: red for hostile
-   and danger, green for ready, pale blue for an interceptor or a sensor ring,
-   ally blue for an allied nation on the map. Tailwind's Preflight sits
-   underneath it all.
+   Design language: black and white with one blue. A black ground, white text,
+   hairline borders, square corners, Inter for words and JetBrains Mono for
+   numbers, and TaylorURL blue as the accent: the primary action, the selected
+   state, the focus ring and the progress fill. Every other colour appears only
+   where it means something: red for hostile and danger, green for ready, pale
+   blue for an interceptor or a sensor ring, ally blue for an allied nation on
+   the map. Tailwind's Preflight sits underneath it all.
 
    Motion answers to two gates, here and in every styles/ file. A media query
    reads the OS preference, and `[data-reduce-motion="true"]` on the document
@@ -129,13 +130,20 @@
     --text: #f4f4f4;
     --dim: #a3a3a3;
     --faint: #5e5e5e;
-    /* The accent is white: primary buttons, the active tab rule, selection,
-       progress fills. --accent-ink is the text on an accent fill. */
-    --accent: #ffffff;
-    --accent-hi: #e6e6e6;
-    --accent-ink: #000000;
-    --accent-soft: rgba(255, 255, 255, 0.07);
-    --accent-line: rgba(255, 255, 255, 0.24);
+    /* The accent is TaylorURL blue, in two steps because one blue cannot do
+       both jobs on black. --accent is the step that reads as a line, a lamp, a
+       progress fill or a word (5.2:1 on the ground); --accent-fill is the
+       deeper step a primary button, a chosen segment or a "You" seat is filled
+       with, because white ink only clears AA on that one (5.0:1). Hover on a
+       line brightens to --accent-hi; hover on a fill deepens to
+       --accent-fill-hi. --accent-ink is the text on a fill. */
+    --accent: #3d76ff;
+    --accent-hi: #4f86ff;
+    --accent-fill: #2b64f0;
+    --accent-fill-hi: #2054d8;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(61, 118, 255, 0.14);
+    --accent-line: rgba(61, 118, 255, 0.5);
     /* --blue is the hover border on a neutral control. --cyan is the one colour
        a sensor carries: an interceptor in flight and a radar ring. --ally
        states a nation's relationship on the map, not a readout. */
@@ -191,12 +199,15 @@
     --color-faint: var(--faint);
     --color-accent: var(--accent);
     --color-accent-hi: var(--accent-hi);
+    --color-accent-fill: var(--accent-fill);
+    --color-accent-fill-hi: var(--accent-fill-hi);
     --color-accent-ink: var(--accent-ink);
     --color-accent-soft: var(--accent-soft);
     --color-accent-line: var(--accent-line);
     --color-blue: var(--blue);
     --color-cyan: var(--cyan);
     --color-red: var(--red);
+    --color-ally: var(--ally);
     --color-good: var(--good);
     --color-danger: var(--danger);
     --color-btn-bg: var(--btn-bg);
@@ -277,9 +288,11 @@
         background: repeating-linear-gradient(90deg, transparent 0 6px, var(--db-seg-gap, var(--sunk)) 6px 8px);
     }
 
-    /* The panel — every docked panel, drawer, popover and context menu. Black
-       glass over the map, one hairline, square corners. A panel with nothing
-       behind it takes the solid surface through .db-hud-solid in hud.css. */
+    /* The panel — every docked panel, popover and context menu. Black glass
+       over the map, one hairline, square corners. A panel with nothing behind
+       it takes the solid surface through .db-hud-solid in hud.css; the status
+       strip, the dock and the drawer are solid outright, so no map label ghosts
+       through the chrome. */
     .db-hud-panel {
         background: var(--panel);
         border: 1px solid var(--line);

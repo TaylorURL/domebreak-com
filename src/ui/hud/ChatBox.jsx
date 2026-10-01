@@ -169,7 +169,7 @@ export default function ChatBox({net, mySlot, overlayOpen}) {
                     <span className="text-[12px] font-semibold">Comms</span>
                     {unread > 0 && (
                         <span
-                            className="min-w-[15px] h-[15px] px-1 grid place-items-center bg-accent text-accent-ink font-mono text-[9px] font-semibold leading-none tabular-nums"
+                            className="min-w-[15px] h-[15px] px-1 grid place-items-center bg-accent-fill text-accent-ink font-mono text-[9px] font-semibold leading-none tabular-nums"
                             aria-label={`${unread} unread`}
                         >
                             {unread}

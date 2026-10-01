@@ -29,7 +29,11 @@ function nameList(names) {
 }
 
 // One alert: a 3px edge rule, a 24px glyph, the title and body, and the single
-// button that answers it.
+// button that answers it. The rule is red on a danger alert and the accent on
+// every other. The button is the outline one, and the blue primary only where
+// it is the move a non-danger alert recommends and that move is open now; a
+// move the player cannot make yet stays an outline rather than a primary with
+// its fill gone.
 function Alert({tone, icon, title, body, action, onDismiss, dismissLabel}) {
     return (
         <div
@@ -165,6 +169,7 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
             : !lead.hasAirstrip
               ? "Build an Airstrip to fly the airlift."
               : null;
+        const canShelter = !infra && lead.exposed;
         const leadKey = exposed ? "lead:exposed" : homeable ? "lead:home" : null;
         if (leadKey && !dismissed[leadKey]) {
             cards.push(
@@ -182,8 +187,11 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
                         exposed ? (
                             <button
                                 type="button"
-                                className={cn(button({variant: "primary"}), "flex-none h-7 px-[10px] text-[12px]")}
-                                disabled={!!infra || !lead.exposed}
+                                className={cn(
+                                    button({variant: canShelter ? "primary" : "default"}),
+                                    "flex-none h-7 px-[10px] text-[12px]",
+                                )}
+                                disabled={!canShelter}
                                 onClick={() => act(api.shelterLeadership)}
                                 title="Airlift exposed leaders into the bunker."
                             >

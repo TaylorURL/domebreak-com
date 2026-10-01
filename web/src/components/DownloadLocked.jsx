@@ -62,7 +62,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                         </button>
                                         <button
                                             onClick={() => onSignIn("signin")}
-                                            className={cn(button({variant: "default", size: "md"}), "w-full max-w-xs")}
+                                            className={cn(button({variant: "default", size: "lg"}), "w-full max-w-xs")}
                                         >
                                             <LogIn size={15} />
                                             <span>Sign In</span>

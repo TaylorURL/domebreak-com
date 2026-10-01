@@ -7,12 +7,25 @@
 
 @plugin "tailwindcss-animate";
 
+/* The hero draws part of the game's own UI through the @game alias — the
+   country names, the missiles in flight and the unit markers on its board
+   (HeroDefenseScene) — and Tailwind only scans this app's files for the classes
+   it generates. These are the game files whose classes the hero renders.
+   Without them a country name loses the centring that sets it on its anchor and
+   the shadow that keeps it legible over the map, and runs off to the right of
+   where it was placed. */
+@source "../../src/ui/live/CountryLabels.jsx";
+@source "../../src/ui/live/SkyLayer.jsx";
+@source "../../src/ui/common/UnitIcon.jsx";
+
 /* DomeBreak landing page — shares the in-game design language: black ground,
    white text, hairline borders and square corners, Inter for words and
-   JetBrains Mono for numbers. Colour appears only where it means something:
-   red for danger, green for ready, pale blue for an interceptor or a sensor
-   ring. Tokens match the game's src/index.css so the marketing surface reads
-   as the same product. */
+   JetBrains Mono for numbers, and TaylorURL blue as the one accent: the
+   primary action, the selected state, the focus ring, the progress fill and
+   the marker lamp. Every other colour appears only where it means
+   something: red for danger, green for ready, pale blue for an interceptor or
+   a sensor ring. Tokens match the game's src/index.css so the marketing
+   surface reads as the same product. */
 
 :root,
 [data-theme="dark"] {
@@ -29,13 +42,20 @@
     --text: #f4f4f4;
     --dim: #a3a3a3;
     --faint: #5e5e5e;
-    /* The accent is white: primary buttons, the active tab rule, selection,
-       progress fills. --accent-ink is the text on an accent fill. */
-    --accent: #ffffff;
-    --accent-hi: #e6e6e6;
-    --accent-ink: #000000;
-    --accent-soft: rgba(255, 255, 255, 0.07);
-    --accent-line: rgba(255, 255, 255, 0.24);
+    /* The accent is TaylorURL blue, in two steps because one blue cannot do
+       both jobs on black. --accent is the step that reads as a line, a lamp, a
+       progress fill or a word (5.2:1 on the ground); --accent-fill is the
+       deeper step a primary button is filled with, because white ink only
+       clears AA on that one (5.0:1). Hover on a line brightens to --accent-hi;
+       hover on a fill deepens to --accent-fill-hi. --accent-ink is the text on
+       a fill. */
+    --accent: #3d76ff;
+    --accent-hi: #4f86ff;
+    --accent-fill: #2b64f0;
+    --accent-fill-hi: #2054d8;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(61, 118, 255, 0.14);
+    --accent-line: rgba(61, 118, 255, 0.5);
     /* --blue is the hover border on a neutral control. --cyan is the one colour
        a sensor carries: an interceptor in flight and a coverage ring. --ally
        states a nation's relationship on the map, not a readout. */
@@ -170,7 +190,9 @@
 }
 
 /* Gray: the same design one shade lighter. Graphite surfaces lifted off pure
-   black, the same hairlines, and the same white accent. */
+   black and the same hairlines. The accent's line step moves up one shade,
+   because on the lifted ground the black theme's blue falls short of AA; the
+   fill steps already carry white ink at AA, so they stay. */
 [data-theme="gray"] {
     --bg: #141414;
     --bg-2: #1c1c1c;
@@ -185,11 +207,13 @@
     --text: #f4f4f4;
     --dim: #adadad;
     --faint: #6e6e6e;
-    --accent: #ffffff;
-    --accent-hi: #e6e6e6;
-    --accent-ink: #000000;
-    --accent-soft: rgba(255, 255, 255, 0.09);
-    --accent-line: rgba(255, 255, 255, 0.26);
+    --accent: #5c8cff;
+    --accent-hi: #709aff;
+    --accent-fill: #2b64f0;
+    --accent-fill-hi: #2054d8;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(92, 140, 255, 0.16);
+    --accent-line: rgba(92, 140, 255, 0.5);
     --blue: #9a9a9a;
     --cyan: #9ecbff;
     --red: #e0574f;
@@ -239,6 +263,8 @@
     --color-faint: var(--faint);
     --color-accent: var(--accent);
     --color-accent-hi: var(--accent-hi);
+    --color-accent-fill: var(--accent-fill);
+    --color-accent-fill-hi: var(--accent-fill-hi);
     --color-accent-ink: var(--accent-ink);
     --color-accent-soft: var(--accent-soft);
     --color-accent-line: var(--accent-line);
@@ -304,7 +330,7 @@ body {
 
 /* A single on-theme focus ring for keyboard navigation. The UA ring follows the
    OS accent, so it arrives in whatever colour the machine happens to be set to;
-   this one is the same white on every machine. Mouse focus stays quiet. */
+   this one is the same blue on every machine. Mouse focus stays quiet. */
 :focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
@@ -459,6 +485,17 @@ body {
         font-weight: 600;
         color: var(--text);
         border-bottom: 1px solid var(--hair);
+    }
+}
+
+/* The site's own lamp tone. Each tone in the shared block reports a state, and
+   the game reads them that way. A lamp beside a kicker, a spec line or a status
+   strip reports nothing — it marks the brand — so it takes the accent rather
+   than borrowing a state's colour. Kept out of the shared block so that block
+   stays identical to the game's. */
+@layer vfx {
+    .db-led-accent {
+        color: var(--accent);
     }
 }
 

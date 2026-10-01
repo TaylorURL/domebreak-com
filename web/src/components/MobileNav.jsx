@@ -14,8 +14,10 @@ import NavMenuItem from "./NavMenuItem.jsx";
 import PlayCta from "./PlayCta.jsx";
 
 // Mobile navigation: a hamburger that opens a full-height drawer with the same
-// grouped menus as the desktop dropdowns, the featured Play Free link, the
-// play CTA, and account actions. Shown only below the md breakpoint.
+// grouped menus as the desktop dropdowns, the play CTA, and account actions.
+// The CTA at the foot is the drawer's one call to action; the Play Free row in
+// the menus is the way to the band, not a second button. Shown only below the
+// md breakpoint.
 //
 // The drawer is portalled into <body> rather than left where it is declared. It
 // is positioned against the viewport, but the nav header it sits in takes a
@@ -100,20 +102,6 @@ export default function MobileNav({onSignIn}) {
                         </div>
 
                         <div className="flex-1 px-3 py-4">
-                            <button
-                                onClick={() => {
-                                    close();
-                                    scrollToId("play");
-                                }}
-                                className="group/item mb-3 flex w-full items-center gap-3 border border-line-2 bg-accent-soft px-3 py-3 text-left transition-colors duration-[var(--dur-fast)] hover:border-accent"
-                            >
-                                <span className="db-led db-led-warn" />
-                                <span className="min-w-0">
-                                    <span className="block text-[13px] font-semibold text-text">Play Free</span>
-                                    <span className="mt-1 block text-[12px] text-faint">Free · online multiplayer</span>
-                                </span>
-                            </button>
-
                             {NAV_MENUS.map((group) => (
                                 <div key={group.label} className="mt-4 first:mt-0">
                                     <div className="px-3 pb-1 text-[12px] font-medium text-faint">{group.label}</div>

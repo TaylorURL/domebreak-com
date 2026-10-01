@@ -3,6 +3,22 @@ import Flag from "../common/Flag.jsx";
 import {GREAT_POWERS} from "../../game/sim/newGame.js";
 import {button, card, chip, input, label, menuTitle, row} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+import {plural} from "../lib/format.js";
+
+// The "You" seat on the nation you will command: the accent's fill step, the
+// one blue that carries white ink.
+const YOU_TAG =
+    "flex-none min-w-[34px] text-center text-[10.5px] font-semibold px-2 py-[3px] rounded-none border border-accent-fill bg-accent-fill text-accent-ink";
+
+// How many cities a nation holds, said in words: the figure in mono and the
+// noun it counts in faint beside it, so a bare number never stands alone.
+function CityCount({n}) {
+    return (
+        <span className="flex-none text-xs text-faint whitespace-nowrap">
+            <span className="font-mono text-dim">{n}</span> {plural(n, "city", "cities")}
+        </span>
+    );
+}
 
 // Nation select: claim the ONE country you command. Rival powers (up to 8, chosen
 // on the rules step) are seeded as live AI nations elsewhere on the map, and every
@@ -73,9 +89,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {sel.name}
                             </span>
-                            <span className="flex-none min-w-[34px] text-center text-[10.5px] font-semibold px-2 py-[3px] rounded-none border border-accent bg-accent text-accent-ink">
-                                You
-                            </span>
+                            <span className={YOU_TAG}>You</span>
                         </button>
                     )}
                     {powers.map((c) => (
@@ -92,12 +106,8 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {c.name}
                             </span>
-                            <span className="font-mono text-xs text-dim">{c.count}</span>
-                            {iso === c.iso && (
-                                <span className="flex-none min-w-[34px] text-center text-[10.5px] font-semibold px-2 py-[3px] rounded-none border border-accent bg-accent text-accent-ink">
-                                    You
-                                </span>
-                            )}
+                            <CityCount n={c.count} />
+                            {iso === c.iso && <span className={YOU_TAG}>You</span>}
                         </button>
                     ))}
                 </div>
@@ -134,7 +144,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                                 <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                     {c.name}
                                 </span>
-                                <span className="font-mono text-xs text-dim">{c.count}</span>
+                                <CityCount n={c.count} />
                             </button>
                         ))}
                     </div>

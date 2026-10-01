@@ -1,7 +1,7 @@
 /* The persistent in-match HUD: the status strip, the dock and its drawer, the
    alert stack, the command deck, the objective tracker, the event log, the
-   layer row, their popovers, the context menu, the pinned bar, and the tactical
-   scrollbars every dark overflow region uses.
+   layer row, their popovers and tooltips, the context menu, the pinned bar, and
+   the tactical scrollbars every dark overflow region uses.
 
    Imported by src/index.css, which owns the tokens, the shared chrome
    utilities and the shared keyframes these rules read. Anything added here
@@ -64,6 +64,24 @@
        panel that clips its own content keeps its shadow. */
     .db-hud-lift {
         filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6));
+    }
+
+    /* The HUD tooltip (ui/hud/HudTooltip.jsx) arrives over the fast step
+       rather than blinking on. It is placed through top and left, so the
+       entrance's scale never fights the placement, and both motion gates stand
+       it down to a plain appearance. */
+    .db-tip {
+        animation: dbPop var(--dur-fast) var(--ease-out);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .db-tip {
+            animation: none;
+        }
+    }
+
+    [data-reduce-motion="true"] .db-tip {
+        animation: none;
     }
 
     @keyframes dbDropInY {

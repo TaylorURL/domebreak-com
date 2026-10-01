@@ -6,12 +6,12 @@
    utilities and the shared keyframes these rules read. Unlayered, so a rule
    added here reliably applies over Tailwind's utilities. */
 
-/* The tab strip: a row of labels over one hairline, the active label carrying a
-   2px white rule that sits on that hairline rather than under it. The -1px
-   margin is what puts the two on the same line, so a tab never shifts its text
-   between states. The wiki's category rail is the one that scrolls, and it
-   scrolls without a bar of its own: the strip is 48px tall and a scrollbar
-   inside it would take a third of the row. */
+/* The tab strip: a row of labels over one hairline, the active label and its
+   2px rule in the accent, the rule sitting on that hairline rather than under
+   it. The -1px margin is what puts the two on the same line, so a tab never
+   shifts its text between states. The wiki's category rail is the one that
+   scrolls, and it scrolls without a bar of its own: the strip is 48px tall and
+   a scrollbar inside it would take a third of the row. */
 .db-tabs {
     display: flex;
     align-items: stretch;
@@ -39,6 +39,6 @@
 
 .db-tab[aria-pressed="true"],
 .db-tab[aria-selected="true"] {
-    color: var(--text);
+    color: var(--accent);
     border-bottom-color: var(--accent);
 }

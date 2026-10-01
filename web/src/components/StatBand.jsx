@@ -29,7 +29,7 @@ export default function StatBand() {
     return (
         <section className="relative border-y border-line bg-bg-2">
             <div className="relative flex items-center overflow-hidden border-b border-hair py-3">
-                <span aria-hidden className="db-led db-led-warn ml-5 mr-1 sm:ml-8" />
+                <span aria-hidden className="db-led db-led-accent ml-5 mr-1 sm:ml-8" />
                 <div className="db-marquee flex w-max whitespace-nowrap will-change-transform">
                     {[0, 1].map((k) => (
                         <div key={k} className="flex shrink-0" aria-hidden={k === 1}>

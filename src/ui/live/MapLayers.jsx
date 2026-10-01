@@ -25,10 +25,12 @@ const REGION_OWNER_LINE_WIDTH = ["interpolate", ["linear"], ["zoom"], 2, 0.6, 6,
 // standing at a glance, easing back as you zoom in so terrain and cities stay
 // legible.
 const REGION_DIPLO_OPACITY = ["interpolate", ["linear"], ["zoom"], 2, 0.78, 4, 0.6, 6, 0.38];
-// The accent, as a literal: these go into MapLibre paint expressions, which are
-// evaluated in the map's own worker and never see a CSS variable. A plan with no
-// colour of its own falls back to it.
-const ACCENT = "#ffffff";
+// White, as a literal: these go into MapLibre paint expressions, which are
+// evaluated in the map's own worker and never see a CSS variable. The map keeps
+// to its own inks rather than the interface's blue accent, because on the map
+// blue already means an ally. White is the hairline over the land and the ring
+// around your own cities, and a plan with no colour of its own falls back to it.
+const WHITE = "#ffffff";
 // The dim grey, same source: a bordering neutral city rings in it, so a city you
 // could march on reads apart from one of your own without taking a colour.
 const DIM = "#a3a3a3";
@@ -122,7 +124,7 @@ export default function MapLayers({
                         type="line"
                         source-layer="regions"
                         paint={{
-                            "line-color": ACCENT,
+                            "line-color": WHITE,
                             "line-opacity": 0.12,
                             "line-width": 0.5,
                         }}
@@ -133,7 +135,7 @@ export default function MapLayers({
                     type="line"
                     source-layer="regions"
                     filter={["==", ["get", "GID_0"], hoveredGid || "__none__"]}
-                    paint={{"line-color": ACCENT, "line-opacity": 0.6, "line-width": 1}}
+                    paint={{"line-color": WHITE, "line-opacity": 0.6, "line-width": 1}}
                 />
             </Source>
             {layers.pop && (
@@ -276,7 +278,7 @@ export default function MapLayers({
                         id="plan-arc-line"
                         type="line"
                         paint={{
-                            "line-color": planColor || ACCENT,
+                            "line-color": planColor || WHITE,
                             "line-width": 1.6,
                             "line-opacity": 0.85,
                             "line-dasharray": [2, 1.6],
@@ -291,7 +293,7 @@ export default function MapLayers({
                         type="circle"
                         paint={{
                             "circle-radius": ["case", ["==", ["get", "on"], 1], 3.4, 2.4],
-                            "circle-color": planColor || ACCENT,
+                            "circle-color": planColor || WHITE,
                             "circle-opacity": ["case", ["==", ["get", "on"], 1], 0.95, 0.4],
                             "circle-stroke-color": INK,
                             "circle-stroke-width": 0.8,
@@ -308,7 +310,7 @@ export default function MapLayers({
                         paint={{
                             "circle-radius": 7,
                             "circle-color": "rgba(0,0,0,0)",
-                            "circle-stroke-color": planColor || ACCENT,
+                            "circle-stroke-color": planColor || WHITE,
                             "circle-stroke-width": 1.6,
                             "circle-stroke-opacity": 0.9,
                         }}
@@ -322,7 +324,7 @@ export default function MapLayers({
                         paint={{
                             "circle-radius": 5.5,
                             "circle-color": "rgba(0,0,0,0)",
-                            "circle-stroke-color": planColor || ACCENT,
+                            "circle-stroke-color": planColor || WHITE,
                             "circle-stroke-width": 1.1,
                             "circle-stroke-opacity": 0.4,
                         }}
@@ -443,7 +445,7 @@ export default function MapLayers({
                         "circle-stroke-color": [
                             "case",
                             ["==", ["get", "mine"], 1],
-                            ACCENT,
+                            WHITE,
                             ["==", ["get", "neutral"], 1],
                             DIM,
                             INK,

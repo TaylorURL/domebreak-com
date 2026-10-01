@@ -6,6 +6,7 @@
 // alliance action goes through the same api entry points DiplomacyScreen
 // uses.
 import ScreenFrame from "./ScreenFrame.jsx";
+import Standing from "./Standing.jsx";
 import Flag from "../common/Flag.jsx";
 import {DIPLOMACY} from "../../game/data/constants.js";
 import {miniButton} from "../lib/variants.js";
@@ -46,22 +47,16 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
     const human = isHuman(n.slot);
     const seatLabel = isMe ? "You" : human ? "Player" : "AI";
-    const seatCls = isMe ? "text-accent-ink bg-accent border-accent" : human ? "text-text border-line-2" : "";
-    const commander = isMe ? "You" : human ? usernameOf.get(n.slot) || "Commander" : null;
+    const seatCls = isMe
+        ? "bg-accent-fill border-accent-fill text-accent-ink"
+        : human
+          ? "text-text border-line-2"
+          : "border-line text-dim";
+    const commander = !isMe && human ? usernameOf.get(n.slot) || "Commander" : null;
 
-    // Where you stand with this power, in the one word and the one colour it
-    // earns: red at war, green allied, and nothing at all for the rest.
-    const standing = isMe
-        ? {label: "Home", tone: "text-dim"}
-        : neutral
-          ? {label: "Neutral", tone: "text-dim"}
-          : eliminated
-            ? {label: "Eliminated", tone: "text-dim"}
-            : rel === "war"
-              ? {label: "At War", tone: "text-red", led: "db-led-live"}
-              : rel === "ally"
-                ? {label: "Allied", tone: "text-good", led: "db-led-ok"}
-                : {label: "At Peace", tone: "text-dim"};
+    // Where you stand with this power, in the word and colours every screen
+    // gives it (see Standing). A power out of the war says so instead.
+    const standing = isMe ? "self" : neutral ? "neutral" : eliminated ? "eliminated" : rel;
 
     const call = (fn, ok) => {
         const r = fn();
@@ -74,44 +69,43 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
     const graceSec = world.rules?.playerGraceSec ?? DIPLOMACY.playerGraceSec;
     const graceActive = graceSec > 0 && (world.time ?? 0) < graceSec;
 
-    return (
-        <ScreenFrame
-            title={n.name}
-            subtitle={`${seatLabel}${commander && !isMe ? ` · ${commander}` : ""}`}
-            onClose={onClose}
-        >
-            <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-4 p-4 bg-sunk border border-line">
-                    <span className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border border-line-2 [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
-                        <Flag iso={n.iso} />
-                    </span>
-                    <div className="flex flex-col gap-[6px] min-w-0">
-                        <b className="text-[18px] font-semibold tracking-[-0.01em]">{n.name}</b>
-                        <div className="flex items-center gap-[8px] flex-wrap">
-                            <span
-                                className={cn(
-                                    "inline-block px-[10px] py-[3px] text-[11px] font-medium border border-line text-dim whitespace-nowrap",
-                                    seatCls,
-                                )}
-                            >
-                                {seatLabel}
-                            </span>
-                            {commander && !isMe && <span className="text-[12px] text-dim">{commander}</span>}
-                            <span
-                                className={cn("inline-flex items-center gap-2 text-[12px] font-medium", standing.tone)}
-                            >
-                                {standing.led && <i className={cn("db-led", standing.led)} aria-hidden="true" />}
-                                {standing.label}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+    // One title row says who this is: the flag, the name, the seat and the
+    // standing, in the frame's own header, so the body below opens on the
+    // figures. The flag-icons mark is drawn 4:3 at the size of its font, so the
+    // font size on its holder is what sets it (an unlayered rule in that sheet
+    // outranks a width utility); the holder is a flex box so the mark sits on no
+    // text baseline and the hairline hugs it.
+    const title = (
+        <span className="flex items-center gap-[10px]">
+            <span className="flex flex-none text-[18px]">
+                <Flag iso={n.iso} className="border border-line-2" />
+            </span>
+            {n.name}
+        </span>
+    );
+    const caption = (
+        <span className="flex items-center justify-end gap-[8px] flex-wrap">
+            <span
+                className={cn(
+                    "inline-block px-[8px] py-[2px] text-[10.5px] font-medium border whitespace-nowrap",
+                    seatCls,
+                )}
+            >
+                {seatLabel}
+            </span>
+            {commander && <span className="text-[12px] text-dim">{commander}</span>}
+            <Standing rel={standing} className="text-[12px] font-medium" />
+        </span>
+    );
 
+    return (
+        <ScreenFrame title={title} caption={caption} onClose={onClose}>
+            <div className="flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-[10px]">
                     <StatCell label="Cities" value={eliminated || neutral ? "—" : cities} />
                     <StatCell label="Forces" value={eliminated || neutral ? "—" : forces} />
                     <StatCell label="Population" value={eliminated || neutral ? "—" : fmtPop(pop)} />
-                    <StatCell label="GDP" value={eliminated || neutral ? "—" : fmtGdp(gdp, 1)} />
+                    <StatCell label="GDP" value={eliminated || neutral ? "—" : fmtGdp(gdp)} />
                 </div>
 
                 <div className="flex flex-col gap-[8px]">
@@ -170,12 +164,6 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                             </button>
                         </div>
                     )}
-                </div>
-
-                <div className="flex justify-end">
-                    <button className={miniButton()} onClick={onClose}>
-                        Close
-                    </button>
                 </div>
             </div>
         </ScreenFrame>

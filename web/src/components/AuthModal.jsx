@@ -105,7 +105,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                         <div className="flex items-center gap-2 text-dim">
                             <GameIcon name="dome" size={22} />
                             <span className="flex items-center gap-2 text-[12px] font-medium text-faint">
-                                <span className="db-led db-led-warn" />
+                                <span className="db-led db-led-accent" />
                                 {signup ? "Create account" : "Sign in"}
                             </span>
                         </div>

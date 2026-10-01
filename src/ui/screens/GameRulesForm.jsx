@@ -1,12 +1,20 @@
 import {useMemo} from "react";
 import {DEFAULT_RULES, normalizeRules, rulesForMode} from "../../game/sim/gameRules.js";
 import {cn} from "../lib/cn.js";
+import {rangeFill} from "../lib/format.js";
 
 // Reusable rules editor. Renders one labelled control per rule that applies to
 // the given mode ("sp" | "mp") — range slider by default, an inline toggle for
 // boolean rules. Callers pass the current rules object and an onChange(next);
 // no internal state, so lifting into either the New Game rules screen
 // (localStorage-backed) or the lobby (Supabase-backed) is a drop-in.
+//
+// Each rule reads in three steps: its name in the text colour at 13px, its value
+// in mono beside it, and the sentence explaining it faint and smaller underneath,
+// so the eye lands on the names first and the help reads as help.
+const RULE_LABEL = "text-[13px] font-medium text-text";
+const RULE_HELP = "text-[11.5px] leading-snug text-faint";
+
 export default function GameRulesForm({mode, rules, onChange, readOnly = false, className}) {
     const active = normalizeRules(rules);
     const visible = useMemo(() => rulesForMode(mode), [mode]);
@@ -56,7 +64,7 @@ function RangeRow({meta, value, readOnly, onChange}) {
     return (
         <label className="flex flex-col gap-1">
             <span className="flex items-baseline justify-between gap-3">
-                <span className="text-[11px] font-medium text-faint">{meta.label}</span>
+                <span className={RULE_LABEL}>{meta.label}</span>
                 <span className="font-mono text-[12px] font-semibold text-text tabular-nums">{meta.format(value)}</span>
             </span>
             <input
@@ -68,8 +76,9 @@ function RangeRow({meta, value, readOnly, onChange}) {
                 disabled={readOnly}
                 onChange={(e) => onChange(Number(e.target.value))}
                 className="db-range db-rules-range w-full disabled:opacity-40 disabled:cursor-not-allowed"
+                style={rangeFill(value, meta.min, meta.max)}
             />
-            <span className="text-[11px] leading-snug text-dim">{meta.help}</span>
+            <span className={RULE_HELP}>{meta.help}</span>
         </label>
     );
 }
@@ -78,7 +87,7 @@ function ToggleRow({meta, value, readOnly, onChange}) {
     return (
         <label className="flex flex-col gap-1">
             <span className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-medium text-faint">{meta.label}</span>
+                <span className={RULE_LABEL}>{meta.label}</span>
                 <button
                     type="button"
                     role="switch"
@@ -90,7 +99,7 @@ function ToggleRow({meta, value, readOnly, onChange}) {
                     <i />
                 </button>
             </span>
-            <span className="text-[11px] leading-snug text-dim">{meta.help}</span>
+            <span className={RULE_HELP}>{meta.help}</span>
         </label>
     );
 }

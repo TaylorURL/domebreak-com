@@ -11,7 +11,7 @@
 
 const ERAS = [
     {id: "coldwar", name: "Cold War", tierRange: [1, 4], years: "1947-1991", color: "#4fc3e8"},
-    {id: "modern", name: "Modern", tierRange: [5, 8], years: "1991-2035", color: "#f4c02a"},
+    {id: "modern", name: "Modern", tierRange: [5, 8], years: "1991-2035", color: "#f4f4f4"},
     {id: "space", name: "Space Age", tierRange: [9, 12], years: "2035+", color: "#b98cff"},
 ];
 

@@ -477,7 +477,7 @@ function Hangar({unit, w, myNation, mySlot, api, labelOf, teamColor, flash}) {
                                 </span>
                             )}
                             <button
-                                className="w-[22px] h-[22px] grid place-items-center text-sm leading-none text-text bg-transparent border border-line-2 transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-accent enabled:hover:text-accent-ink enabled:hover:border-accent disabled:opacity-35 disabled:cursor-default"
+                                className="w-[22px] h-[22px] grid place-items-center text-sm leading-none text-text bg-transparent border border-line-2 transition-[background,color,border-color] duration-[var(--dur-fast)] ease-out-db enabled:hover:bg-accent-fill enabled:hover:text-accent-ink enabled:hover:border-accent-fill disabled:opacity-35 disabled:cursor-default"
                                 disabled={full}
                                 aria-label={
                                     full

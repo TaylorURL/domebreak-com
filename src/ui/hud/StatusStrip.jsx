@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {
     gdpOf,
     incomeOf,
@@ -21,11 +21,35 @@ import {cn} from "../lib/cn.js";
 import Flag from "../common/Flag.jsx";
 import Icon from "../common/Icon.jsx";
 import PopTrend from "../common/PopTrend.jsx";
-import {popoverCard} from "../lib/variants.js";
+import HudTooltip, {HudFloat} from "./HudTooltip.jsx";
+import {popoverCard, segment, segmentItem} from "../lib/variants.js";
 import {gameDate} from "../lib/gameClock.js";
 
 // The speed segment's label: the multiplier as the rules define it.
 const speedLabel = (s) => `${s}×`;
+
+// The desktop shell's platform, from the bridge in electron/preload.cjs, or
+// null in a browser, where no window controls sit over the page.
+const SHELL = typeof window === "undefined" ? null : (window.dbShell?.platform ?? null);
+
+// Whether the desktop window is in full screen, where the OS hides its window
+// controls and the strip has no gutter to keep for them. Always false in a
+// browser.
+function useFullScreen() {
+    const [on, setOn] = useState(false);
+    useEffect(() => {
+        const shell = window.dbShell;
+        if (!shell?.onFullScreen) return;
+        let live = true;
+        shell.isFullScreen().then((v) => live && setOn(!!v));
+        const off = shell.onFullScreen((v) => setOn(!!v));
+        return () => {
+            live = false;
+            off();
+        };
+    }, []);
+    return on;
+}
 
 // A leadership picture in one word, for the vitals bar's read-out.
 function leadWord(lead) {
@@ -67,8 +91,8 @@ function Stat({icon, value, label, delta, score, className, children, ...rest}) 
     );
 }
 
-// One vitals bar: a label, a mono figure, and a 4px track. `warn` turns the
-// figure and the fill red, which is the only colour the strip ever carries.
+// One vitals bar: a label, a mono figure, and a 4px track filled in the accent.
+// `warn` turns the figure and the fill red, which is the strip's only alarm.
 function Gauge({label, read, frac, warn, className, children, ...rest}) {
     return (
         <div
@@ -106,16 +130,24 @@ function Gauge({label, read, frac, warn, className, children, ...rest}) {
     );
 }
 
-// A hover breakdown, dropped from the cell it annotates.
-function Breakdown({title, read, children}) {
+// A hover breakdown, dropped from the cell it annotates (`anchor`, a ref to the
+// cell). It floats on <body> rather than inside the strip: the strip is one
+// layer of the HUD and the alert stack under it is a higher one, which would
+// cover a breakdown left inside.
+function Breakdown({anchor, title, read, children}) {
     return (
-        <div className={cn(popoverCard(), "absolute top-full right-0 mt-2 w-[248px] z-20 text-left cursor-default")}>
+        <HudFloat
+            anchor={anchor}
+            side="bottom"
+            align="end"
+            className={cn(popoverCard(), "w-[248px] text-left cursor-default")}
+        >
             <header className="flex items-center justify-between gap-3 px-[13px] py-[8px]">
                 <span>{title}</span>
                 <span className="font-mono text-[11px] font-semibold tabular-nums text-text">{read}</span>
             </header>
             <div className="px-[13px] pt-[9px] pb-[11px] flex flex-col gap-[6px] text-[11.5px]">{children}</div>
-        </div>
+        </HudFloat>
     );
 }
 
@@ -137,9 +169,26 @@ function Line({label, detail, value, tone}) {
 // The status strip: one 52px line across the top of the match carrying who you
 // are, the clock and the speed control, the five national figures, and the two
 // vitals bars. Everything a glance needs and nothing a glance does not.
+//
+// In a match it is also the window's title bar. The desktop shell draws no
+// frame, so the strip's own ground is the drag region, and every control on it,
+// and every cell that opens a breakdown on hover, opts back out: a drag region
+// takes the pointer for the window and the page never sees it. Where the shell
+// draws its window controls over the page, the strip leaves them a gutter of
+// solid ground, the traffic lights at the left on macOS and the caption buttons
+// at the right on Windows, sized to the controls electron/main.cjs places. In
+// full screen, and in a browser, there are no controls and no gutter.
+//
+// The ground is solid, so a country name the map draws under the strip never
+// shows through it.
 export default function StatusStrip({world, api, myNation, mySlot, keys, online, meBadge}) {
     const K = resolveKeys(keys);
+    const fullScreen = useFullScreen();
     const [info, setInfo] = useState(null); // "gdp" | "lead" | "stab" | null
+    // The cells each breakdown drops from.
+    const gdpRef = useRef(null);
+    const leadRef = useRef(null);
+    const stabRef = useRef(null);
 
     const net = myNation ? netIncomeOf(world, myNation.slot) : 0;
     const income = myNation ? incomeOf(world, myNation.slot) : 0;
@@ -159,12 +208,13 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
     const {date, time} = gameDate(world.time);
     const leadExposed = !!lead && lead.exposed && lead.atWar;
 
-    const segBtn =
-        "grid place-items-center h-7 min-w-[36px] px-[10px] border-r border-line last:border-r-0 font-mono text-[12px] font-semibold tabular-nums text-dim transition-colors duration-[var(--dur-fast)] ease-out-db hover:text-text";
-
     return (
         <div
-            className="relative w-full h-[52px] flex items-stretch bg-panel-2 border-b border-line pointer-events-auto"
+            className={cn(
+                "relative w-full h-[52px] flex items-stretch bg-panel-solid border-b border-line pointer-events-auto [-webkit-app-region:drag]",
+                SHELL === "darwin" && !fullScreen && "pl-[80px]",
+                SHELL === "win32" && !fullScreen && "pr-[140px]",
+            )}
             aria-label="National status"
         >
             <div className="flex items-center gap-3 min-w-0 px-[22px] max-[1441px]:px-[14px] border-r border-line">
@@ -180,7 +230,11 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
             </div>
 
             <div className="flex items-center gap-[18px] max-[1441px]:gap-3 px-[22px] max-[1441px]:px-[14px] border-r border-line">
-                <span className="font-mono text-[13.5px] font-medium tabular-nums text-dim whitespace-nowrap">
+                {/* Held at the width of its widest reading, "Sep 30, 2026 · 23:59"
+                    or "Sep 30 · 23:59" where the year drops, so the speed control
+                    beside it stays put as the day gains a digit. Every glyph in
+                    the mono face is one ch wide. */}
+                <span className="min-w-[20ch] max-[1441px]:min-w-[14ch] font-mono text-[13.5px] font-medium tabular-nums text-dim whitespace-nowrap">
                     <b className="font-semibold text-text">
                         <span className="max-[1441px]:hidden">{date}</span>
                         <span className="hidden max-[1441px]:inline">{date.split(",")[0]}</span>
@@ -195,29 +249,32 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                         </span>
                     </span>
                 ) : (
-                    <span className="inline-flex border border-line-2" role="group" aria-label="Game speed">
-                        <button
-                            type="button"
-                            className={cn(segBtn, world.paused && "bg-accent text-accent-ink hover:text-accent-ink")}
-                            onClick={world.paused ? api.play : api.pause}
-                            aria-pressed={world.paused}
-                            title={`Pause (${keyLabel(K.pause)})`}
-                        >
-                            <Icon name="pause" size={13} />
-                        </button>
+                    <span
+                        className={cn(segment(), "[-webkit-app-region:no-drag]")}
+                        role="group"
+                        aria-label="Game speed"
+                    >
+                        <HudTooltip label="Pause" hint={keyLabel(K.pause)} side="bottom">
+                            <button
+                                type="button"
+                                className={cn(segmentItem({on: world.paused}), "min-w-[36px]")}
+                                onClick={world.paused ? api.play : api.pause}
+                                aria-pressed={world.paused}
+                                aria-label="Pause"
+                            >
+                                <Icon name="pause" size={13} />
+                            </button>
+                        </HudTooltip>
                         {GAME_SPEEDS.map((s) => (
                             <button
                                 type="button"
                                 key={s}
                                 className={cn(
-                                    segBtn,
-                                    !world.paused &&
-                                        world.speed === s &&
-                                        "bg-accent text-accent-ink hover:text-accent-ink",
+                                    segmentItem({on: !world.paused && world.speed === s}),
+                                    "min-w-[36px] tabular-nums",
                                 )}
                                 aria-pressed={!world.paused && world.speed === s}
                                 onClick={() => api.setSpeed(s)}
-                                title={`Speed ${speedLabel(s)}`}
                             >
                                 {speedLabel(s)}
                             </button>
@@ -235,20 +292,21 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                     delta={`${fmtNet(net, 1)}/s`}
                 />
                 <Stat
+                    ref={gdpRef}
                     icon="coin"
                     value={fmtGdp(gdp)}
                     label="GDP"
-                    className="cursor-help"
+                    className="cursor-help [-webkit-app-region:no-drag]"
                     onMouseEnter={() => setInfo("gdp")}
                     onMouseLeave={() => setInfo(null)}
                 >
                     {info === "gdp" && (
-                        <Breakdown title="Gross domestic product" read={fmtGdp(gdp)}>
+                        <Breakdown anchor={gdpRef} title="Gross Domestic Product" read={fmtGdp(gdp)}>
                             <Line label="Income" value={`+${income.toFixed(1)}/s`} />
                             <Line label="Upkeep" value={`−${upkeep.toFixed(1)}/s`} />
                             <Line label="Net" value={`${fmtNet(net, 1)}/s`} tone={net < 0 ? "danger" : undefined} />
                             <Line
-                                label="Industry output"
+                                label="Industry Output"
                                 detail={`${indUsed} of ${indCap} slots in use`}
                                 value={`+${indOut.toFixed(1)}/s`}
                             />
@@ -270,7 +328,14 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                     icon="people"
                     value={fmtPop(pop)}
                     label="Population"
-                    delta={<PopTrend rate={popRate} base={pop} label className="text-[11px]" />}
+                    delta={
+                        <PopTrend
+                            rate={popRate}
+                            base={pop}
+                            label
+                            className="text-[11px] [-webkit-app-region:no-drag]"
+                        />
+                    }
                     className="max-[1681px]:hidden"
                 />
                 <Stat
@@ -281,16 +346,17 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                 />
                 {lead && (
                     <Gauge
+                        ref={leadRef}
                         label="Leadership"
                         read={leadExposed ? "Exposed" : leadWord(lead) === "Secure" ? `${lead.pct}%` : leadWord(lead)}
                         frac={leadExposed ? 1 : lead.pct / 100}
                         warn={leadExposed}
-                        className="cursor-help"
+                        className="cursor-help [-webkit-app-region:no-drag]"
                         onMouseEnter={() => setInfo("lead")}
                         onMouseLeave={() => setInfo(null)}
                     >
                         {info === "lead" && (
-                            <Breakdown title="National leadership" read={`${lead.pct}%`}>
+                            <Breakdown anchor={leadRef} title="National Leadership" read={`${lead.pct}%`}>
                                 <div className="text-[11px] text-faint">
                                     {lead.total - lead.lost} of {lead.total} tokens intact
                                 </div>
@@ -309,15 +375,16 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                 )}
                 {stab && (
                     <Gauge
+                        ref={stabRef}
                         label="Stability"
                         read={`${stab.pct}%`}
                         frac={stab.pct / 100}
-                        className="cursor-help"
+                        className="cursor-help [-webkit-app-region:no-drag]"
                         onMouseEnter={() => setInfo("stab")}
                         onMouseLeave={() => setInfo(null)}
                     >
                         {info === "stab" && stabInfo && (
-                            <Breakdown title="National stability" read={`${stabInfo.pct}%`}>
+                            <Breakdown anchor={stabRef} title="National Stability" read={`${stabInfo.pct}%`}>
                                 {stabInfo.factors.length ? (
                                     stabInfo.factors.map((f) => (
                                         <Line
@@ -338,7 +405,11 @@ export default function StatusStrip({world, api, myNation, mySlot, keys, online,
                         )}
                     </Gauge>
                 )}
-                {online && meBadge && <div className="flex items-center pl-3 pr-2 border-l border-line">{meBadge}</div>}
+                {online && meBadge && (
+                    <div className="flex items-center pl-3 pr-2 border-l border-line [-webkit-app-region:no-drag]">
+                        {meBadge}
+                    </div>
+                )}
             </div>
         </div>
     );

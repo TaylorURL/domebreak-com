@@ -4,10 +4,11 @@ import {ChevronDown} from "lucide-react";
 import HeroMap from "./HeroMap.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow, Wordmark} from "./Primitives.jsx";
-import {button} from "../lib/variants.js";
+import {button, ctaRow} from "../lib/variants.js";
 import {scrollToId} from "../lib/nav.js";
+import {FRAME_BOX_STYLE, FRAME_STYLE} from "../lib/heroFrame.js";
 
-// The stat strip under the rule: a white marker and a reading on each line.
+// The stat strip under the rule: an accent marker and a reading on each line.
 const SPECS = [
     {label: "222 nations"},
     {label: "Defense & offense"},
@@ -50,19 +51,24 @@ export default function Hero({onSignIn}) {
 
             {/* The frame around the live scene: one hairline over the open half of
                 the board, and the theatre it is showing read out beneath it.
-                Decorative — the map itself is scenery, not a control. */}
+                Decorative — the map itself is scenery, not a control. Its box is
+                measured in lib/heroFrame.js, which the scene's camera aims into,
+                so the map's own labels land inside the hairline rather than
+                across it; it begins where the ground under the copy has faded
+                out, so it never reaches the column. */}
             <motion.div
                 aria-hidden
                 {...fadeUp(reduce, 0.5)}
-                className="pointer-events-none absolute right-8 top-[17%] z-10 hidden w-[42%] max-w-[620px] lg:block"
+                style={FRAME_STYLE}
+                className="pointer-events-none absolute z-10 hidden xl:block"
             >
-                <div className="relative aspect-[620/470] border border-line" />
+                <div className="relative border border-line" style={FRAME_BOX_STYLE} />
                 <div className="mt-2 flex items-center justify-between gap-4 border border-line bg-panel px-3 py-[7px] text-[12px] text-faint">
-                    <span className="flex items-center gap-2">
-                        <span className="db-led db-led-warn" />
+                    <span className="flex shrink-0 items-center gap-2">
+                        <span className="db-led db-led-accent" />
                         Threat board · Live
                     </span>
-                    <span className="hidden text-dim xl:inline">Homeland defense · CONUS · Intercept grid</span>
+                    <span className="truncate text-dim">Homeland defense · CONUS · Intercept grid</span>
                 </div>
             </motion.div>
 
@@ -89,7 +95,7 @@ export default function Hero({onSignIn}) {
                     </motion.p>
 
                     <motion.div {...fadeUp(reduce, 0.24)} className="mt-8">
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className={ctaRow()}>
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn("signup")}
@@ -104,7 +110,7 @@ export default function Hero({onSignIn}) {
                                 onClick={() => scrollToId("play")}
                                 className="group inline-flex items-center gap-2 text-text transition-colors hover:text-dim"
                             >
-                                <span className="db-led db-led-warn" />
+                                <span className="db-led db-led-accent" />
                                 Free · Online Multiplayer
                                 <ChevronDown
                                     size={13}
@@ -126,7 +132,7 @@ export default function Hero({onSignIn}) {
                     >
                         {SPECS.map((s) => (
                             <span key={s.label} className="flex items-center gap-2 text-[12px] text-faint">
-                                <span className="db-led db-led-warn" />
+                                <span className="db-led db-led-accent" />
                                 {s.label}
                             </span>
                         ))}

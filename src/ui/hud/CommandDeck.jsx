@@ -1,40 +1,45 @@
 import {UNIT_ICON, unitLabel, unitLockReason, WARHEAD_ORDER, WARHEADS} from "../../game/engine.js";
 import {WARHEAD_ICON} from "../../game/data/constants.js";
 import UnitIcon from "../common/UnitIcon.jsx";
+import HudTooltip from "./HudTooltip.jsx";
 import {prodLabel, prodTime} from "../lib/prod.js";
 import {cn} from "../lib/cn.js";
 import {HOTBAR} from "../lib/hotbar.js";
 
 // One stockpile cell: the round, how many are held, and what it is called. A
-// stockpile of none drops to the faint ink so a glance skips it.
+// stockpile of none drops to the faint ink so a glance skips it. The cell's
+// own label is a short code, and a narrow window drops even that, so the
+// tooltip carries the full name.
 function Round({type, count}) {
     const wh = WARHEADS[type];
     return (
-        <div
-            className={cn(
-                "flex flex-col items-center justify-center gap-[3px] w-[54px] max-[1439px]:w-[44px] h-[72px]",
-                count > 0 ? "text-accent" : "text-faint",
-            )}
-            title={`${wh.name} in the stockpile: ${count}`}
-            role="img"
-            aria-label={`${wh.name}: ${count} held`}
-        >
-            <UnitIcon name={WARHEAD_ICON[type]} size={24} />
-            <b
+        <HudTooltip label={wh.name} detail={`${count} in the stockpile`}>
+            <div
                 className={cn(
-                    "font-mono text-[17px] font-semibold tabular-nums leading-none",
-                    count === 0 && "text-faint",
+                    "flex flex-col items-center justify-center gap-[3px] w-[54px] max-[1439px]:w-[44px] h-[72px]",
+                    count > 0 ? "text-accent" : "text-faint",
                 )}
+                role="img"
+                aria-label={`${wh.name}: ${count} held`}
             >
-                {count}
-            </b>
-            <small className="text-[10px] leading-none text-faint max-[1439px]:hidden">{wh.short}</small>
-        </div>
+                <UnitIcon name={WARHEAD_ICON[type]} size={24} />
+                <b
+                    className={cn(
+                        "font-mono text-[17px] font-semibold tabular-nums leading-none",
+                        count === 0 && "text-faint",
+                    )}
+                >
+                    {count}
+                </b>
+                <small className="text-[10px] leading-none text-faint max-[1439px]:hidden">{wh.short}</small>
+            </div>
+        </HudTooltip>
     );
 }
 
 // The command deck: the national stockpile, the build hotbar keyed 1-8, and what
-// the line is turning out right now.
+// the line is turning out right now. A slot shows a short name, so its tooltip
+// gives the full one and, while the slot is locked, what it is waiting on.
 export default function CommandDeck({world, mySlot, myNation, placing, onPlace}) {
     const ammo = myNation?.ammo || {};
     const cur = myNation?.prod?.current || null;
@@ -68,43 +73,43 @@ export default function CommandDeck({world, mySlot, myNation, placing, onPlace})
                     const building = cur?.item.kind === "unit" && cur.item.type === s.type;
                     const label = unitLabel(s.type);
                     return (
-                        <button
-                            type="button"
-                            key={s.type}
-                            className={cn(
-                                "relative flex-1 min-w-[48px] max-w-[70px] h-[72px] flex flex-col items-center justify-center gap-[5px] border text-dim transition-[border-color,color,background-color] duration-[var(--dur-fast)] ease-out-db focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
-                                on
-                                    ? "border-accent bg-accent-soft text-accent"
-                                    : "border-line hover:border-line-2 hover:text-text",
-                                lock && "opacity-40",
-                            )}
-                            onClick={() => onPlace?.(s.type)}
-                            aria-pressed={on}
-                            title={lock ? `${label}: ${lock}` : `${label} (${i + 1})`}
-                            aria-label={lock ? `${label}, locked: ${lock}` : `Place a ${label}, key ${i + 1}`}
-                        >
-                            <span
-                                className="absolute left-[5px] top-[5px] inline-grid place-items-center min-w-[14px] h-[14px] px-[3px] border border-line-2 font-mono text-[9px] leading-none text-faint"
-                                aria-hidden="true"
+                        <HudTooltip key={s.type} label={label} hint={i + 1} detail={lock}>
+                            <button
+                                type="button"
+                                className={cn(
+                                    "relative flex-1 min-w-[48px] max-w-[70px] h-[72px] flex flex-col items-center justify-center gap-[5px] border text-dim transition-[border-color,color,background-color] duration-[var(--dur-fast)] ease-out-db focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                                    on
+                                        ? "border-accent bg-accent-soft text-accent"
+                                        : "border-line hover:border-line-2 hover:text-text",
+                                    lock && "opacity-40",
+                                )}
+                                onClick={() => onPlace?.(s.type)}
+                                aria-pressed={on}
+                                aria-label={lock ? `${label}, locked: ${lock}` : `Place a ${label}, key ${i + 1}`}
                             >
-                                {i + 1}
-                            </span>
-                            <UnitIcon name={UNIT_ICON[s.type]} size={24} />
-                            <small className={cn("text-[10px] font-medium leading-none truncate max-w-full px-1")}>
-                                {s.short}
-                            </small>
-                            {building && (
-                                <i
-                                    className="absolute left-[6px] right-[6px] bottom-[5px] h-[2px] bg-line"
+                                <span
+                                    className="absolute left-[5px] top-[5px] inline-grid place-items-center min-w-[14px] h-[14px] px-[3px] border border-line-2 font-mono text-[9px] leading-none text-faint"
                                     aria-hidden="true"
                                 >
+                                    {i + 1}
+                                </span>
+                                <UnitIcon name={UNIT_ICON[s.type]} size={24} />
+                                <small className={cn("text-[10px] font-medium leading-none truncate max-w-full px-1")}>
+                                    {s.short}
+                                </small>
+                                {building && (
                                     <i
-                                        className="block h-full bg-accent"
-                                        style={{width: `${Math.round((cur.progress || 0) * 100)}%`}}
-                                    />
-                                </i>
-                            )}
-                        </button>
+                                        className="absolute left-[6px] right-[6px] bottom-[5px] h-[2px] bg-line"
+                                        aria-hidden="true"
+                                    >
+                                        <i
+                                            className="block h-full bg-accent"
+                                            style={{width: `${Math.round((cur.progress || 0) * 100)}%`}}
+                                        />
+                                    </i>
+                                )}
+                            </button>
+                        </HudTooltip>
                     );
                 })}
             </div>

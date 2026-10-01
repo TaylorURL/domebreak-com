@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {acceptFriend, fetchFriends, removeFriend, requestFriend} from "../../account/social.js";
 import {useModal} from "../hooks/useModal.js";
-import {overlay, card, button, miniButton, badge, input as inputCls, label, menuTitle, sub} from "../lib/variants.js";
+import {overlay, card, button, miniButton, badge, input as inputCls, label, menuTitle} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import Flag from "./Flag.jsx";
 
@@ -133,12 +133,14 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
 
     // "Your Party" card: roster (with leader badge, ready dot, flag), my own
     // ready toggle, leader-only kick/join-mode/launch controls, and leave.
+    // Without a party it is one outlined button: Add is the panel's one primary,
+    // since the field beside it is what the panel is for.
     const partySection = () => {
         const {party, members, meId} = partyCtl;
         if (!party) {
             return (
                 <button
-                    className={cn(button({variant: "primary"}), "w-full")}
+                    className={cn(button(), "w-full")}
                     disabled={partyBusy}
                     onClick={() => partyAct(partyCtl.create)}
                 >
@@ -263,12 +265,20 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                     <label className="sr-only" htmlFor="db-friends-input">
                         Username
                     </label>
+                    {/* A lookup, not a form the browser should fill: autocomplete off
+                        and a name no contact or login heuristic matches keep its
+                        suggestion list from dropping over the panel. */}
                     <input
                         id="db-friends-input"
+                        name="db-commander-lookup"
                         className={cn(inputCls(), "flex-1")}
                         placeholder="Add by username"
                         value={input}
                         maxLength={24}
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") add();
@@ -297,8 +307,13 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                     </div>
                 )}
 
-                {loading && <p className={sub()}>Loading allies…</p>}
-                {!loading && friends.length === 0 && <p className={sub()}>No allies yet. Add a commander by name.</p>}
+                {/* Loading and the empty roster sit where the friends list will, in
+                    a box of their own, rather than flush under the party button. */}
+                {(loading || friends.length === 0) && (
+                    <p className="mt-4 mb-0 px-3 py-4 bg-bg-2 border border-line text-[12.5px] leading-[1.5] text-dim text-center">
+                        {loading ? "Loading allies…" : "No allies yet. Add a commander by name."}
+                    </p>
+                )}
 
                 {incoming.length > 0 && (
                     <div className="mt-4">

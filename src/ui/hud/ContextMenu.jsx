@@ -37,7 +37,7 @@ export default function ContextMenu({x, y, title, items, onClose}) {
     return (
         <>
             <div
-                className="fixed inset-0 z-40"
+                className="fixed inset-0 z-40 [-webkit-app-region:no-drag]"
                 onClick={onClose}
                 onContextMenu={(e) => {
                     e.preventDefault();

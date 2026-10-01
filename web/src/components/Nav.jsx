@@ -11,20 +11,6 @@ import NavDropdown from "./NavDropdown.jsx";
 import MobileNav from "./MobileNav.jsx";
 import {PlayNavLink} from "./PlayCta.jsx";
 
-// Featured, always-visible link to the "play free" band — the site's headline
-// call to action, so it gets a live status LED instead of sitting in a menu.
-function PlayLink() {
-    return (
-        <button
-            onClick={() => scrollToId("play")}
-            className="hidden items-center gap-2 px-3 py-2 text-[12.5px] font-semibold text-text transition-colors duration-[var(--dur-fast)] ease-out-db hover:text-dim md:inline-flex cursor-pointer"
-        >
-            <span className="db-led db-led-warn" />
-            Play Free
-        </button>
-    );
-}
-
 export default function Nav({onSignIn}) {
     const {loading, signedIn} = useAccount();
     const [scrolled, setScrolled] = useState(false);
@@ -41,10 +27,12 @@ export default function Nav({onSignIn}) {
             className={cn(
                 // Off the top of the page the bar is black glass over a
                 // hairline, which is the one line that says the chrome is
-                // sitting above the page rather than in it.
+                // sitting above the page rather than in it. The glass is the
+                // strong chrome: anything thinner lets the hero scene and the
+                // copy scrolling under the bar show through its links.
                 "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-300 ease-out-db",
                 scrolled
-                    ? "border-b border-line bg-chrome backdrop-blur-[10px]"
+                    ? "border-b border-line bg-chrome-strong backdrop-blur-[10px]"
                     : "border-b border-transparent bg-transparent",
             )}
         >
@@ -62,12 +50,12 @@ export default function Nav({onSignIn}) {
                     <span className="hidden text-[12px] font-medium text-faint lg:inline">Global Missile Command</span>
                 </button>
 
-                {/* Desktop menu cluster — grouped dropdowns + the featured play link. */}
+                {/* Desktop menu cluster — the grouped dropdowns. The bar's one
+                    call to action is the Play Free button on the right. */}
                 <div className="hidden items-center md:flex">
                     {NAV_MENUS.map((group) => (
                         <NavDropdown key={group.label} label={group.label} items={group.items} />
                     ))}
-                    <PlayLink />
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-2">

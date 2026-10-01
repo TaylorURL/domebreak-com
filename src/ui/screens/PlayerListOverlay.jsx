@@ -1,6 +1,7 @@
 import Flag from "../common/Flag.jsx";
 import {overlay, card, menuTitle, iconButton} from "../lib/variants.js";
 import Icon from "../common/Icon.jsx";
+import Standing from "./Standing.jsx";
 import {cn} from "../lib/cn.js";
 import {fmtGdp, fmtPop} from "../lib/format.js";
 import {useRoster} from "../lib/roster.js";
@@ -14,6 +15,10 @@ import {gdpOf, populationOf, populationTrendOf} from "../../game/engine.js";
 // engine queries only; never mutates. In multiplayer the netClient's roster
 // supplies each human's username; AI seats stay labelled AI in both single-
 // and multi-player.
+//
+// The Power column takes whatever the fixed figure columns leave, and the
+// Commander column only what its seat tag and name need, so a full nation
+// name fits beside its flag.
 export default function PlayerListOverlay({world, mySlot, players, onOpenCountry, onClose}) {
     const {usernameOf, isHuman} = useRoster(players);
 
@@ -34,29 +39,33 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
             b.alive - a.alive || citiesOf(b.slot) - citiesOf(a.slot) || gdpOf(world, b.slot) - gdpOf(world, a.slot),
     );
 
+    // An eliminated power is out of the war whatever it was to you, so it says
+    // that rather than its last standing.
     const relOf = (n) => {
         if (n.slot === mySlot) return "self";
+        if (!n.alive) return "eliminated";
         const r = me?.relations[n.slot];
         return r === "war" ? "war" : r === "ally" ? "ally" : "peace";
     };
+    // The seat tag says who commands a power; the name beside it is only for a
+    // human other than you, since the tag already reads "You" on your own row.
     const seatOf = (n) => {
-        if (n.slot === mySlot) return {label: "You", cls: "text-accent-ink bg-accent border-accent"};
+        if (n.slot === mySlot) return {label: "You", cls: "bg-accent-fill border-accent-fill text-accent-ink"};
         if (isHuman(n.slot)) return {label: "Player", cls: "text-text border-line-2"};
         return {label: "AI", cls: ""};
     };
     const commanderOf = (n) => {
-        if (n.slot === mySlot) return "You";
-        if (isHuman(n.slot)) return usernameOf.get(n.slot) || "Commander";
+        if (n.slot !== mySlot && isHuman(n.slot)) return usernameOf.get(n.slot) || "Commander";
         return null;
     };
 
     const rowGrid =
-        "grid grid-cols-[36px_minmax(180px,2fr)_minmax(140px,1.2fr)_64px_64px_72px_78px_92px] items-center gap-3 px-[14px] py-[10px] border-b border-hair";
+        "grid grid-cols-[28px_minmax(200px,1fr)_minmax(96px,max-content)_56px_60px_76px_76px_96px] items-center gap-3 px-[14px] py-[10px] border-b border-hair";
 
     return (
         <div className={overlay({placement: "center"})} onClick={onClose}>
             <div
-                className={cn(card(), "db-card-scroll w-[min(900px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
+                className={cn(card(), "db-card-scroll w-[min(960px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="db-players-title"
@@ -185,20 +194,10 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                     )}
                                 </span>
                                 <span className="text-right font-mono text-xs" role="cell">
-                                    {n.alive ? fmtGdp(gdpOf(world, n.slot), 1) : "—"}
+                                    {n.alive ? fmtGdp(gdpOf(world, n.slot)) : "—"}
                                 </span>
                                 <span role="cell">
-                                    {isMe ? (
-                                        <span className="text-[11.5px] text-dim">Home</span>
-                                    ) : !n.alive ? (
-                                        <span className="text-[11.5px] text-dim">Eliminated</span>
-                                    ) : r === "war" ? (
-                                        <span className="text-[11.5px] text-danger">At War</span>
-                                    ) : r === "ally" ? (
-                                        <span className="text-[11.5px] text-text">Allied</span>
-                                    ) : (
-                                        <span className="text-[11.5px] text-dim">At Peace</span>
-                                    )}
+                                    <Standing rel={r} />
                                 </span>
                             </div>
                         );
