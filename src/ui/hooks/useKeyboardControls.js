@@ -31,6 +31,10 @@ export function useKeyboardControls({
     setPlayerListOpen,
     countryPopupSlot,
     setCountryPopupSlot,
+    selUnit,
+    setSelUnit,
+    selCity,
+    setSelCity,
     onPause,
     onHotbar,
     overlayOpen,
@@ -42,6 +46,12 @@ export function useKeyboardControls({
 }) {
     useWindowEvent("keydown", (e) => {
         if (e.key !== "Escape") return;
+        // A selection only counts while it is on screen: a unit that has died
+        // since it was picked has taken its card with it, and clearing its stale
+        // id would spend a press on nothing the player can see.
+        const selected =
+            (selUnit != null && w.units.some((u) => u.id === selUnit)) ||
+            (selCity != null && w.cities.some((c) => c.id === selCity));
         if (menu) setMenu(null);
         else if (disembarkId) setDisembarkId(null);
         else if (moving) setMoving(null);
@@ -49,11 +59,14 @@ export function useKeyboardControls({
         else if (placing) setPlacing(null);
         else if (attackMode) setAttackMode(false);
         // The dossier popup and the Tab scoreboard sit on top of the map, so they
-        // close first; the open drawer goes next, and only an empty screen lets
-        // Escape through to the pause menu.
+        // close first; the selection card and its ring go next, then the open
+        // drawer, and only an empty screen lets Escape through to the pause menu.
         else if (countryPopupSlot != null) setCountryPopupSlot?.(null);
         else if (playerListOpen) setPlayerListOpen(false);
-        else if (panel) setPanel(null);
+        else if (selected) {
+            setSelUnit?.(null);
+            setSelCity?.(null);
+        } else if (panel) setPanel(null);
         else onPause?.();
     });
 

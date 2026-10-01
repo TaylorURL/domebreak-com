@@ -589,7 +589,10 @@ export default function App() {
 
     return (
         <div className="relative z-[1] flex flex-col h-full">
-            <TitleBarDrag />
+            {/* In a match the status strip is the title bar: it carries its own
+                drag region around its controls, so the full-width strip would
+                only sit over the speed buttons and swallow their clicks. */}
+            {screen !== "playing" && <TitleBarDrag />}
             {attract}
             {splash}
             {screen !== "playing" && (
@@ -741,6 +744,7 @@ export default function App() {
             {overlay === "pause" && (
                 <PauseMenu
                     over={world?.over}
+                    keys={keys}
                     onResume={resume}
                     onSave={() => {
                         setSaveMode("save");

@@ -1,4 +1,5 @@
 import Icon from "../common/Icon.jsx";
+import HudTooltip from "./HudTooltip.jsx";
 import {HUD_PANELS} from "../../game/platform/hudLayout.js";
 import {cn} from "../lib/cn.js";
 import {useDisclosure} from "../../lib/hooks/useDisclosure.js";
@@ -61,28 +62,31 @@ export default function HudLayoutMenu({layout, onToggle, onResetAll, panels = HU
                     </div>
                 </div>
             )}
-            <button
-                type="button"
-                className={cn(
-                    "relative grid place-items-center w-9 h-9 border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-line-2 focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
-                    open && "text-accent border-line-2",
-                )}
-                onClick={toggle}
-                aria-expanded={open}
-                aria-haspopup="menu"
-                title="Customize HUD Layout"
-                aria-label="Customize HUD layout"
-            >
-                <Icon name="sliders" size={16} />
-                {hiddenCount > 0 && !open && (
-                    <span
-                        className="absolute -top-px -right-px min-w-[14px] h-[14px] px-1 grid place-items-center bg-accent text-accent-ink font-mono text-[9px] font-semibold leading-none tabular-nums"
-                        aria-label={`${hiddenCount} hidden`}
-                    >
-                        {hiddenCount}
-                    </span>
-                )}
-            </button>
+            {/* The tooltip stands down while the menu is open: both rise from
+                this button, and the menu is the one being read. */}
+            <HudTooltip label="Customize HUD Layout" disabled={open}>
+                <button
+                    type="button"
+                    className={cn(
+                        "relative grid place-items-center w-9 h-9 border border-line bg-panel text-dim backdrop-blur-[8px] transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:border-line-2 focus-visible:outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--accent)]",
+                        open && "text-accent border-line-2",
+                    )}
+                    onClick={toggle}
+                    aria-expanded={open}
+                    aria-haspopup="menu"
+                    aria-label="Customize HUD layout"
+                >
+                    <Icon name="sliders" size={16} />
+                    {hiddenCount > 0 && !open && (
+                        <span
+                            className="absolute -top-px -right-px min-w-[14px] h-[14px] px-1 grid place-items-center bg-accent-fill text-accent-ink font-mono text-[9px] font-semibold leading-none tabular-nums"
+                            aria-label={`${hiddenCount} hidden`}
+                        >
+                            {hiddenCount}
+                        </span>
+                    )}
+                </button>
+            </HudTooltip>
         </div>
     );
 }

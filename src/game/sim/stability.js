@@ -36,7 +36,7 @@ function stabilityFactors(w, n, eco) {
         if (lostFrac > 0)
             f.push({
                 key: "pop",
-                label: "Population lost",
+                label: "Population Lost",
                 penalty: lostFrac * STABILITY.wPopLoss,
                 detail: `${Math.round(lostFrac * 100)}% of citizens gone`,
             });
@@ -46,7 +46,7 @@ function stabilityFactors(w, n, eco) {
     if (wars - STABILITY.freeWars > 0)
         f.push({
             key: "war",
-            label: "Too many wars",
+            label: "Too Many Wars",
             penalty: (wars - STABILITY.freeWars) * STABILITY.wPerWar,
             detail: `${wars} active fronts`,
         });
@@ -56,14 +56,14 @@ function stabilityFactors(w, n, eco) {
         if ((n.lead.lost || 0) > 0)
             f.push({
                 key: "lead",
-                label: "Leadership killed",
+                label: "Leadership Killed",
                 penalty: (n.lead.lost / total) * STABILITY.wLeadLoss,
                 detail: `${n.lead.lost} of ${total} lost`,
             });
         if ((n.lead.sheltered || 0) > 0)
             f.push({
                 key: "bunker",
-                label: "Leadership bunkered",
+                label: "Leadership Bunkered",
                 penalty: (n.lead.sheltered / total) * STABILITY.wBunkered,
                 detail: `${n.lead.sheltered} sheltered, not governing`,
             });
@@ -72,7 +72,7 @@ function stabilityFactors(w, n, eco) {
     if ((eco ? eco.netIncome : netIncomeOf(w, n.slot)) < 0)
         f.push({
             key: "deficit",
-            label: "Points deficit",
+            label: "Points Deficit",
             penalty: STABILITY.wDeficit,
             detail: "spending outpaces income",
         });
@@ -88,7 +88,7 @@ function stabilityFactors(w, n, eco) {
         if (sum > 0)
             f.push({
                 key: "defeat",
-                label: "Recent defeat",
+                label: "Recent Defeat",
                 penalty: sum,
                 detail:
                     n.defeatPenalties.length > 1

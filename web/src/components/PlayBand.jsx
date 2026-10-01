@@ -81,7 +81,7 @@ export default function PlayBand({onSignIn}) {
                             <button
                                 type="button"
                                 onClick={() => onSignIn?.("signup")}
-                                className={cn(button({variant: "default"}), "w-full")}
+                                className={cn(button({variant: "default", size: "lg"}), "w-full")}
                             >
                                 Create a Free Account
                             </button>

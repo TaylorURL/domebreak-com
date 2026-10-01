@@ -31,9 +31,12 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                         </p>
                     </div>
                 </div>
+                {/* Field names here read at the weight GameRulesForm gives its rule
+                    names, 13px in the text colour, with any explaining sentence
+                    faint and smaller under them. */}
                 {nation && (
                     <div className="mb-4 flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-faint">Commander</span>
+                        <span className="text-[13px] font-medium text-text">Commander</span>
                         <span className={cn(chip({subtle: true}), "inline-flex items-center gap-1.5")}>
                             <Flag iso={nation.iso} />
                             <span className="truncate">{nation.name}</span>
@@ -53,7 +56,7 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                         aria-controls="db-newgame-ai-nations"
                     >
                         <span className="flex flex-col">
-                            <span className="text-[11px] font-medium text-faint">AI Nations</span>
+                            <span className="text-[13px] font-medium text-text">AI Nations</span>
                             <span className="text-[12px] text-dim">
                                 {aiPicks.length ? `${aiPicks.length} pinned` : "Random"}
                             </span>
@@ -66,7 +69,7 @@ export default function NewGameRules({data, iso, initialRules, onStart, onBack})
                     </button>
                     {aiOpen && (
                         <div id="db-newgame-ai-nations" className="border border-line bg-sunk p-3">
-                            <p className="mt-0 mb-2.5 text-[11px] leading-snug text-dim">
+                            <p className="mt-0 mb-2.5 text-[11.5px] leading-snug text-faint">
                                 Pin the nations you want to fight. Pinned nations always join the war; any remaining
                                 Active Nations slots are filled at random. Leave empty for a fully random cast.
                             </p>

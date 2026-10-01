@@ -25,10 +25,11 @@ export function Wordmark({className, stacked = false}) {
     );
 }
 
-// The kicker over a heading: a short Inter label with a status lamp. `tone`
-// picks the lamp — live is the red blink that says something is happening, and
-// the other three are steady.
-export function Eyebrow({children, dot = true, tone = "warn", className}) {
+// The kicker over a heading: a short Inter label with a lamp. `tone` picks the
+// lamp — accent, the default, is the brand's own mark and reports nothing; live
+// is the red blink that says something is happening, and the rest are steady
+// states.
+export function Eyebrow({children, dot = true, tone = "accent", className}) {
     return (
         <div className={cn("inline-flex items-center gap-2 text-[12px] font-medium text-faint", className)}>
             {dot && <span className={cn("db-led", `db-led-${tone}`)} />}

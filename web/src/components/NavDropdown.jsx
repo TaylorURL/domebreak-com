@@ -90,7 +90,7 @@ export default function NavDropdown({label, items}) {
                 className={cn(
                     "relative inline-flex items-center gap-2 px-3 py-2 text-[12.5px] font-medium transition-colors duration-[var(--dur-fast)] ease-out-db cursor-pointer",
                     // Open is an active state, so it takes the white text and
-                    // the 2px white rule the tab strips use; resting labels
+                    // the 2px accent rule the tab strips use; resting labels
                     // stay dim.
                     open
                         ? "text-text after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-accent after:content-['']"

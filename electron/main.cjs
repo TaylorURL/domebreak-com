@@ -128,6 +128,10 @@ async function createWindow() {
         icon: ICON,
         backgroundColor: "#000000",
         title: "DomeBreak",
+        // The page draws its own title bar: TitleBarDrag outside a match, the
+        // status strip inside one. The strip leaves these window controls a
+        // gutter sized to them (left on macOS, right on Windows), so a change to
+        // either position or size here moves that gutter in StatusStrip.jsx too.
         titleBarStyle: "hidden",
         trafficLightPosition: {x: 14, y: 18},
         titleBarOverlay: {color: "#000000", symbolColor: "#a3a3a3", height: 34},
@@ -140,6 +144,11 @@ async function createWindow() {
         },
     });
     win.setMenuBarVisibility(false);
+    // Full screen hides the window controls, so the page is told when the
+    // window enters or leaves it and the strip can close up its gutter.
+    const sendFullScreen = () => win.webContents.send("shell:fullscreen", win.isFullScreen());
+    win.on("enter-full-screen", sendFullScreen);
+    win.on("leave-full-screen", sendFullScreen);
     // Native-app hardening: nothing that reveals a web runtime. No browser
     // context menu, no pinch/keyboard zoom, no reload or devtools shortcuts.
     // Game keys (WASD/arrows/space/etc.) are untouched.
@@ -185,6 +194,7 @@ app.whenReady().then(() => {
     }
     registerLocalStore();
     registerUpdater();
+    ipcMain.handle("shell:fullscreen", (e) => BrowserWindow.fromWebContents(e.sender)?.isFullScreen() ?? false);
     createWindow();
 });
 app.on("activate", () => {

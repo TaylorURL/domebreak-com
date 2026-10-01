@@ -40,8 +40,8 @@ const quantize = (v, steps) => Math.round(v * steps) / steps;
 // elements and the capture badge's fixed screen offset. Constant identity keeps
 // the library Marker memo intact even while the badge/ring reposition.
 //
-// Selection is a white corner box on the map. The city keeps a ring inside it
-// because a city is a place rather than a thing.
+// Selection is a corner box on the map in the accent blue. The city keeps a
+// ring inside it because a city is a place rather than a thing.
 const SELECTION_MARK = (
     <span className="db-sel-mark" aria-hidden="true">
         <i className="tr" />
@@ -232,6 +232,13 @@ export default function MapMarkers({
                 p.y = e.clientY;
             }
         };
+        // Hand the hover an updater, unless a placement or a relocation owns the
+        // cursor. Each updater returns the same object when nothing changes, so
+        // React bails out and a pointer resting on a unit costs nothing.
+        const hoverUnit = (take) => {
+            const {placing, moving, setHover} = ctxRef.current;
+            if (!placing && !moving) setHover(take);
+        };
         return {
             click: (id, e) => {
                 const u = unitById(id);
@@ -242,12 +249,18 @@ export default function MapMarkers({
                 if (u) ctxRef.current.openUnitMenu(u, e);
             },
             enter: (id, e) => {
-                const {placing, moving, setHover} = ctxRef.current;
                 trackPos(e);
-                if (!placing && !moving)
-                    setHover((h) => (h && h.kind === "unit" && h.id === id ? h : {kind: "unit", id}));
+                hoverUnit((h) => (h && h.kind === "unit" && h.id === id ? h : {kind: "unit", id}));
             },
-            move: (id, e) => trackPos(e),
+            // Moving over a unit takes the hover back only while nothing holds it.
+            // That is how a readout the camera cleared as it started to move (see
+            // LiveGame) returns on the next nudge of the pointer, without ever
+            // taking the hover from the country or city readout the map probe put
+            // there.
+            move: (id, e) => {
+                trackPos(e);
+                hoverUnit((h) => h || {kind: "unit", id});
+            },
             leave: (id) => ctxRef.current.setHover((h) => (h && h.kind === "unit" && h.id === id ? null : h)),
         };
     }, []);

@@ -6,13 +6,15 @@
 // go through the api.
 import {useState} from "react";
 import {DrawerScreen} from "./ScreenFrame.jsx";
+import Standing from "./Standing.jsx";
 import Flag from "../common/Flag.jsx";
 import Icon from "../common/Icon.jsx";
 import {colorForSlot, DIPLOMACY} from "../../game/data/constants.js";
 import {miniButton, input} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
-import {fmtGdp} from "../lib/format.js";
+import {fmtGdp, plural} from "../lib/format.js";
 import {useRoster} from "../lib/roster.js";
+import {gdpOf} from "../../game/engine.js";
 
 // One figure in the strip under the header.
 function Readout({label, value, tone}) {
@@ -24,13 +26,13 @@ function Readout({label, value, tone}) {
     );
 }
 
-// A power's standing toward you, stated by a lamp as well as a word.
-function Standing({label, tone = "text-dim", led}) {
+// One of a power's holdings on its roster row: the figure in mono, and the word
+// it counts in, agreeing with it, in the faint ink of the line around it.
+function Holding({n, one, many}) {
     return (
-        <span className={cn("inline-flex items-center gap-[6px] text-[11.5px]", tone)}>
-            {led && <i className={cn("db-led", led)} aria-hidden="true" />}
-            {label}
-        </span>
+        <>
+            <span className="font-mono tabular-nums text-dim">{n}</span> {plural(n, one, many)}
+        </>
     );
 }
 
@@ -49,6 +51,8 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
     for (const u of world.units) if (u.hp > 0) forceCount[u.slot] = (forceCount[u.slot] || 0) + 1;
     const citiesOf = (slot) => cityCount[slot] || 0;
     const forcesOf = (slot) => forceCount[slot] || 0;
+    const myCities = citiesOf(mySlot),
+        myUnits = forcesOf(mySlot);
     // Your standing toward a slot: "war" | "ally" | "peace" (absent reads as peace).
     const rel = (n) =>
         n.slot === mySlot
@@ -101,11 +105,14 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
     }
     wars.sort((x, y) => y.mine - x.mine);
 
+    // The seat tag says who commands a power, in the same tags the dossier and
+    // the scoreboard use. Ally blue is kept for an alliance, so a human seat
+    // reads in the text colour rather than in a colour that means allied.
     const seat = (n) =>
         n.slot === mySlot
-            ? {label: "You", cls: "bg-accent border-accent text-accent-ink"}
+            ? {label: "You", cls: "bg-accent-fill border-accent-fill text-accent-ink"}
             : isHuman(n.slot)
-              ? {label: "Player", cls: "border-[var(--ally)] text-[var(--ally)]"}
+              ? {label: "Player", cls: "border-line-2 text-text"}
               : {label: "AI", cls: "border-line text-dim"};
 
     return (
@@ -114,7 +121,7 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
             labelledBy="db-drawer-talks"
             caption={
                 <>
-                    <b>{citiesOf(mySlot)}</b> cities · <b>{forcesOf(mySlot)}</b> units
+                    <b>{myCities}</b> {plural(myCities, "city", "cities")} · <b>{myUnits}</b> {plural(myUnits, "unit")}
                 </>
             }
             onClose={onClose}
@@ -127,18 +134,22 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
             <div className="grid grid-cols-3 border-b border-line">
                 <Readout label="Powers Standing" value={aliveCount} />
                 <Readout label="At War With" value={atWar} tone={atWar ? "text-red" : undefined} />
-                <Readout label="Alliances" value={allied} tone={allied ? "text-[var(--ally)]" : undefined} />
+                <Readout label="Alliances" value={allied} tone={allied ? "text-ally" : undefined} />
             </div>
 
+            {/* The war board holds four wars in view and scrolls the rest inside
+                itself, so a theatre at war everywhere never crowds the roster
+                below it down to a row. Each line is 18px with 7px between, so
+                93px is exactly four. */}
             {wars.length > 0 && (
                 <section className="px-4 py-3 border-b border-line">
                     <h4 className="db-sec m-0 mb-2">War Board</h4>
-                    <ul className="m-0 p-0 list-none flex flex-col gap-[7px]">
+                    <ul className="db-scroll m-0 p-0 list-none flex flex-col gap-[7px] max-h-[93px] overflow-y-auto">
                         {wars.map(({a, b, mine}) => (
                             <li
                                 key={`${a.slot}-${b.slot}`}
                                 className={cn(
-                                    "flex items-center gap-[8px] text-[12px]",
+                                    "flex-none flex items-center gap-[8px] h-[18px] text-[12px]",
                                     mine ? "text-text" : "text-dim",
                                 )}
                             >
@@ -170,6 +181,8 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                     const standing = rel(n); // "self" | "war" | "ally" | "peace"
                     const war = standing === "war";
                     const s = seat(n);
+                    const cities = citiesOf(n.slot),
+                        units = forcesOf(n.slot);
                     return (
                         <li
                             key={n.slot}
@@ -197,20 +210,19 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                                 </span>
                             </div>
                             <div className="flex items-center gap-2 min-w-0">
-                                {isMe ? (
-                                    <Standing label="Home" />
-                                ) : !n.alive ? (
-                                    <Standing label="Eliminated" tone="text-faint" />
-                                ) : war ? (
-                                    <Standing label="At War" tone="text-red" led="db-led-live" />
-                                ) : standing === "ally" ? (
-                                    <Standing label="Allied" tone="text-[var(--ally)]" led="db-led-sensor" />
-                                ) : (
-                                    <Standing label="At Peace" tone="text-good" led="db-led-ok" />
-                                )}
-                                <span className="ml-auto font-mono text-[11px] tabular-nums text-dim whitespace-nowrap">
-                                    {n.alive ? `${citiesOf(n.slot)}c · ${forcesOf(n.slot)}u · ` : "— · — · "}
-                                    {fmtGdp(n.gdp, 1)}
+                                <Standing rel={!isMe && !n.alive ? "eliminated" : standing} />
+                                <span className="ml-auto text-[11px] text-faint whitespace-nowrap">
+                                    {n.alive ? (
+                                        <>
+                                            <Holding n={cities} one="city" many="cities" /> ·{" "}
+                                            <Holding n={units} one="unit" /> ·{" "}
+                                            <span className="font-mono tabular-nums text-dim">
+                                                {fmtGdp(gdpOf(world, n.slot))}
+                                            </span>
+                                        </>
+                                    ) : (
+                                        "—"
+                                    )}
                                 </span>
                             </div>
                             {!isMe && n.alive && (

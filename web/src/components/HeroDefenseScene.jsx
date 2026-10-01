@@ -20,6 +20,7 @@ import UnitIcon from "@game/ui/common/UnitIcon.jsx";
 import {UNIT_ICON} from "@game/game/data/units.js";
 import {radarRangeOf, UNITS} from "@game/game/engine.js";
 import {geoCircle, interpGC} from "@game/game/geo/geo.js";
+import {frameBox} from "../lib/heroFrame.js";
 
 // One loop of the scene, in scene-seconds. Every scripted launch, intercept and
 // impact finishes before this, then the clock wraps and the wave repeats.
@@ -27,11 +28,13 @@ const LOOP_SEC = 24;
 const SIM_SPEED = 1; // scene-seconds per wall-second
 const STATE_HZ = 30; // throttle React state churn / camera repaints
 
-// Camera: flat mercator framed on the continental US. A slow drift + zoom breath
-// keeps it alive without ever reading as a random simulation. Left padding shifts
-// the map clear of the hero's copy rail so the eastern seaboard action stays in
-// the open right half of the frame.
-const CAM = {lng: -95, lat: 41.2, zoom: 4.05};
+// Camera: flat mercator on the eastern half of the continental US, where the
+// Atlantic waves are met. Its centre is held in the middle of the hero's framed
+// box (framePad below), so the frame shows the seaboard and the interior behind
+// it at every window size, and the labels laid out around that centre keep
+// their place against the frame's hairline. A slow drift + zoom breath keeps it
+// alive without ever reading as a random simulation.
+const CAM = {lng: -80, lat: 40, zoom: 4.05};
 const ZOOM_AMP = 0.09,
     ZOOM_PERIOD_S = 30;
 const LNG_AMP = 2.2,
@@ -100,9 +103,15 @@ const SITES = [
 
 // Belligerent name labels, rendered by the game's own CountryLabels. The US is
 // the defender ("mine"); its neighbors are the in-frame combatants. `w` is the
-// nation weight the component uses for label size + zoom LOD.
+// nation weight the component uses for label size + zoom LOD. The US name sits
+// inside the frame rather than at the country's middle, which lies under the
+// copy at most widths: a little south-west of the camera's centre, clear of the
+// Washington battery and the Chesapeake, with room for the drift on every side
+// of even the narrowest frame (448px across, at 1280). The neighbors keep their
+// own middles, which lie far enough off the centre to fall above or below the
+// frame and its caption whatever the window.
 const LABELS = [
-    {iso: "US", name: "United States", lng: -99, lat: 39.5, w: 1.8, mine: true, combat: true},
+    {iso: "US", name: "United States", lng: -82, lat: 37.5, w: 1.8, mine: true, combat: true},
     {iso: "CA", name: "Canada", lng: -101, lat: 55, w: 1.4, combat: true},
     {iso: "MX", name: "Mexico", lng: -102, lat: 23.5, w: 1.2, combat: true},
     {iso: "CU", name: "Cuba", lng: -79, lat: 21.8, w: 0.8, combat: true},
@@ -772,17 +781,32 @@ function Scene({onReady, still}) {
     );
 }
 
-// Left projection padding so the map biases right of the hero copy rail. Scales
-// with viewport width and collapses on narrow screens where the copy stacks above.
+// Projection padding that puts the camera's centre in the middle of the hero's
+// framed box (lib/heroFrame.js), the same box Hero.jsx draws its hairline
+// around. MapLibre centres the camera in what the padding leaves, so each axis
+// pads its near side by the far side's surplus. Below the width the scene mounts
+// at, the copy covers most of the board and a light bias right of it is all
+// there is to aim for.
 function framePad(m) {
     let w = 0;
+    let h = 0;
     try {
-        w = m.getContainer().clientWidth || 0;
+        const c = m.getContainer();
+        w = c.clientWidth || 0;
+        h = c.clientHeight || 0;
     } catch {
         /* tearing down */
     }
-    const left = w >= 1024 ? Math.min(w * 0.2, 320) : w >= 640 ? w * 0.1 : 0;
-    return {top: 0, right: 0, bottom: 0, left};
+    if (w < 1024) return {top: 0, right: 0, bottom: 0, left: w >= 640 ? w * 0.1 : 0};
+    const box = frameBox(w, h);
+    const x = (box.left + box.right) / 2;
+    const y = (box.top + box.bottom) / 2;
+    return {
+        top: Math.max(0, 2 * y - h),
+        right: Math.max(0, w - 2 * x),
+        bottom: Math.max(0, h - 2 * y),
+        left: Math.max(0, 2 * x - w),
+    };
 }
 
 export default function HeroDefenseScene({still = false, onReady}) {

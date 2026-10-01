@@ -20,13 +20,16 @@ const BADGE =
     "absolute right-1 top-1 inline-grid place-items-center min-w-[14px] h-[14px] px-[3px] border border-line-2 font-mono text-[9px] leading-none text-faint";
 
 // The left dock: the whole command surface in six items, plus the pause menu at
-// the foot. Whichever item is active carries the wash and the white inset rule
-// on its leading edge, and its drawer is the one open beside it.
+// the foot. Whichever item is active carries the wash and the blue inset rule
+// on its leading edge, and its drawer is the one open beside it. Every item
+// already shows its name and its key, so none carries a tooltip. The rail
+// stands on the solid surface, like the drawer it opens, so the map never shows
+// through either.
 export default function Dock({panel, keys, onPanel, onPause}) {
     const K = resolveKeys(keys);
     return (
         <nav
-            className="absolute left-0 top-[52px] bottom-0 z-7 w-[72px] flex flex-col items-center gap-1 py-[10px] bg-panel-2 border-r border-line pointer-events-auto"
+            className="absolute left-0 top-[52px] bottom-0 z-7 w-[72px] flex flex-col items-center gap-1 py-[10px] bg-panel-solid border-r border-line pointer-events-auto"
             aria-label="Command"
         >
             {DOCK_ITEMS.map((it) => {
@@ -38,7 +41,6 @@ export default function Dock({panel, keys, onPanel, onPause}) {
                         className={cn(ITEM, on && "bg-accent-soft text-accent shadow-[inset_2px_0_0_var(--accent)]")}
                         onClick={() => onPanel?.(it.id)}
                         aria-pressed={on}
-                        title={K[it.id] ? `${it.label} (${keyLabel(K[it.id])})` : it.label}
                     >
                         {K[it.id] && (
                             <span className={BADGE} aria-hidden="true">
@@ -54,7 +56,6 @@ export default function Dock({panel, keys, onPanel, onPause}) {
                 type="button"
                 className={cn(ITEM, "mt-auto")}
                 onClick={() => onPause?.()}
-                title="Settings (Esc)"
                 aria-label="Open the pause menu"
             >
                 <Icon name="gear" size={22} />

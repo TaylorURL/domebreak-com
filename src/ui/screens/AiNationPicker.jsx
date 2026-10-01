@@ -3,6 +3,7 @@ import Flag from "../common/Flag.jsx";
 import {GREAT_POWERS} from "../../game/sim/newGame.js";
 import {chip, input} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+import {plural} from "../lib/format.js";
 
 // Multi-select for pinning the exact nations the AI will field. Empty selection =
 // fully random (buildSetup fills the roster from the power pool). Picks here are
@@ -118,7 +119,11 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {c.name}
                             </span>
-                            <span className="font-mono text-xs text-dim">{c.count}</span>
+                            {/* The city count in words, as NewGame's list sets it. */}
+                            <span className="flex-none text-xs text-faint whitespace-nowrap">
+                                <span className="font-mono text-dim">{c.count}</span>{" "}
+                                {plural(c.count, "city", "cities")}
+                            </span>
                         </button>
                     ))}
                 </div>

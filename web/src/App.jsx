@@ -18,6 +18,7 @@ import RouteErrorBoundary from "./components/RouteErrorBoundary.jsx";
 import lazyRoute from "./lib/lazyRoute.js";
 import {
     useHashRoute,
+    isHomeRoute,
     isWikiRoute,
     isDownloadRoute,
     isAdminRoute,
@@ -124,7 +125,7 @@ function Landing({onSignIn, onShowShortcuts}) {
                         "Diplomacy with every rival nation",
                     ]}
                     image="/shots/wartime-command.webp"
-                    imageAlt="DomeBreak console at war, missiles in flight while the economy panel tracks the strain"
+                    imageAlt="DomeBreak console at war, a missile inbound on New England while the status strip tracks GDP"
                 />
 
                 <div className="db-band border-y border-line">
@@ -155,10 +156,11 @@ function Shell() {
             ["privacy", isPrivacyRoute],
             ["terms", isTermsRoute],
             ["contact", isContactRoute],
-            // The home page answers for the bare hash and for in-page anchors
-            // (#doctrine, #play); a hash naming a route nobody serves is a dead
-            // address and gets told so rather than being shown the home page.
-            ["home", (h) => !h || h === "#" || !h.startsWith("#/")],
+            // The home page answers for the bare hash, for in-page anchors
+            // (#doctrine, #play) and for #/ itself; a hash naming a route nobody
+            // serves is a dead address and gets told so rather than being shown
+            // the home page.
+            ["home", isHomeRoute],
         ].find(([, matches]) => matches(hash))?.[0] ?? "notFound";
     useDocumentMeta(route);
 

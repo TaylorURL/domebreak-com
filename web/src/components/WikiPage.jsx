@@ -45,11 +45,13 @@ function StatRow({k, v}) {
 }
 
 // One filter in the rail. The label never moves between states: the resting
-// hairline under the strip and the active 2px white rule sit on the same line,
-// which is what .db-tab's negative margin buys (web/src/styles/pages.css).
+// hairline under the strip and the active 2px accent rule sit on the same line,
+// which is what .db-tab's negative margin buys (web/src/styles/pages.css). The
+// tab has no side padding, so the first label starts on the content's left edge
+// and lines up with the headings below; the rail's gap spaces the rest.
 function FilterTab({active, onClick, children}) {
     return (
-        <button type="button" onClick={onClick} aria-pressed={active} className="db-tab px-[18px] py-3 text-[13px]">
+        <button type="button" onClick={onClick} aria-pressed={active} className="db-tab py-3 text-[13px]">
             {children}
         </button>
     );
@@ -179,7 +181,7 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                 </section>
 
                 <div className="sticky top-16 z-40 border-t border-line bg-chrome-strong backdrop-blur-[10px]">
-                    <div className="db-tabs mx-auto max-w-[1400px] px-5 sm:px-8">
+                    <div className="db-tabs mx-auto max-w-[1400px] gap-9 px-5 sm:px-8">
                         <FilterTab active={activeCategory === "all"} onClick={() => selectCategory("all")}>
                             All
                         </FilterTab>
@@ -206,7 +208,7 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                                         <p className="mt-2 max-w-2xl text-[14px] text-dim">{c.blurb}</p>
                                     </div>
                                     <span className="inline-flex items-center gap-2 text-[12.5px] text-faint">
-                                        <span className="db-led db-led-warn" />
+                                        <span className="db-led db-led-accent" />
                                         <span className="font-mono tabular-nums">{c.units.length}</span> unit
                                         {c.units.length === 1 ? "" : "s"}
                                     </span>

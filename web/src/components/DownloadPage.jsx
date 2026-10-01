@@ -128,7 +128,11 @@ function PlatformCard({platform, version, mine}) {
                     // the OS and the file's own line for a reader arriving at the
                     // link out of context.
                     aria-label={`Download DomeBreak for ${platform.os} on ${platform.arch}: ${platform.sub}`}
-                    className={cn(button({variant: "primary", size: "lg"}), "w-full")}
+                    // The visitor's own installer is the page's one primary
+                    // button and the rest are secondary, so four downloads in a
+                    // row still say which one to take. A visitor on neither
+                    // family gets four secondaries, with nothing singled out.
+                    className={cn(button({variant: mine ? "primary" : "default", size: "lg"}), "w-full")}
                 >
                     Get {platform.arch}
                 </a>

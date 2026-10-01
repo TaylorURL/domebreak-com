@@ -37,7 +37,7 @@ function DrawerHead({title, caption, onClose, id}) {
 }
 
 // The drawer's tab row. `items` is [{id, label}]; the active one takes the
-// white rule underneath.
+// accent's blue rule underneath.
 export function DrawerTabs({items, value, onChange, label}) {
     return (
         <div className="db-tabs flex-none" role="tablist" aria-label={label}>
@@ -72,7 +72,7 @@ export default function ScreenFrame({title, caption, subtitle, onClose, children
 
     return (
         <div
-            className="absolute inset-0 z-40 flex bg-[rgba(0,0,0,0.66)] p-[clamp(10px,2vw,44px)]"
+            className="absolute inset-0 z-40 flex bg-[rgba(0,0,0,0.66)] p-[clamp(10px,2vw,44px)] [-webkit-app-region:no-drag]"
             ref={ref}
             tabIndex={-1}
             role="dialog"

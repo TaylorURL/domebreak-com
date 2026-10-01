@@ -11,7 +11,7 @@ import {fmtMonthYear, fmtPlaytimeHours, winRatePct} from "../lib/format.js";
 import {useDisclosure} from "../../lib/hooks/useDisclosure.js";
 
 // The commander's identity glyph: their chosen unit icon, or the first letter of
-// their username as a fallback, inside a plain white-bordered circle.
+// their username as a fallback, inside a circle ringed in the accent blue.
 function AvatarCircle({avatar, initial, size = 30, iconSize = 18, className = ""}) {
     return (
         <span

@@ -20,7 +20,7 @@ import UnitIcon from "../common/UnitIcon.jsx";
 import {cn} from "../lib/cn.js";
 import {button, miniButton} from "../lib/variants.js";
 import {cmpStr, countBy} from "../../lib/iter.js";
-import {fmtKm} from "../lib/format.js";
+import {fmtKm, plural, rangeFill} from "../lib/format.js";
 
 // Plan — the battle planning console in the dock's drawer. The player authors
 // attack plans by picking attacker unit TYPES → target CATEGORIES (type → type)
@@ -181,7 +181,7 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
             labelledBy="db-drawer-plan"
             caption={
                 <>
-                    <b>{plans.length}</b> plans · <b>{armedCount}</b> armed
+                    <b>{plans.length}</b> {plural(plans.length, "plan")} · <b>{armedCount}</b> armed
                 </>
             }
             onClose={onClose}
@@ -458,6 +458,11 @@ export default function BattlePlanScreen({world: w, mySlot, bp, onClose}) {
                                 value={active.engagementKm}
                                 onChange={(e) => bp.patchPlan(active.id, {engagementKm: Number(e.target.value)})}
                                 className="db-range"
+                                style={rangeFill(
+                                    active.engagementKm,
+                                    BATTLE_PLAN.minEngagementKm,
+                                    BATTLE_PLAN.maxEngagementKm,
+                                )}
                                 aria-label="Engagement range"
                             />
                             <p className="mt-1 mb-0 text-[10.5px] text-faint leading-[1.4]">

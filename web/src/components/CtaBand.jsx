@@ -3,7 +3,8 @@ import {motion, useReducedMotion, useScroll, useTransform} from "motion/react";
 import Reveal from "./Reveal.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow} from "./Primitives.jsx";
-import {button} from "../lib/variants.js";
+import {cn} from "../lib/cn.js";
+import {button, ctaRow} from "../lib/variants.js";
 
 const ctaBg = "/shots/population-heat.webp";
 
@@ -50,7 +51,7 @@ export default function CtaBand({onSignIn}) {
                     </Reveal>
 
                     <Reveal delay={0.15}>
-                        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                        <div className={cn(ctaRow({align: "center"}), "mt-10")}>
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn?.("signup")}

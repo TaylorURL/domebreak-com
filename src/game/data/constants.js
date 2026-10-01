@@ -13,10 +13,10 @@ export const SLOT_COLOR = {
     5: "#b36b6b",
     6: "#6bb388",
     7: "#b3cea1",
-    8: "#c19d86",
+    8: "#5b85ae",
     9: "#b36ba4",
     10: "#a1cec5",
-    11: "#c1b586",
+    11: "#5baea0",
     12: "#6ba4b3",
     13: "#c5a1ce",
     14: "#6bb36b",
@@ -27,14 +27,18 @@ export const MAX_SLOTS = 16;
 // Per-nation colors. Slots 0 to 15 use the hand-tuned palette above; every slot
 // beyond it (the roster runs to ~222 nations) gets a deterministic color via
 // golden-angle hue spacing at the same muted saturation, so adjacent slots stay
-// tellable apart.
+// tellable apart. The band from orange through yellow is turned half a circle
+// into the blues, because at this saturation those hues come out khaki and gold,
+// and gold is not in the palette.
 const COLOR_S = 32,
     COLOR_L = 64;
+const GOLD_BAND = [20, 70];
 
 export function colorForSlot(slot) {
     const hand = SLOT_COLOR[slot];
     if (hand) return hand;
-    const hue = (slot * 137.508) % 360;
+    let hue = (slot * 137.508) % 360;
+    if (hue >= GOLD_BAND[0] && hue < GOLD_BAND[1]) hue += 180;
     return `hsl(${hue.toFixed(1)}, ${COLOR_S}%, ${COLOR_L}%)`;
 }
 
@@ -319,7 +323,7 @@ export const BATTLE_PLAN = {
     autoBuildIntervalSec: 4, // min game-seconds between auto-resupply queue actions per plan
     // Per-plan preview arc/target colors, cycled by plan index — chosen distinct
     // from the faction hues (white/red/blue/grey) so a plan never reads as a nation.
-    planColors: ["#ffffff", "#c2c2c2", "#9ecbff", "#8f8f8f", "#c9b7d9", "#a9c9b8", "#d8c0a8", "#6f6f6f"],
+    planColors: ["#ffffff", "#c2c2c2", "#9ecbff", "#8f8f8f", "#c9b7d9", "#a9c9b8", "#d8a8b8", "#6f6f6f"],
     // Target categories for the Battle Planning screen. A plan selects attacker unit
     // TYPES and these target CATEGORIES (type → type), never individual map units; the
     // solver maps each at-war enemy entity to a category. `city` (types:null) = enemy
@@ -363,7 +367,7 @@ export * from "./units.js";
 // faction color. The `space` violet is the orbital-sensor tier that reconsat maps
 // onto (RADAR_RING_COLORS[unit.type]).
 export const RADAR_RING_COLORS = {
-    oth: "#e8a33d",
+    oth: "#e8e8e8",
     radar: "#4fc3e8",
     space: "#b98cff",
     reconsat: "#b98cff",

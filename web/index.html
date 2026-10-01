@@ -30,7 +30,7 @@
         <meta property="og:image:height" content="630" />
         <meta
             property="og:image:alt"
-            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+            content="The DomeBreak wordmark and the line Global Missile Command beside the in-game command map of the United States"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="DomeBreak: Real-Time Missile Defense on the World Map" />
@@ -41,7 +41,7 @@
         <meta name="twitter:image" content="https://domebreak.com/og.jpg" />
         <meta
             name="twitter:image:alt"
-            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+            content="The DomeBreak wordmark and the line Global Missile Command beside the in-game command map of the United States"
         />
 
         <!-- Perf: warm up the connections the page reaches for. -->
@@ -368,9 +368,12 @@
             // addressed elsewhere drops it here, while the parser is still inside
             // the body and nothing has been painted, rather than showing the
             // landing page for the moment before the bundle renders the route that
-            // was actually asked for.
+            // was actually asked for. #/ and #/home are the home page spelled out,
+            // the same call isHomeRoute makes in src/hooks/useHashRoute.js, so
+            // they keep it.
             (function () {
-                if (location.hash.slice(0, 2) !== "#/") return;
+                var hash = location.hash;
+                if (hash.slice(0, 2) !== "#/" || /^#\/(home\/?)?$/.test(hash)) return;
                 var painted = document.querySelector("[data-prerendered]");
                 if (painted) painted.remove();
             })();

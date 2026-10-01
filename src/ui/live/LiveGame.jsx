@@ -68,6 +68,10 @@ import {useLiveLayers} from "../hooks/useLiveLayers.js";
 import {useOwnershipLayer} from "../hooks/useOwnershipLayer.js";
 import {useDiplomacyLayer} from "../hooks/useDiplomacyLayer.js";
 import SelectionPanel from "./SelectionPanel.jsx";
+import TitleBarDrag from "../common/TitleBarDrag.jsx";
+
+// The desktop shell, where the status strip doubles as the window's title bar.
+const DESKTOP = typeof window !== "undefined" && !!window.dbShell;
 
 // A targeting prompt in the lane over the map: what the next click will do, and
 // the control that calls it off.
@@ -376,6 +380,10 @@ export default function LiveGame({
         setPlayerListOpen,
         countryPopupSlot,
         setCountryPopupSlot,
+        selUnit,
+        setSelUnit,
+        selCity,
+        setSelCity,
         onPause,
         onHotbar: (i) => armPlacing(HOTBAR[i]?.type),
         overlayOpen,
@@ -508,7 +516,10 @@ export default function LiveGame({
         // Localized hover probe: zoomed out → whole-country readout; zoomed in → the
         // city under the cursor. (Units carry their own hover via their markers.)
         // Every setHover below preserves identity when the CONTENT is unchanged, so
-        // sweeping the cursor across one country costs zero re-renders.
+        // sweeping the cursor across one country costs zero re-renders. While a
+        // placement or a relocation owns the cursor nothing is probed, and the
+        // hover is let go, so the card from before it cannot come back stale once
+        // the order lands.
         if (!placing && !moving) {
             hoverPosRef.current.x = e.originalEvent.clientX;
             hoverPosRef.current.y = e.originalEvent.clientY;
@@ -522,7 +533,7 @@ export default function LiveGame({
                     setHover((h) => (h && h.kind === "city" && h.id === id ? h : {kind: "city", id}));
                 } else setHover((h) => (h && (h.kind === "city" || h.kind === "country") ? null : h));
             }
-        }
+        } else setHover(null);
     };
     const onMove = (e) => {
         lastMoveEvt.current = e;
@@ -540,6 +551,27 @@ export default function LiveGame({
         },
         [],
     );
+    // The readout describes what is under a still pointer on the map, so it goes
+    // the moment that stops being true: the pointer leaves the map for the HUD, or
+    // the camera starts moving the world out from under it (a wheel zoom, a key
+    // pan, a fly-to). A move still waiting on the frame gate is dropped with it,
+    // or it would bring the stale card straight back. The next pointer move over
+    // the map probes afresh.
+    useEffect(() => {
+        const m = mapRef.current;
+        if (!m) return;
+        const clear = () => {
+            lastMoveEvt.current = null;
+            setHover(null);
+        };
+        const box = m.getContainer();
+        box.addEventListener("mouseleave", clear);
+        m.on("movestart", clear);
+        return () => {
+            box.removeEventListener("mouseleave", clear);
+            m.off("movestart", clear);
+        };
+    }, [mapReady]);
     const onMapClick = (e) => {
         if (disembarkId) {
             const r = api.disembark(disembarkId, e.lngLat.lng, e.lngLat.lat);
@@ -706,9 +738,32 @@ export default function LiveGame({
     const selectedUnit = w.units.find((u) => u.id === selUnit);
     const movingUnit = w.units.find((u) => u.id === moving);
     const selectedCity = w.cities.find((c) => c.id === selCity);
+    // The readout is the map describing what is under the pointer, so it only
+    // speaks while the map is what the player is looking at. A dossier,
+    // scoreboard, controls reference, context menu, menu or modal silences it
+    // rather than having a card drawn over or under it, as does a placement or
+    // relocation, which stops the probe; and the unit the selection card already
+    // describes is not described a second time. An open drawer leaves the map
+    // beside it live, so the readout keeps working there.
+    const warModal = !w.over && ((!net && hasWarPopup) || (net && !!allyOfferPop) || !!warAlert);
+    const hoverMuted =
+        !!placing ||
+        !!moving ||
+        !!menu ||
+        countryPopupSlot != null ||
+        playerListOpen ||
+        helpOpen ||
+        overlayOpen ||
+        warModal ||
+        (eliminated && !spectating) ||
+        w.over;
+    const shownHover =
+        hoverMuted || (hover?.kind === "unit" && hover.id === selUnit && selectedUnit && !hudHidden) ? null : hover;
     const hoverEnt =
-        hover &&
-        (hover.kind === "unit" ? visUnits.find((u) => u.id === hover.id) : w.cities.find((c) => c.id === hover.id));
+        shownHover &&
+        (shownHover.kind === "unit"
+            ? visUnits.find((u) => u.id === shownHover.id)
+            : w.cities.find((c) => c.id === shownHover.id));
 
     return (
         <>
@@ -780,7 +835,11 @@ export default function LiveGame({
             <CountryLabels map={mapRef.current} labels={labels} />
 
             {/* 1 Status strip: who you are, the clock and speed, the national
-                figures, the two vitals. One line, full width, above everything. */}
+                figures, the two vitals. One line, full width, above everything.
+                On the desktop it is also what the window is dragged by, so
+                while it is hidden or moved down clear of the title bar band,
+                the plain band stands in for it. */}
+            {DESKTOP && (hud.strip.hidden || hud.strip.dy >= 34) && <TitleBarDrag />}
             <AdjustablePanel
                 panel={hud.strip}
                 onChange={(p) => setHud("strip", p)}
@@ -1037,7 +1096,7 @@ export default function LiveGame({
             {menu && <ContextMenu {...menu} onClose={() => setMenu(null)} />}
             {helpOpen && <ControlsOverlay keys={keys} onClose={() => setHelpOpen(false)} />}
             <HoverPopups
-                hover={hover}
+                hover={shownHover}
                 hoverEnt={hoverEnt}
                 pos={hoverPosRef.current}
                 countryByGid={countryByGid}
@@ -1164,7 +1223,14 @@ export default function LiveGame({
                 aria-hidden={!booting}
             >
                 <div className="text-center motion-safe:animate-[dbRowIn_500ms_var(--ease-out)_both]">
-                    {myNation?.iso && <Flag iso={myNation.iso} className="w-[54px] h-[36px] mx-auto" />}
+                    {/* flag-icons draws its mark 4:3 at the size of its font, and
+                        its own width rule outranks a utility, so the holder's
+                        font size is what sets it. */}
+                    {myNation?.iso && (
+                        <span className="flex justify-center text-[40px]">
+                            <Flag iso={myNation.iso} />
+                        </span>
+                    )}
                     <div className="mt-4 text-[24px] font-semibold tracking-tight text-text">
                         {myNation?.name || "Command"}
                     </div>

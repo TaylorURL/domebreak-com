@@ -4,7 +4,7 @@ import {clamp01} from "../../lib/math.js";
 // Meter — the shared thin progress / health track used for city vitality, build
 // progress, capture, and industry readouts. `frac` (0..1) drives the fill width.
 //
-// A 4px --line track under a white fill, which is what a quantity reads as
+// A 4px --line track under a blue fill, which is what a quantity reads as
 // everywhere in the interface. A caller states a different ink only where the
 // ink means something: `fillClass` (a bg-* utility, e.g. bg-good for done or
 // healthy, bg-danger for exposed) or `color` (any CSS colour, e.g. a team

@@ -6,7 +6,7 @@ import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, ctaRow} from "../lib/variants.js";
 
 // Anything under a hash this site does not route. Without it an unknown route
 // rendered the landing page under the landing page's title and canonical, so a
@@ -37,7 +37,7 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
                             </h1>
                             {asked && (
                                 <p className="mt-5 inline-flex max-w-full items-center gap-2 overflow-hidden border border-line bg-bg-2 px-3 py-[7px] font-mono text-[12px] text-dim">
-                                    <span className="db-led db-led-warn" />
+                                    <span className="db-led db-led-accent" />
                                     <span className="truncate">{asked}</span>
                                 </p>
                             )}
@@ -46,7 +46,7 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
                                 wiki, and the download page.
                             </p>
 
-                            <div className="mt-9 flex flex-wrap items-center gap-3">
+                            <div className={cn(ctaRow(), "mt-9")}>
                                 <PlayCta />
                                 <a href="#/" className={cn(button({variant: "default", size: "lg"}), "gap-2")}>
                                     <ArrowLeft size={15} />

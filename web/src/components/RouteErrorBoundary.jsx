@@ -1,6 +1,6 @@
 import {Component} from "react";
 import {cn} from "../lib/cn.js";
-import {button, panel} from "../lib/variants.js";
+import {button, ctaRow, panel} from "../lib/variants.js";
 
 // The routed pages load as their own chunks, so any one of them can fail to
 // arrive after the page around it has already rendered. React treats that as a
@@ -37,7 +37,7 @@ export default class RouteErrorBoundary extends Component {
                     <p className="mt-4 text-[15px] leading-relaxed text-dim">
                         Part of the site failed to arrive. Reload the page and it should come back.
                     </p>
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3 border-t border-hair pt-6">
+                    <div className={cn(ctaRow({align: "center"}), "mt-8 border-t border-hair pt-6")}>
                         <button
                             type="button"
                             onClick={() => window.location.reload()}

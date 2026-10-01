@@ -15,7 +15,7 @@ import Flag from "../common/Flag.jsx";
 
 // Per-kind copy. `foe` is the other belligerent's display name. `danger` marks
 // the cards that announce a war against you or the loss of one: those carry the
-// red edge rule, and every other card carries the white one.
+// red edge rule, and every other card carries the blue one.
 function content(kind, foe) {
     switch (kind) {
         case "victory":

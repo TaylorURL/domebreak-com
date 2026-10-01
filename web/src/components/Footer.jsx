@@ -3,7 +3,6 @@ import {scrollToId} from "../lib/nav.js";
 import {NAV_MENUS} from "../lib/navMenus.js";
 import {Wordmark} from "./Primitives.jsx";
 import GameIcon from "./GameIcon.jsx";
-import PlayCta from "./PlayCta.jsx";
 import ScrollVelocity from "./reactbits/ScrollVelocity.jsx";
 import useReleaseVersion from "../hooks/useReleaseVersion.js";
 import {chip} from "../lib/variants.js";
@@ -88,16 +87,17 @@ export default function Footer({onShowShortcuts}) {
                         <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-dim">
                             A real-time strategy game of missile defense and offense, fought on the real world map.
                         </p>
-                        <div className="mt-6">
-                            <PlayCta size="md" />
-                        </div>
-                        <div className="mt-5 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 border border-line px-3 py-2 text-[12px] text-faint">
+                        {/* No Play Free button here: the nav carries one on every
+                            page, and on the home page the closing band just above
+                            carries another. Play Free stays in the Get It column
+                            as a link. */}
+                        <div className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 border border-line px-3 py-2 text-[12px] text-faint">
                             <span className="flex items-center gap-2">
-                                <span className="db-led db-led-warn" />
+                                <span className="db-led db-led-accent" />
                                 Now Live · Free to Play
                             </span>
                             <span className="flex items-center gap-2">
-                                <span className="db-led db-led-warn" />
+                                <span className="db-led db-led-accent" />
                                 macOS + Windows
                             </span>
                             {version && <span className={chip({tone: "subtle"})}>{`v${version}`}</span>}
@@ -109,10 +109,6 @@ export default function Footer({onShowShortcuts}) {
                     ))}
 
                     <Col title="More">
-                        <FootLink onClick={() => scrollToId("play")}>
-                            <span className="db-led db-led-warn" />
-                            Play Free
-                        </FootLink>
                         <FootLink onClick={() => scrollToId("top")}>Top</FootLink>
                         <FootLink onClick={onShowShortcuts}>
                             <Keyboard size={14} />

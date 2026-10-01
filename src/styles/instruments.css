@@ -46,15 +46,15 @@
 
     .db-ibtn.on,
     .db-ibtn.primary {
-        background: var(--accent);
-        border-color: var(--accent);
+        background: var(--accent-fill);
+        border-color: var(--accent-fill);
         color: var(--accent-ink);
     }
 
     .db-ibtn.on:enabled:hover,
     .db-ibtn.primary:enabled:hover {
-        background: var(--accent-hi);
-        border-color: var(--accent-hi);
+        background: var(--accent-fill-hi);
+        border-color: var(--accent-fill-hi);
     }
 
     .db-ibtn.danger {
@@ -133,7 +133,7 @@
     }
 
     /* The war outcome card's edge rule: red when it announces a war or a
-       defeat, white for everything else. Three pixels on the leading edge,
+       defeat, blue for everything else. Three pixels on the leading edge,
        drawn inside the panel's own hairline. */
     .db-edge-rule {
         position: relative;
