@@ -23,7 +23,7 @@ function GateCard({icon, eyebrow, title, body, action}) {
                     <div
                         className={cn(
                             panel({frame: "glass"}),
-                            "mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                            "mx-auto w-full max-w-[560px] p-[26px] text-center sm:p-10",
                         )}
                     >
                         <span className="mx-auto flex h-14 w-14 items-center justify-center border border-line text-text">
