@@ -1,41 +1,37 @@
 import {cn} from "../lib/cn.js";
 
 // The DOME / BREAK wordmark — dim + bright split, exactly as the game title.
-// `stacked` renders it as a two-line logotype (DOME over BREAK) with tight
-// leading, for the hero; the default is the inline one-line lockup.
-export function Wordmark({className, glow = false, stacked = false}) {
+// It is the one piece of type that keeps its mark: set in caps on a wide track
+// so the two halves read as one lockup. `stacked` renders it as a two-line
+// logotype (DOME over BREAK) with tight leading, for the hero; the default is
+// the inline one-line lockup.
+export function Wordmark({className, stacked = false}) {
     if (stacked) {
         // Tight leading lives on the inner block spans: cn()/tailwind-merge
         // strips a `leading-*` off the outer span because it collides with the
         // arbitrary `text-[clamp(...)]` font-size passed in via className.
         return (
-            <span className={cn("block font-display font-bold uppercase tracking-[0.09em]", className)}>
+            <span className={cn("block font-bold uppercase tracking-[0.09em]", className)}>
                 <span className="block leading-[0.82] text-dim">DOME</span>
-                <span className={cn("block leading-[0.82] text-text", glow && "db-title-glow")}>BREAK</span>
+                <span className="block leading-[0.82] text-text">BREAK</span>
             </span>
         );
     }
     return (
-        <span className={cn("font-display font-bold uppercase leading-[0.92] tracking-[0.14em]", className)}>
+        <span className={cn("font-bold uppercase leading-[0.92] tracking-[0.14em]", className)}>
             <span className="text-dim">DOME</span>
-            <span className={cn("text-text", glow && "db-title-glow inline-block")}>BREAK</span>
+            <span className="text-text">BREAK</span>
         </span>
     );
 }
 
-// Mono kicker with a status LED — the "SYSTEM ONLINE" motif. `tone` picks the
-// lamp: live is the red blink that says something is happening, and the other
-// three are steady. `framed` sets the kicker inside the four corner brackets,
-// which is how the hero opens.
-export function Eyebrow({children, dot = true, tone = "live", framed = false, className}) {
+// The kicker over a heading: a short Inter label with a lamp. `tone` picks the
+// lamp — accent, the default, is the brand's own mark and reports nothing; live
+// is the red blink that says something is happening, and the rest are steady
+// states.
+export function Eyebrow({children, dot = true, tone = "accent", className}) {
     return (
-        <div
-            className={cn(
-                "inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.28em] text-faint",
-                framed && "relative db-brackets px-[14px] py-[9px]",
-                className,
-            )}
-        >
+        <div className={cn("inline-flex items-center gap-2 text-[12px] font-medium text-faint", className)}>
             {dot && <span className={cn("db-led", `db-led-${tone}`)} />}
             <span>{children}</span>
         </div>

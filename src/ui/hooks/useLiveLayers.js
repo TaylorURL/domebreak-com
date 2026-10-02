@@ -23,7 +23,7 @@ import {
     unitVisibleTo,
     vitalityOf,
 } from "../../game/engine.js";
-import {CAPTURE, NEUTRAL, RADAR_RING_COLORS} from "../../game/data/constants.js";
+import {CAPTURE, NEUTRAL} from "../../game/data/constants.js";
 import {circle, gcTrail, geoCircle, GEODESIC_MAX_KM, withinKm} from "../../game/geo/geo.js";
 
 // Coverage rings render round in whichever projection is showing: a true geodesic
@@ -35,10 +35,13 @@ import {circle, gcTrail, geoCircle, GEODESIC_MAX_KM, withinKm} from "../../game/
 const coverageRing = (globe, lng, lat, km, steps, innerKm = 0) =>
     (globe && km <= GEODESIC_MAX_KM ? geoCircle : circle)(lng, lat, km, steps, innerKm);
 
-// Strike-envelope color for a selected offensive unit's reach ring — the warm amber
-// the battle-plan overlay draws with, so an offensive reach ring never reads as a
-// (team-colored) defensive coverage bubble.
-const STRIKE_COLOR = "#f0a63c";
+// The map is black and white, so these are the two inks a coverage ring can take.
+// A sensor ring is the one pale blue on the map (--cyan); a selected platform's
+// strike envelope is drawn in the white accent. Literals rather than tokens:
+// these go into MapLibre paint expressions, which are evaluated in the map's own
+// worker and never see a CSS variable.
+const SENSOR_INK = "#9ecbff";
+const STRIKE_INK = "#ffffff";
 
 // Rolling 32-bit checksum helpers for the change-detectors below — the same
 // Math.imul(31) mix useOwnershipLayer / useDiplomacyLayer gate their heavy
@@ -209,11 +212,11 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
     // emitter list for the animated ping share one filter and one rebuild —
     // RadarPulse regenerates the expanding ring itself each animation frame;
     // radarEmitters only feeds it where the emitters are and how far they reach.
-    // Dedicated ground sensors ring in their own hue so the warning tiers read
-    // apart (OTH amber, Early Warning cyan); mobile emitters keep their faction
-    // color. The 44-step ring geometry only regenerates when the checksum over
-    // emitter identity/position/range/color (or the projection, which reshapes
-    // the ring) moves — a wall of static ground radars costs one scan per tick.
+    // Every emitter rings in the one pale blue a sensor carries, so a coverage
+    // boundary never reads as a unit's allegiance. The 44-step ring geometry only
+    // regenerates when the checksum over emitter identity/position/range (or the
+    // projection, which reshapes the ring) moves — a wall of static ground radars
+    // costs one scan per tick.
     const radarSigRef = useRef(null);
     const radarRef = useRef(null);
     const {radarFC, radarEmitters} = useMemo(() => {
@@ -227,7 +230,6 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
             sig = foldNum(sig, Math.round(u.lng * 1e5));
             sig = foldNum(sig, Math.round(u.lat * 1e5));
             sig = foldNum(sig, Math.round(radarRangeOf(u.type)));
-            sig = foldStr(sig, RADAR_RING_COLORS[u.type] || teamColor(u.slot));
         }
         if (radarRef.current && sig === radarSigRef.current) return radarRef.current;
         radarSigRef.current = sig;
@@ -236,7 +238,7 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
                 type: "FeatureCollection",
                 features: emitters.map((u) => {
                     const c = coverageRing(globe, u.lng, u.lat, radarRangeOf(u.type), 44);
-                    c.properties = {color: RADAR_RING_COLORS[u.type] || teamColor(u.slot)};
+                    c.properties = {color: SENSOR_INK};
                     return c;
                 }),
             },
@@ -244,7 +246,7 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
                 lng: u.lng,
                 lat: u.lat,
                 rKm: radarRangeOf(u.type),
-                color: RADAR_RING_COLORS[u.type] || teamColor(u.slot),
+                color: SENSOR_INK,
             })),
         };
         return radarRef.current;
@@ -310,12 +312,12 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
                 // Strike platforms — silo, TEL, hypersonic battery, subs, the orbital
                 // strike bus, ground guns — show how far their munition reaches. The
                 // strategic ranges are huge (an ICBM is near-global), which is the
-                // point: the reach IS the overlay. Painted in the strike color below.
+                // point: the reach IS the overlay. Painted in the strike ink below.
                 radius = def.range;
                 isStrike = 1;
             }
             // An airstrip (or other sortie platform) shows how far its bomber sorties
-            // reach — the amber strike ring — rather than its short runway footprint.
+            // reach — the white strike ring — rather than its short runway footprint.
             if (def.sortieKm) {
                 radius = def.sortieKm;
                 isStrike = 1;
@@ -334,7 +336,11 @@ export function useLiveLayers({w, mySlot, backdrop, layers, selUnit, teamColor, 
                     56,
                     def.kind === "defense" ? defenseMinRange(w, sel) : 0,
                 );
-                c.properties = {color: isStrike ? STRIKE_COLOR : teamColor(mySlot), sel: 1, radar: isRadar};
+                c.properties = {
+                    color: isRadar ? SENSOR_INK : isStrike ? STRIKE_INK : teamColor(mySlot),
+                    sel: 1,
+                    radar: isRadar,
+                };
                 f.push(c);
             }
         }

@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {acceptFriend, fetchFriends, removeFriend, requestFriend} from "../../account/social.js";
 import {useModal} from "../hooks/useModal.js";
-import {overlay, card, button, miniButton, badge, input as inputCls, label, menuTitle, sub} from "../lib/variants.js";
+import {overlay, card, button, miniButton, badge, input as inputCls, label, menuTitle} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import Flag from "./Flag.jsx";
 
@@ -133,12 +133,14 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
 
     // "Your Party" card: roster (with leader badge, ready dot, flag), my own
     // ready toggle, leader-only kick/join-mode/launch controls, and leave.
+    // Without a party it is one outlined button: Add is the panel's one primary,
+    // since the field beside it is what the panel is for.
     const partySection = () => {
         const {party, members, meId} = partyCtl;
         if (!party) {
             return (
                 <button
-                    className={cn(button({variant: "primary"}), "w-full")}
+                    className={cn(button(), "w-full")}
                     disabled={partyBusy}
                     onClick={() => partyAct(partyCtl.create)}
                 >
@@ -149,7 +151,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
         const isLeader = party.leader === meId;
         const me = members.find((m) => m.user_id === meId);
         return (
-            <div className="db-notch-sm px-[10px] py-2 bg-btn-bg border border-line">
+            <div className="px-[10px] py-2 bg-bg-2 border border-line">
                 <div role="list" aria-labelledby="db-party-roster-h">
                     {members.map((m) => (
                         <div
@@ -162,7 +164,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 <span
                                     className={cn(
                                         "inline-block w-2 h-2 rounded-full shrink-0",
-                                        m.ready ? "bg-[#46d38a] shadow-[0_0_6px_rgba(70,211,138,0.9)]" : "bg-line",
+                                        m.ready ? "bg-good" : "bg-line",
                                     )}
                                     aria-hidden="true"
                                 />
@@ -208,7 +210,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                     className={cn(
                                         miniButton(),
                                         "flex-1 capitalize",
-                                        party.join_mode === mode && "border-gold-line text-gold",
+                                        party.join_mode === mode && "border-accent bg-accent-soft text-text",
                                     )}
                                     disabled={partyBusy}
                                     aria-pressed={party.join_mode === mode}
@@ -227,7 +229,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 Launch Private
                             </button>
                             <button
-                                className={cn(miniButton(), "flex-1 border-gold-line text-gold")}
+                                className={cn(miniButton(), "flex-1 border-accent")}
                                 disabled={partyBusy}
                                 onClick={() => partyAct(partyCtl.queuePublic)}
                             >
@@ -263,12 +265,20 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                     <label className="sr-only" htmlFor="db-friends-input">
                         Username
                     </label>
+                    {/* A lookup, not a form the browser should fill: autocomplete off
+                        and a name no contact or login heuristic matches keep its
+                        suggestion list from dropping over the panel. */}
                     <input
                         id="db-friends-input"
+                        name="db-commander-lookup"
                         className={cn(inputCls(), "flex-1")}
                         placeholder="Add by username"
                         value={input}
                         maxLength={24}
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") add();
@@ -280,7 +290,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                 </div>
                 <div aria-live="assertive">
                     {addErr && (
-                        <p className="db-notch-sm text-danger bg-[rgba(224,87,79,0.1)] border border-danger px-3 py-2 text-[12.5px] mt-[10px] mb-0">
+                        <p className="text-danger bg-[rgba(224,87,79,0.12)] border border-danger px-3 py-2 text-[12.5px] mt-[10px] mb-0">
                             {addErr}
                         </p>
                     )}
@@ -297,8 +307,13 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                     </div>
                 )}
 
-                {loading && <p className={sub()}>Loading allies…</p>}
-                {!loading && friends.length === 0 && <p className={sub()}>No allies yet. Add a commander by name.</p>}
+                {/* Loading and the empty roster sit where the friends list will, in
+                    a box of their own, rather than flush under the party button. */}
+                {(loading || friends.length === 0) && (
+                    <p className="mt-4 mb-0 px-3 py-4 bg-bg-2 border border-line text-[12.5px] leading-[1.5] text-dim text-center">
+                        {loading ? "Loading allies…" : "No allies yet. Add a commander by name."}
+                    </p>
+                )}
 
                 {incoming.length > 0 && (
                     <div className="mt-4">
@@ -311,7 +326,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, incoming request`}
                                     >
@@ -354,7 +369,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, pending request`}
                                     >
@@ -400,7 +415,7 @@ export default function FriendsPanel({onClose, presence, partyCtl}) {
                                 return (
                                     <div
                                         key={f.id}
-                                        className="db-notch-sm flex items-center justify-between gap-2 px-[10px] py-2 bg-btn-bg border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
+                                        className="flex items-center justify-between gap-2 px-[10px] py-2 bg-bg-2 border border-line mt-[6px] motion-safe:animate-[dbRowIn_220ms_var(--ease-out)_both]"
                                         role="listitem"
                                         aria-label={`${uname}, ${online ? "online" : "offline"}`}
                                     >

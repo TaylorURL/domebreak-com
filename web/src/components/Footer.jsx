@@ -3,22 +3,18 @@ import {scrollToId} from "../lib/nav.js";
 import {NAV_MENUS} from "../lib/navMenus.js";
 import {Wordmark} from "./Primitives.jsx";
 import GameIcon from "./GameIcon.jsx";
-import PlayCta from "./PlayCta.jsx";
 import ScrollVelocity from "./reactbits/ScrollVelocity.jsx";
 import useReleaseVersion from "../hooks/useReleaseVersion.js";
 import {chip} from "../lib/variants.js";
 
 const ICON_STRIP = ["dome", "radar", "interceptor", "thaad", "silo", "reconsat", "carrier", "factory"];
 
-const LEGAL_LINK =
-    "font-mono text-[11px] uppercase tracking-[0.2em] text-faint transition-colors duration-150 hover:text-text";
+const LEGAL_LINK = "text-[12.5px] text-faint transition-colors duration-150 hover:text-text";
 
 function Col({title, children}) {
     return (
         <div className="flex flex-col gap-3">
-            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-faint">
-                {title}
-            </span>
+            <span className="text-[12px] font-medium text-faint">{title}</span>
             {children}
         </div>
     );
@@ -76,7 +72,7 @@ export default function Footer({onShowShortcuts}) {
                     velocity={26}
                     numCopies={4}
                     damping={40}
-                    className="font-display font-bold uppercase tracking-[0.04em] text-[color-mix(in_srgb,var(--text)_8%,transparent)]"
+                    className="font-semibold tracking-[0.04em] text-[color-mix(in_srgb,var(--text)_8%,transparent)]"
                 />
             </div>
 
@@ -84,28 +80,27 @@ export default function Footer({onShowShortcuts}) {
                 <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:grid-cols-[1.7fr_1fr_1fr_1fr]">
                     <div className="col-span-2 sm:col-span-4 lg:col-span-1">
                         <div className="flex items-center gap-3">
-                            <GameIcon name="dome" size={22} className="text-gold" />
+                            <GameIcon name="dome" size={22} className="text-text" />
                             <Wordmark className="text-[18px]" />
                         </div>
-                        <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
-                            Global Missile Command
-                        </p>
+                        <p className="mt-3 text-[12.5px] text-faint">Global Missile Command</p>
                         <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-dim">
                             A real-time strategy game of missile defense and offense, fought on the real world map.
                         </p>
-                        <div className="mt-6">
-                            <PlayCta size="md" />
-                        </div>
-                        <div className="mt-5 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 db-notch-sm border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
+                        {/* No Play Free button here: the nav carries one on every
+                            page, and on the home page the closing band just above
+                            carries another. Play Free stays in the Get It column
+                            as a link. */}
+                        <div className="mt-6 inline-flex max-w-full flex-wrap items-center gap-x-4 gap-y-2 border border-line px-3 py-2 text-[12px] text-faint">
                             <span className="flex items-center gap-2">
-                                <span className="db-led db-led-live" />
-                                Now Live · Free to Play
+                                <span className="db-led db-led-accent" />
+                                Now live · Free to play
                             </span>
                             <span className="flex items-center gap-2">
-                                <span className="db-led db-led-ok" />
+                                <span className="db-led db-led-accent" />
                                 macOS + Windows
                             </span>
-                            {version && <span className={chip({tone: "subtle", shape: "notch"})}>{`v${version}`}</span>}
+                            {version && <span className={chip({tone: "subtle"})}>{`v${version}`}</span>}
                         </div>
                     </div>
 
@@ -114,10 +109,6 @@ export default function Footer({onShowShortcuts}) {
                     ))}
 
                     <Col title="More">
-                        <FootLink onClick={() => scrollToId("play")}>
-                            <span className="db-led db-led-live" />
-                            Play Free
-                        </FootLink>
                         <FootLink onClick={() => scrollToId("top")}>Top</FootLink>
                         <FootLink onClick={onShowShortcuts}>
                             <Keyboard size={14} />
@@ -141,7 +132,7 @@ export default function Footer({onShowShortcuts}) {
                     carries the TaylorURL credit, and a second one beside it is the
                     per-project copy the one shared bar exists to remove. */}
                 <div className="mt-6 flex flex-col gap-3 border-t border-hair pt-6 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="font-mono text-[11px] text-faint">Made solo by Trenton Taylor</p>
+                    <p className="text-[12.5px] text-faint">Made solo by Trenton Taylor</p>
                     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
                         <a href="#/privacy" className={LEGAL_LINK}>
                             Privacy

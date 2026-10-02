@@ -20,6 +20,7 @@ import UnitIcon from "@game/ui/common/UnitIcon.jsx";
 import {UNIT_ICON} from "@game/game/data/units.js";
 import {radarRangeOf, UNITS} from "@game/game/engine.js";
 import {geoCircle, interpGC} from "@game/game/geo/geo.js";
+import {frameBox} from "../lib/heroFrame.js";
 
 // One loop of the scene, in scene-seconds. Every scripted launch, intercept and
 // impact finishes before this, then the clock wraps and the wave repeats.
@@ -27,11 +28,13 @@ const LOOP_SEC = 24;
 const SIM_SPEED = 1; // scene-seconds per wall-second
 const STATE_HZ = 30; // throttle React state churn / camera repaints
 
-// Camera: flat mercator framed on the continental US. A slow drift + zoom breath
-// keeps it alive without ever reading as a random simulation. Left padding shifts
-// the map clear of the hero's copy rail so the eastern seaboard action stays in
-// the open right half of the frame.
-const CAM = {lng: -95, lat: 41.2, zoom: 4.05};
+// Camera: flat mercator on the eastern half of the continental US, where the
+// Atlantic waves are met. Its centre is held in the middle of the hero's framed
+// box (framePad below), so the frame shows the seaboard and the interior behind
+// it at every window size, and the labels laid out around that centre keep
+// their place against the frame's hairline. A slow drift + zoom breath keeps it
+// alive without ever reading as a random simulation.
+const CAM = {lng: -80, lat: 40, zoom: 4.05};
 const ZOOM_AMP = 0.09,
     ZOOM_PERIOD_S = 30;
 const LNG_AMP = 2.2,
@@ -40,17 +43,18 @@ const LAT_AMP = 0.9,
     LAT_PERIOD_S = 38;
 
 // MapLibre paint properties take a literal colour, not a custom property, so
-// the scene carries the theme's own values rather than reading them. Each one
-// is the token it is named after: sensor cyan for everything the defence grid
-// owns, the neutral line and text greys for the rest of the world.
-const DEFENDER = "#7fd4ff"; // --cyan: US units, cities highlight, defense rings
-const RADAR_TINT = "#7fd4ff"; // --cyan: radar coverage, dashed and dimmer than the rings
-const US_TINT = "#2f7fb0"; // homeland wash — light enough that terrain reads through
-const US_LINE = "#7fd4ff"; // --cyan: glowing national border
-const NEUTRAL_TINT = "#6b7580"; // --faint: nations colors.json has no entry for
-const NEUTRAL_LINE = "#2b3037"; // --line: their borders, one step down from the wash
-const BACKDROP_CITY = "#6b7580"; // --faint: every other nation's cities, unlit
-const CITY_HALO = "#f2f4f6"; // --text: ring around the homeland's own cities
+// the scene carries the theme's own values rather than reading them. The board
+// is black and white: pale blue is the sensor colour and belongs to the
+// coverage rings alone, and everything else is one of the greys the page is
+// already set in.
+const SENSOR = "#9ecbff"; // --cyan: the coverage rings and the interceptors flying
+const DEFENDER = "#f4f4f4"; // --text: US units and the homeland's own cities
+const US_TINT = "#3f3f3f"; // homeland wash — light enough that terrain reads through
+const US_LINE = "#f4f4f4"; // --text: the national border
+const NEUTRAL_TINT = "#5e5e5e"; // --faint: nations colors.json has no entry for
+const NEUTRAL_LINE = "#1f1f1f"; // --line over black: their borders, one step down from the wash
+const BACKDROP_CITY = "#5e5e5e"; // --faint: every other nation's cities, unlit
+const CITY_HALO = "#f4f4f4"; // --text: ring around the homeland's own cities
 // National tint opacity: the US washed a touch stronger than its neighbors. Flat
 // values (not a zoom ramp) because the hero holds a fixed close zoom — and MapLibre
 // forbids a zoom expression nested inside the per-nation match anyway.
@@ -99,9 +103,15 @@ const SITES = [
 
 // Belligerent name labels, rendered by the game's own CountryLabels. The US is
 // the defender ("mine"); its neighbors are the in-frame combatants. `w` is the
-// nation weight the component uses for label size + zoom LOD.
+// nation weight the component uses for label size + zoom LOD. The US name sits
+// inside the frame rather than at the country's middle, which lies under the
+// copy at most widths: a little south-west of the camera's centre, clear of the
+// Washington battery and the Chesapeake, with room for the drift on every side
+// of even the narrowest frame (448px across, at 1280). The neighbors keep their
+// own middles, which lie far enough off the centre to fall above or below the
+// frame and its caption whatever the window.
 const LABELS = [
-    {iso: "US", name: "United States", lng: -99, lat: 39.5, w: 1.8, mine: true, combat: true},
+    {iso: "US", name: "United States", lng: -82, lat: 37.5, w: 1.8, mine: true, combat: true},
     {iso: "CA", name: "Canada", lng: -101, lat: 55, w: 1.4, combat: true},
     {iso: "MX", name: "Mexico", lng: -102, lat: 23.5, w: 1.2, combat: true},
     {iso: "CU", name: "Cuba", lng: -79, lat: 21.8, w: 0.8, combat: true},
@@ -362,9 +372,9 @@ function Scene({onReady, still}) {
         };
     }, []);
 
-    // Paint the political map the way the live game does — every nation washed in
-    // its own flag color from colors.json — then lift the US out as the highlighted
-    // defender with a brighter wash and a glowing border. Also nudge the terrain
+    // Paint the political map: every nation washed at the weight its own flag
+    // colour carries, read off colors.json and taken to grey, then the US lifted
+    // out of it with a stronger wash and a white border. Also nudge the terrain
     // relief up a touch so the close-in view reads at full game fidelity. `cols`
     // may be null before colors.json loads; the US emphasis still applies.
     const paintMap = (m, cols) => {
@@ -372,13 +382,16 @@ function Scene({onReady, still}) {
             const tint = [];
             const line = [];
             if (cols) {
-                const mix = (v, g) => Math.round(v * 0.6 + g * 0.4); // borders muted toward neutral
+                // Rec. 709 luminance, held inside a narrow band so a dark flag
+                // and a bright one both read as a wash rather than as ink.
+                const grey = (c, lo, hi) => {
+                    const l = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+                    const v = Math.round(lo + l * (hi - lo));
+                    return `rgb(${v},${v},${v})`;
+                };
                 for (const [gid, c] of Object.entries(cols)) {
-                    tint.push(gid, gid === "USA" ? US_TINT : `rgb(${c[0]},${c[1]},${c[2]})`);
-                    line.push(
-                        gid,
-                        gid === "USA" ? US_LINE : `rgb(${mix(c[0], 96)},${mix(c[1], 100)},${mix(c[2], 108)})`,
-                    );
+                    tint.push(gid, gid === "USA" ? US_TINT : grey(c, 56, 132));
+                    line.push(gid, gid === "USA" ? US_LINE : grey(c, 38, 86));
                 }
             } else {
                 tint.push("USA", US_TINT);
@@ -679,12 +692,12 @@ function Scene({onReady, still}) {
                 {/* Radar coverage — the game's dashed picket (drawn under defense
                     rings so the tighter engagement bubbles read on top). */}
                 <Source id="hero-radar" type="geojson" data={radarFC}>
-                    <Layer id="radar-fill" type="fill" paint={{"fill-color": RADAR_TINT, "fill-opacity": 0.04}} />
+                    <Layer id="radar-fill" type="fill" paint={{"fill-color": SENSOR, "fill-opacity": 0.04}} />
                     <Layer
                         id="radar-ring"
                         type="line"
                         paint={{
-                            "line-color": RADAR_TINT,
+                            "line-color": SENSOR,
                             "line-width": 0.9,
                             "line-opacity": 0.4,
                             "line-dasharray": [3, 3],
@@ -694,11 +707,11 @@ function Scene({onReady, still}) {
 
                 {/* Defense engagement rings — the game's solid battery footprints. */}
                 <Source id="hero-defense" type="geojson" data={defenseFC}>
-                    <Layer id="defense-fill" type="fill" paint={{"fill-color": DEFENDER, "fill-opacity": 0.05}} />
+                    <Layer id="defense-fill" type="fill" paint={{"fill-color": SENSOR, "fill-opacity": 0.05}} />
                     <Layer
                         id="defense-ring"
                         type="line"
-                        paint={{"line-color": DEFENDER, "line-width": 0.9, "line-opacity": 0.45}}
+                        paint={{"line-color": SENSOR, "line-width": 0.9, "line-opacity": 0.45}}
                     />
                 </Source>
 
@@ -745,7 +758,7 @@ function Scene({onReady, still}) {
                                 className="inline-flex"
                                 style={{transform: `rotate(${a.heading}deg) scale(${(0.7 + a.alt * 0.3).toFixed(3)})`}}
                             >
-                                <UnitIcon name={UNIT_ICON.interceptor} color={DEFENDER} size={16} />
+                                <UnitIcon name={UNIT_ICON.interceptor} color={SENSOR} size={16} />
                             </span>
                         </div>
                     </Marker>
@@ -768,17 +781,32 @@ function Scene({onReady, still}) {
     );
 }
 
-// Left projection padding so the map biases right of the hero copy rail. Scales
-// with viewport width and collapses on narrow screens where the copy stacks above.
+// Projection padding that puts the camera's centre in the middle of the hero's
+// framed box (lib/heroFrame.js), the same box Hero.jsx draws its hairline
+// around. MapLibre centres the camera in what the padding leaves, so each axis
+// pads its near side by the far side's surplus. Below the width the scene mounts
+// at, the copy covers most of the board and a light bias right of it is all
+// there is to aim for.
 function framePad(m) {
     let w = 0;
+    let h = 0;
     try {
-        w = m.getContainer().clientWidth || 0;
+        const c = m.getContainer();
+        w = c.clientWidth || 0;
+        h = c.clientHeight || 0;
     } catch {
         /* tearing down */
     }
-    const left = w >= 1024 ? Math.min(w * 0.2, 320) : w >= 640 ? w * 0.1 : 0;
-    return {top: 0, right: 0, bottom: 0, left};
+    if (w < 1024) return {top: 0, right: 0, bottom: 0, left: w >= 640 ? w * 0.1 : 0};
+    const box = frameBox(w, h);
+    const x = (box.left + box.right) / 2;
+    const y = (box.top + box.bottom) / 2;
+    return {
+        top: Math.max(0, 2 * y - h),
+        right: Math.max(0, w - 2 * x),
+        bottom: Math.max(0, h - 2 * y),
+        left: Math.max(0, 2 * x - w),
+    };
 }
 
 export default function HeroDefenseScene({still = false, onReady}) {

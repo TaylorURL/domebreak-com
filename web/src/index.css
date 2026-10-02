@@ -7,39 +7,60 @@
 
 @plugin "tailwindcss-animate";
 
-/* DomeBreak landing page — shares the in-game design language: a tactical
-  command console in dark neutral surfaces, an amber accent, notched corners,
-  hairline corner brackets, a squared display face for labels and mono data.
-  Tokens match the game's src/index.css so the marketing surface reads as the
-  same product. */
+/* The hero draws part of the game's own UI through the @game alias — the
+   country names, the missiles in flight and the unit markers on its board
+   (HeroDefenseScene) — and Tailwind only scans this app's files for the classes
+   it generates. These are the game files whose classes the hero renders.
+   Without them a country name loses the centring that sets it on its anchor and
+   the shadow that keeps it legible over the map, and runs off to the right of
+   where it was placed. */
+@source "../../src/ui/live/CountryLabels.jsx";
+@source "../../src/ui/live/SkyLayer.jsx";
+@source "../../src/ui/common/UnitIcon.jsx";
+
+/* DomeBreak landing page — shares the in-game design language: black ground,
+   white text, hairline borders and square corners, Inter for words and
+   JetBrains Mono for numbers, and TaylorURL blue as the one accent: the
+   primary action, the selected state, the focus ring, the progress fill and
+   the marker lamp. Every other colour appears only where it means
+   something: red for danger, green for ready, pale blue for an interceptor or
+   a sensor ring. Tokens match the game's src/index.css so the marketing
+   surface reads as the same product. */
 
 :root,
 [data-theme="dark"] {
-    --bg: #08090b;
-    --bg-2: #0e1013;
-    --panel: rgba(13, 15, 19, 0.88);
-    --panel-2: rgba(10, 12, 15, 0.95);
-    --panel-solid: #0e1013;
-    --sunk: #060708;
-    --line: #2b3037;
-    --line-soft: rgba(255, 255, 255, 0.1);
-    --hair: rgba(255, 255, 255, 0.06);
-    --text: #f2f4f6;
-    --dim: #9aa4af;
-    --faint: #6b7580;
-    /* The amber accent: primary buttons, active tabs, selection, progress and
-       kickers. --gold-contrast is the ink that clears contrast on an amber fill. */
-    --gold: #f2b544;
-    --gold-hi: #ffd27a;
-    --gold-contrast: #14110a;
-    --gold-soft: rgba(242, 181, 68, 0.12);
-    --gold-line: rgba(242, 181, 68, 0.45);
-    --glow-gold: 0 0 18px rgba(242, 181, 68, 0.35);
-    /* Steel carries hover borders on neutral controls and secondary emphasis.
-       Cyan is the sensor colour — radar, interceptors, links — and is kept
-       apart from --ally, which states a nation's relationship, not a readout. */
-    --blue: #9fb4c8;
-    --cyan: #7fd4ff;
+    --bg: #000000;
+    --bg-2: #0a0a0a;
+    --panel: rgba(6, 6, 6, 0.9);
+    --panel-2: rgba(8, 8, 8, 0.96);
+    --panel-solid: #080808;
+    --sunk: #000000;
+    --line: rgba(255, 255, 255, 0.12);
+    --line-2: rgba(255, 255, 255, 0.24);
+    --line-soft: rgba(255, 255, 255, 0.08);
+    --hair: rgba(255, 255, 255, 0.07);
+    --text: #f4f4f4;
+    --dim: #a3a3a3;
+    --faint: #5e5e5e;
+    /* The accent is TaylorURL blue, in two steps because one blue cannot do
+       both jobs on black. --accent is the step that reads as a line, a lamp, a
+       progress fill or a word (5.2:1 on the ground); --accent-fill is the
+       deeper step a primary button is filled with, because white ink only
+       clears AA on that one (5.0:1). Hover on a line brightens to --accent-hi;
+       hover on a fill deepens to --accent-fill-hi. --accent-ink is the text on
+       a fill. */
+    --accent: #3d76ff;
+    --accent-hi: #4f86ff;
+    --accent-fill: #2b64f0;
+    --accent-fill-hi: #2054d8;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(61, 118, 255, 0.14);
+    --accent-line: rgba(61, 118, 255, 0.5);
+    /* --blue is the hover border on a neutral control. --cyan is the one colour
+       a sensor carries: an interceptor in flight and a coverage ring. --ally
+       states a nation's relationship on the map, not a readout. */
+    --blue: #9a9a9a;
+    --cyan: #9ecbff;
     --red: #e0574f;
     --ally: #5fa8ff;
     --good: #5fe39a;
@@ -47,27 +68,28 @@
 
     /* Translucent chrome that floats over content: the sticky nav bar and the
        wiki filter rail, the modal and drawer backdrops, the compact bordered
-       controls in the header cluster, and the solid primary-button surface. */
-    --chrome: rgba(8, 9, 11, 0.72);
-    --chrome-strong: rgba(8, 9, 11, 0.86);
-    --chrome-soft: rgba(8, 9, 11, 0.55);
-    --chrome-veil: rgba(8, 9, 11, 0.7);
-    --chrome-deep: rgba(8, 9, 11, 0.94);
-    --scrim: rgba(4, 6, 9, 0.72);
-    --scrim-thin: rgba(4, 6, 9, 0.08);
-    --field: rgba(16, 18, 20, 0.7);
-    --control: #20242b;
-    --control-hover: #282d35;
-    --shine: #c9d2db;
+       controls in the header cluster, and the solid control surface. Every one
+       is mixed from the page's own black. */
+    --chrome: rgba(0, 0, 0, 0.72);
+    --chrome-strong: rgba(0, 0, 0, 0.86);
+    --chrome-soft: rgba(0, 0, 0, 0.55);
+    --chrome-veil: rgba(0, 0, 0, 0.7);
+    --chrome-deep: rgba(0, 0, 0, 0.94);
+    --scrim: rgba(0, 0, 0, 0.72);
+    --scrim-thin: rgba(0, 0, 0, 0.08);
+    --field: rgba(10, 10, 10, 0.7);
+    --control: #141414;
+    --control-hover: #1c1c1c;
+    --shine: #d4d4d4;
     --shine-hi: #ffffff;
 
-    --radius: 6px;
-    --radius-sm: 4px;
-    --radius-lg: 8px;
+    --radius: 0px;
+    --radius-sm: 0px;
+    --radius-lg: 0px;
     --shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.66);
     --shadow-sm: 0 10px 26px -12px rgba(0, 0, 0, 0.6);
-    --btn-bg: #17191d;
-    --btn-bg-2: #101215;
+    --btn-bg: #0f0f0f;
+    --btn-bg-2: #0a0a0a;
 
     /* Three speeds, so a hover, a state change and an entrance are not timed by
        hand at each call site. --dur-fast is the one a pointer feels. */
@@ -82,144 +104,147 @@
        line set before the real face arrives occupies the space it will end up in. */
     --sans: "Inter", "Inter Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --mono: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, "SF Mono", Menlo, monospace;
-    --display: "Chakra Petch", "Chakra Petch Fallback", var(--sans);
 
     /* Ink for the procedural chrome below: text selection, the vignette and
-       rail fades, and the tactical scrollbars. */
+       rail fades, and the scrollbars. */
     --ink-white: #ffffff;
     --ink-black: #000000;
     --select-bg: rgba(255, 255, 255, 0.16);
-    --vignette-ink: rgba(40, 48, 60, 0.5);
-    --rail-fade-near: rgba(7, 9, 13, 0.92);
-    --rail-fade-mid: rgba(7, 9, 13, 0.72);
-    --rail-fade-far: rgba(7, 9, 13, 0);
+    --vignette-edge: rgba(0, 0, 0, 0.85);
+    --rail-fade-near: rgba(0, 0, 0, 0.92);
+    --rail-fade-mid: rgba(0, 0, 0, 0.72);
+    --rail-fade-far: rgba(0, 0, 0, 0);
     --scrollbar-track: rgba(255, 255, 255, 0.035);
-    --scrollbar-thumb: #575f6a;
-    --scrollbar-thumb-hover: #78818d;
-    --scrollbar-thumb-active: #949ca7;
-    --scrollbar-thumb-paper: rgba(0, 0, 0, 0.28);
-    --scrollbar-thumb-paper-hover: rgba(0, 0, 0, 0.45);
+    --scrollbar-thumb: #3d3d3d;
+    --scrollbar-thumb-hover: #565656;
+    --scrollbar-thumb-active: #707070;
 
     /* Sprite ink for the hero scene: missile hulls and exhaust, interceptors,
-       detonations and fallout. Each family reads hi / mid / low down its body
-       plus a glow, so a whole sprite retints from four values. */
-    --flame-default: #ff8a1a;
-    --missile-hull-hi: #f4f5f6;
-    --missile-hull-mid: #c9cdd2;
-    --missile-hull-low: #989ca2;
-    --missile-hull-glow: rgba(222, 226, 232, 0.6);
-    --missile-nose: #f2f4f6;
-    --missile-fin: #9da1a7;
-    --missile-cluster-band: rgba(16, 42, 54, 0.3);
-    --missile-cluster-hi: #f2f5f6;
-    --missile-cluster-mid: #cbe4ee;
-    --missile-cluster-low: #a7c3cf;
-    --missile-cluster-base: #8db0bd;
-    --missile-mirv-hi: #f6f7f8;
-    --missile-mirv-mid: #c6cace;
-    --missile-mirv-low: #93979d;
-    --int-hull-hi: #eafff3;
-    --int-hull-mid: #8dffbf;
-    --int-hull-low: #3fd98a;
-    --int-hull-glow: rgba(141, 255, 191, 0.85);
-    --int-flame-mid: #aaffcf;
-    --int-flame-low: #25e084;
-    --int-flame-glow: rgba(60, 230, 140, 0.85);
-    --int-spark-mid: #d6f4ff;
-    --int-spark-glow: rgba(150, 232, 255, 0.95);
-    --thaad-hull-mid: #b8f4ff;
-    --thaad-hull-low: #37b6ef;
-    --thaad-hull-glow: rgba(120, 226, 255, 0.95);
-    --thaad-flame-mid: #cdf3ff;
-    --thaad-flame-low: #33b4ef;
-    --thaad-flame-glow: rgba(90, 205, 255, 0.9);
-    --boom-flash-mid: rgba(255, 244, 214, 0.9);
-    --boom-flash-out: rgba(255, 210, 120, 0);
-    --boom-ring: rgba(255, 214, 140, 0.9);
-    --boom-ring-glow: rgba(255, 180, 90, 0.6);
-    --boom-fire-hi: #fff2c0;
-    --boom-fire-mid: #ffd24a;
-    --boom-fire-low: #ff3b0a;
-    --boom-fire-out: rgba(120, 20, 0, 0);
-    --boom-core-mid: #fff0b8;
-    --boom-core-out: rgba(255, 200, 90, 0);
-    --boom-smoke-near: rgba(60, 54, 48, 0.7);
-    --boom-smoke-mid: rgba(48, 44, 40, 0.3);
-    --boom-smoke-out: rgba(40, 36, 32, 0);
-    --boom-spark: #ffd873;
-    --intercept-ring: rgba(160, 226, 255, 0.9);
-    --intercept-ring-glow: rgba(120, 200, 255, 0.6);
-    --sight-glow: rgba(127, 212, 255, 0.65);
-    --sight-glow-soft: rgba(127, 212, 255, 0.7);
-    --fallout-glow-near: rgba(160, 255, 74, 0.5);
-    --fallout-glow-mid: rgba(120, 220, 40, 0.22);
-    --fallout-glow-out: rgba(90, 180, 30, 0);
-    --fallout-ring: rgba(182, 255, 92, 0.75);
-    --fallout-ring-glow: rgba(140, 255, 58, 0.5);
-    --fallout-text: #c9ff7a;
-    --fallout-text-glow: rgba(140, 255, 58, 0.9);
+       detonations and fallout. A missile is white through grey, an interceptor
+       is pale blue, a detonation runs white-hot to grey, and fallout is grey.
+       Each family reads hi / mid / low down its body plus a glow, so a whole
+       sprite retints from four values. */
+    --missile-flame: #e6e6e6;
+    --missile-hull-hi: #f4f4f4;
+    --missile-hull-mid: #a3a3a3;
+    --missile-hull-low: #6e6e6e;
+    --missile-hull-glow: rgba(255, 255, 255, 0.35);
+    --missile-nose: #f4f4f4;
+    --missile-fin: #8a8a8a;
+    --missile-cluster-band: rgba(255, 255, 255, 0.16);
+    --missile-cluster-hi: #f4f4f4;
+    --missile-cluster-mid: #b5b5b5;
+    --missile-cluster-low: #868686;
+    --missile-cluster-base: #6b6b6b;
+    --missile-mirv-hi: #f4f4f4;
+    --missile-mirv-mid: #9c9c9c;
+    --missile-mirv-low: #676767;
+    --int-hull-hi: #eef5ff;
+    --int-hull-mid: #9ecbff;
+    --int-hull-low: #6d97c7;
+    --int-hull-glow: rgba(158, 203, 255, 0.7);
+    --int-flame-mid: #cfe3ff;
+    --int-flame-low: #9ecbff;
+    --int-flame-glow: rgba(158, 203, 255, 0.7);
+    --int-spark-mid: #e4f0ff;
+    --int-spark-glow: rgba(158, 203, 255, 0.85);
+    --thaad-hull-mid: #cfe3ff;
+    --thaad-hull-low: #7aa6d6;
+    --thaad-hull-glow: rgba(158, 203, 255, 0.8);
+    --thaad-flame-mid: #dcebff;
+    --thaad-flame-low: #9ecbff;
+    --thaad-flame-glow: rgba(158, 203, 255, 0.75);
+    --boom-flash-mid: rgba(255, 255, 255, 0.9);
+    --boom-flash-out: rgba(255, 255, 255, 0);
+    --boom-ring: rgba(255, 255, 255, 0.9);
+    --boom-ring-glow: rgba(255, 255, 255, 0.45);
+    --boom-fire-hi: #ffffff;
+    --boom-fire-mid: #cfcfcf;
+    --boom-fire-low: #5a5a5a;
+    --boom-fire-out: rgba(20, 20, 20, 0);
+    --boom-core-mid: #f4f4f4;
+    --boom-core-out: rgba(255, 255, 255, 0);
+    --boom-smoke-near: rgba(56, 56, 56, 0.7);
+    --boom-smoke-mid: rgba(44, 44, 44, 0.3);
+    --boom-smoke-out: rgba(36, 36, 36, 0);
+    --boom-spark: #e6e6e6;
+    --intercept-ring: rgba(158, 203, 255, 0.9);
+    --intercept-ring-glow: rgba(158, 203, 255, 0.5);
+    --sight-glow: rgba(255, 255, 255, 0.45);
+    --sight-glow-soft: rgba(255, 255, 255, 0.35);
+    --fallout-glow-near: rgba(190, 190, 190, 0.45);
+    --fallout-glow-mid: rgba(150, 150, 150, 0.2);
+    --fallout-glow-out: rgba(120, 120, 120, 0);
+    --fallout-ring: rgba(215, 215, 215, 0.7);
+    --fallout-ring-glow: rgba(180, 180, 180, 0.45);
+    --fallout-text: #d4d4d4;
+    --fallout-text-glow: rgba(255, 255, 255, 0.5);
     --fallout-text-shadow: rgba(0, 0, 0, 0.8);
 
-    /* The primary button's sheen sweep. */
-    --btn-sheen: rgba(255, 255, 255, 0.45);
     /* The THAAD interceptor's core glow. */
-    --wire-glow-from: rgba(120, 226, 255, 0.75);
-    --wire-glow-to: rgba(160, 238, 255, 1);
+    --wire-glow-from: rgba(158, 203, 255, 0.6);
+    --wire-glow-to: rgba(206, 227, 255, 0.95);
     --pulse-danger-out: rgba(224, 87, 79, 0);
     --pulse-danger-mid: rgba(224, 87, 79, 0.22);
     --lift-shadow: rgba(0, 0, 0, 0.45);
 }
 
-/* Gray: the neutral slate between the two. Same structure, warmed-off
-   graphite surfaces and a lifted line so hairlines still read at the lower
-   contrast the mid tone leaves them. */
+/* Gray: the same design one shade lighter. Graphite surfaces lifted off pure
+   black and the same hairlines. The accent's line step moves up one shade,
+   because on the lifted ground the black theme's blue falls short of AA; the
+   fill steps already carry white ink at AA, so they stay. */
 [data-theme="gray"] {
-    --bg: #24262a;
-    --bg-2: #2c2f34;
-    --panel: rgba(44, 47, 52, 0.88);
-    --panel-2: rgba(38, 41, 45, 0.95);
-    --panel-solid: #2c2f34;
-    --sunk: #1d1f22;
-    --line: #454a51;
-    --line-soft: rgba(255, 255, 255, 0.12);
+    --bg: #141414;
+    --bg-2: #1c1c1c;
+    --panel: rgba(22, 22, 22, 0.9);
+    --panel-2: rgba(26, 26, 26, 0.96);
+    --panel-solid: #1c1c1c;
+    --sunk: #101010;
+    --line: rgba(255, 255, 255, 0.14);
+    --line-2: rgba(255, 255, 255, 0.26);
+    --line-soft: rgba(255, 255, 255, 0.1);
     --hair: rgba(255, 255, 255, 0.08);
-    --text: #eef0f3;
-    --dim: #b3bac2;
-    --faint: #868e97;
-    --gold: #f2b544;
-    --gold-hi: #ffd27a;
-    --gold-contrast: #14110a;
-    --gold-soft: rgba(242, 181, 68, 0.14);
-    --gold-line: rgba(242, 181, 68, 0.45);
-    --blue: #9fb4c8;
+    --text: #f4f4f4;
+    --dim: #adadad;
+    --faint: #6e6e6e;
+    --accent: #5c8cff;
+    --accent-hi: #709aff;
+    --accent-fill: #2b64f0;
+    --accent-fill-hi: #2054d8;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(92, 140, 255, 0.16);
+    --accent-line: rgba(92, 140, 255, 0.5);
+    --blue: #9a9a9a;
+    --cyan: #9ecbff;
     --red: #e0574f;
     --ally: #5fa8ff;
+    --good: #5fe39a;
     --danger: #e0574f;
 
-    --chrome: rgba(36, 38, 42, 0.72);
-    --chrome-strong: rgba(36, 38, 42, 0.86);
-    --chrome-soft: rgba(36, 38, 42, 0.55);
-    --chrome-veil: rgba(36, 38, 42, 0.7);
-    --chrome-deep: rgba(36, 38, 42, 0.94);
-    --scrim: rgba(20, 22, 25, 0.72);
-    --scrim-thin: rgba(20, 22, 25, 0.08);
-    --field: rgba(52, 56, 61, 0.7);
-    --control: #3a3f46;
-    --control-hover: #454b53;
-    --shine: #d6dce3;
+    --chrome: rgba(20, 20, 20, 0.72);
+    --chrome-strong: rgba(20, 20, 20, 0.86);
+    --chrome-soft: rgba(20, 20, 20, 0.55);
+    --chrome-veil: rgba(20, 20, 20, 0.7);
+    --chrome-deep: rgba(20, 20, 20, 0.94);
+    --scrim: rgba(8, 8, 8, 0.72);
+    --scrim-thin: rgba(8, 8, 8, 0.08);
+    --field: rgba(28, 28, 28, 0.7);
+    --control: #262626;
+    --control-hover: #303030;
+    --shine: #d4d4d4;
     --shine-hi: #ffffff;
 
-    --btn-bg: #383c42;
-    --btn-bg-2: #2f3238;
+    --btn-bg: #232323;
+    --btn-bg-2: #1c1c1c;
     --select-bg: rgba(255, 255, 255, 0.18);
-    --vignette-ink: rgba(88, 96, 108, 0.5);
-    --rail-fade-near: rgba(30, 32, 36, 0.92);
-    --rail-fade-mid: rgba(30, 32, 36, 0.72);
-    --rail-fade-far: rgba(30, 32, 36, 0);
+    --vignette-edge: rgba(0, 0, 0, 0.7);
+    --rail-fade-near: rgba(20, 20, 20, 0.92);
+    --rail-fade-mid: rgba(20, 20, 20, 0.72);
+    --rail-fade-far: rgba(20, 20, 20, 0);
     --scrollbar-track: rgba(255, 255, 255, 0.05);
-    --scrollbar-thumb: #6b7480;
-    --scrollbar-thumb-hover: #838c98;
-    --scrollbar-thumb-active: #9ba3ae;
+    --scrollbar-thumb: #4d4d4d;
+    --scrollbar-thumb-hover: #666666;
+    --scrollbar-thumb-active: #808080;
 }
 
 @theme inline {
@@ -230,16 +255,19 @@
     --color-panel-solid: var(--panel-solid);
     --color-sunk: var(--sunk);
     --color-line: var(--line);
+    --color-line-2: var(--line-2);
     --color-line-soft: var(--line-soft);
     --color-hair: var(--hair);
     --color-text: var(--text);
     --color-dim: var(--dim);
     --color-faint: var(--faint);
-    --color-gold: var(--gold);
-    --color-gold-hi: var(--gold-hi);
-    --color-gold-contrast: var(--gold-contrast);
-    --color-gold-soft: var(--gold-soft);
-    --color-gold-line: var(--gold-line);
+    --color-accent: var(--accent);
+    --color-accent-hi: var(--accent-hi);
+    --color-accent-fill: var(--accent-fill);
+    --color-accent-fill-hi: var(--accent-fill-hi);
+    --color-accent-ink: var(--accent-ink);
+    --color-accent-soft: var(--accent-soft);
+    --color-accent-line: var(--accent-line);
     --color-blue: var(--blue);
     --color-cyan: var(--cyan);
     --color-good: var(--good);
@@ -261,7 +289,6 @@
 
     --font-sans: var(--sans);
     --font-mono: var(--mono);
-    --font-display: var(--display);
 
     --radius-sm: var(--radius-sm);
     --radius-DEFAULT: var(--radius);
@@ -303,9 +330,9 @@ body {
 
 /* A single on-theme focus ring for keyboard navigation. The UA ring follows the
    OS accent, so it arrives in whatever colour the machine happens to be set to;
-   this one is the same amber on every machine. Mouse focus stays quiet. */
+   this one is the same blue on every machine. Mouse focus stays quiet. */
 :focus-visible {
-    outline: 2px solid var(--gold);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -319,49 +346,14 @@ body {
         opacity: 0.045;
     }
 
-    /* Radial top vignette that seats content over the dark canvas. */
+    /* A plain fade to the page ground at the edges, so a full-bleed band settles
+       into the page rather than ending on a line. It carries no colour of its
+       own: the ink is the ground the section already sits on. */
     .db-vignette {
-        background: radial-gradient(1300px 760px at 50% -22%, var(--vignette-ink), transparent 62%);
+        background: radial-gradient(1200px 820px at 50% 46%, transparent 42%, var(--vignette-edge) 100%);
     }
 
-    /* Corner tick "L" marks — the recurring targeting motif. */
-    .db-tick::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 14px;
-        height: 14px;
-        border-top: 1px solid var(--gold-line);
-        border-left: 1px solid var(--gold-line);
-        pointer-events: none;
-    }
-
-    .db-tick::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 14px;
-        height: 14px;
-        border-bottom: 1px solid var(--gold-line);
-        border-right: 1px solid var(--gold-line);
-        pointer-events: none;
-    }
-
-    /* Instrument-panel top seam gradient. */
-    .db-seam::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--gold-line), transparent);
-        pointer-events: none;
-    }
-
-    /* Tactical scrollbar to match the game. */
+    /* Scrollbar to match the game. */
     .db-scroll {
         scrollbar-width: thin;
         scrollbar-color: var(--scrollbar-thumb) transparent;
@@ -391,16 +383,6 @@ body {
 
     .db-blink {
         animation: dbBlink 2.4s var(--ease-io) infinite;
-    }
-
-    @keyframes dbTitleGlow {
-        0%,
-        100% {
-            filter: brightness(1);
-        }
-        50% {
-            filter: brightness(1.16);
-        }
     }
 
     @keyframes dbMarquee {
@@ -435,114 +417,15 @@ body {
    keeps its frame. In @layer vfx, which is declared after Tailwind's utilities,
    so these sit above them. */
 @layer vfx {
-    /* Notched corners. The clip cuts a 45 degree chamfer off the top-left and
-       bottom-right of the box, which is the silhouette every framed surface in
-       the UI shares: primary buttons, HUD panels, cards and image frames.
-       .db-notch-sm is the 5px cut for controls, .db-notch the 8px cut for
-       panels. A clip path hides everything outside itself, so a notched element
-       cannot paint a box-shadow, outline or ring beyond its own edge — put a
-       glow on a wrapper, or leave it off. */
-    .db-notch {
-        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-    }
-
-    .db-notch-sm {
-        clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
-    }
-
-    /* The clip also swallows the focus ring :focus-visible draws in @layer base,
-       so a notched control redraws it on the inside at the same weight. --db-ring
-       is the ink: the accent by default, and whatever reads against the fill on a
-       control that is already amber. */
-    .db-notch:focus-visible,
-    .db-notch-sm:focus-visible {
-        outline: none;
-        box-shadow: inset 0 0 0 2px var(--db-ring, var(--gold));
-    }
-
-    /* Four corner brackets, the targeting motif, drawn without a wrapper
-       element: each pseudo-element lays a full 1px frame over the box and masks
-       it down to two opposite corners, so the pair renders four L's and nothing
-       in between. --db-bracket is the arm length, and growing it on hover is
-       what makes the brackets close in; mask-size interpolates, so the growth
-       and the brightening run together over --dur-fast.
-
-       The element needs its own positioning context (relative, absolute or
-       fixed) for the overlays to land on it. */
-    .db-brackets {
-        --db-bracket: 10px;
-    }
-
-    .db-brackets::before,
-    .db-brackets::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        border: 1px solid var(--gold-line);
-        mask-image: linear-gradient(#000, #000), linear-gradient(#000, #000);
-        mask-repeat: no-repeat;
-        mask-size: var(--db-bracket) var(--db-bracket);
-        transition:
-            border-color var(--dur-fast) var(--ease-out),
-            mask-size var(--dur-fast) var(--ease-out);
-    }
-
-    .db-brackets::before {
-        mask-position:
-            0 0,
-            100% 0;
-    }
-
-    .db-brackets::after {
-        mask-position:
-            0 100%,
-            100% 100%;
-    }
-
-    .db-brackets:hover,
-    .db-brackets:focus-visible {
-        --db-bracket: 14px;
-    }
-
-    .db-brackets:hover::before,
-    .db-brackets:hover::after,
-    .db-brackets:focus-visible::before,
-    .db-brackets:focus-visible::after {
-        border-color: var(--gold);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .db-brackets::before,
-        .db-brackets::after {
-            transition: none;
-        }
-    }
-
-    /* Scanlines: a static CRT tint for panels and cards, one bright row every
-       three pixels, blended so it darkens and lightens what is under it rather
-       than greying it. Nothing moves, so there is nothing to stand down under
-       reduced motion. The element needs its own positioning context. */
-    .db-scan::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        mix-blend-mode: overlay;
-        background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
-    }
-
-    /* Status LED. The tone classes set nothing but the colour; the lamp and its
-       bloom both read currentColor, so one tone swaps both. Live is the only
-       one that blinks, because a blinking light means something is happening
-       and four of them blinking means nothing does. */
+    /* Status LED. The tone classes set nothing but the colour; the lamp reads
+       currentColor, so one tone swaps it. Live is the only one that blinks,
+       because a blinking light means something is happening and four of them
+       blinking means nothing does. */
     .db-led {
         width: 6px;
         height: 6px;
         flex-shrink: 0;
-        border-radius: 50%;
         background: currentColor;
-        box-shadow: 0 0 7px currentColor;
     }
 
     .db-led-live {
@@ -555,7 +438,7 @@ body {
     }
 
     .db-led-warn {
-        color: var(--gold);
+        color: var(--text);
     }
 
     .db-led-sensor {
@@ -585,75 +468,41 @@ body {
         background: repeating-linear-gradient(90deg, transparent 0 6px, var(--db-seg-gap, var(--sunk)) 6px 8px);
     }
 
-    /* The HUD panel frame — every docked panel, popover and context menu. Glass
-       over the map, a hairline edge, the small corner cut, scanlines, and a
-       short amber rule on the top edge that reads as the tab of a labelled
-       instrument. The tab starts where the corner cut lets the top edge begin
-       and runs --db-tab wide.
-
-       Like every clipped surface it cannot paint outside its own edge, so a
-       panel that needs a drop shadow gets it from a wrapper. The element needs
-       its own positioning context, which a docked panel already has. */
+    /* The panel — every card, popover and floating menu. Black glass, one
+       hairline, square corners. A panel with nothing behind it takes the solid
+       surface from its call site. */
     .db-hud-panel {
         background: var(--panel);
         border: 1px solid var(--line);
-        clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
-        backdrop-filter: blur(10px) saturate(1.15);
+        backdrop-filter: blur(10px);
     }
 
-    .db-hud-panel::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 5px;
-        width: var(--db-tab, 72px);
-        height: 2px;
-        background: var(--gold);
-        pointer-events: none;
-    }
-
-    .db-hud-panel::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        mix-blend-mode: overlay;
-        background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
-    }
-
-    /* The panel's header strip: mono micro-caps, the same measure on every
-       panel, over a hairline that separates it from the readout below. */
+    /* The panel's header strip: the title in Inter over a hairline that
+       separates it from the readout below. */
     .db-hud-panel > header {
-        font-family: var(--mono);
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.22em;
-        color: var(--dim);
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
         border-bottom: 1px solid var(--hair);
-    }
-
-    /* The wordmark's bloom. A text-shadow rather than a filter, so it lights the
-       letterforms and leaves everything around them alone. */
-    .db-title-glow {
-        text-shadow: var(--glow-gold);
-        animation: dbTitleGlow 6s var(--ease-io) infinite alternate;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .db-title-glow {
-            animation: none;
-        }
     }
 }
 
-/* The sheen a primary button sweeps on hover, and the keyframes more than one
-   surface animates with. Unlayered so they reliably apply over Tailwind's
-   utilities. */
-/* Custom tactical scrollbars */
+/* The site's own lamp tone. Each tone in the shared block reports a state, and
+   the game reads them that way. A lamp beside a kicker, a spec line or a status
+   strip reports nothing — it marks the brand — so it takes the accent rather
+   than borrowing a state's colour. Kept out of the shared block so that block
+   stays identical to the game's. */
+@layer vfx {
+    .db-led-accent {
+        color: var(--accent);
+    }
+}
+
+/* Custom scrollbars */
 /* .db-scroll is the reusable dark-panel scrollbar; .db-savelist is an alias
        kept for the existing save list. Apply db-scroll to any dark overflow region
-       (e.g. the in-game NationPanel roster) so it never falls back to the raw
-       white browser scrollbar. */
+       so it never falls back to the raw white browser scrollbar. */
 .db-savelist,
 .db-scroll {
     scrollbar-width: thin;
@@ -675,7 +524,6 @@ body {
 .db-savelist::-webkit-scrollbar-thumb,
 .db-scroll::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
-    border-radius: 999px;
     border: 3px solid transparent;
     background-clip: padding-box;
 }
@@ -692,34 +540,12 @@ body {
     background-clip: padding-box;
 }
 
-/* single sheen sweep on hover — a rare, deliberate flourish, not per-frame */
-.db-btn.primary::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-120%);
-    background: linear-gradient(105deg, transparent 40%, var(--btn-sheen) 50%, transparent 60%);
-}
-
-.db-btn.primary:hover:not(:disabled)::after {
-    transform: translateX(120%);
-    transition: transform 620ms var(--ease-out);
-}
-
-/* all @keyframes */
+/* The keyframes more than one surface animates with. Unlayered so they reliably
+   apply over Tailwind's utilities. */
 @keyframes dbRowIn {
     from {
         opacity: 0;
         transform: translateY(7px);
-    }
-}
-
-@keyframes dbTitleGlow {
-    from {
-        filter: brightness(1);
-    }
-    to {
-        filter: brightness(1.22);
     }
 }
 

@@ -3,12 +3,13 @@ import {motion, useReducedMotion, useScroll, useTransform} from "motion/react";
 import Reveal from "./Reveal.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow} from "./Primitives.jsx";
-import {button} from "../lib/variants.js";
+import {cn} from "../lib/cn.js";
+import {button, ctaRow} from "../lib/variants.js";
 
 const ctaBg = "/shots/population-heat.webp";
 
-// Closing call to action — full-bleed console behind a heavy scrim, the free
-// play/download CTA front and center.
+// Closing call to action — a full-bleed console behind a heavy scrim, with the
+// free play and download CTA front and center.
 export default function CtaBand({onSignIn}) {
     const ref = useRef(null);
     const reduce = useReducedMotion();
@@ -26,7 +27,9 @@ export default function CtaBand({onSignIn}) {
                 loading="lazy"
                 decoding="async"
                 style={reduce ? undefined : {y: bgY}}
-                className="absolute inset-0 z-0 h-[116%] w-full -translate-y-[8%] object-cover opacity-[0.28]"
+                // The capture is of the console itself, and the band around it
+                // carries no colour, so it is shown in the same two greys.
+                className="absolute inset-0 z-0 h-[116%] w-full -translate-y-[8%] object-cover opacity-[0.2]"
             />
             <div
                 aria-hidden
@@ -38,7 +41,7 @@ export default function CtaBand({onSignIn}) {
                 <div className="mx-auto max-w-2xl text-center">
                     <Reveal>
                         <Eyebrow className="justify-center">Free to play · Out now</Eyebrow>
-                        <h2 className="mt-6 font-display text-[clamp(2.2rem,6vw,4.5rem)] font-bold uppercase leading-[1.02] text-text">
+                        <h2 className="mt-6 text-[clamp(2.2rem,6vw,4.5rem)] font-semibold leading-[1.04] tracking-[-0.025em] text-text">
                             Raise your dome
                         </h2>
                         <p className="mx-auto mt-5 max-w-lg text-[clamp(1rem,1.4vw,1.15rem)] leading-relaxed text-dim">
@@ -48,7 +51,7 @@ export default function CtaBand({onSignIn}) {
                     </Reveal>
 
                     <Reveal delay={0.15}>
-                        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+                        <div className={cn(ctaRow({align: "center"}), "mt-10")}>
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn?.("signup")}
@@ -60,7 +63,7 @@ export default function CtaBand({onSignIn}) {
                     </Reveal>
 
                     <Reveal delay={0.22}>
-                        <p className="mx-auto mt-8 max-w-xl border-t border-hair pt-8 font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
+                        <p className="mx-auto mt-8 max-w-xl border-t border-hair pt-8 text-[12.5px] text-faint">
                             Already have an account?{" "}
                             <button
                                 onClick={() => onSignIn?.("signin")}

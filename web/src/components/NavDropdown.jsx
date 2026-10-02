@@ -88,11 +88,12 @@ export default function NavDropdown({label, items}) {
                 aria-expanded={open}
                 aria-controls={id}
                 className={cn(
-                    "relative inline-flex items-center gap-2 px-3 py-2 font-display text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-[var(--dur-fast)] ease-out-db cursor-pointer",
-                    // Open is an active state, so it takes the accent and the
-                    // 2px rule the tab strips use; resting labels stay dim.
+                    "relative inline-flex items-center gap-2 px-3 py-2 text-[12.5px] font-medium transition-colors duration-[var(--dur-fast)] ease-out-db cursor-pointer",
+                    // Open is an active state, so it takes the white text and
+                    // the 2px accent rule the tab strips use; resting labels
+                    // stay dim.
                     open
-                        ? "text-gold after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-gold after:content-['']"
+                        ? "text-text after:absolute after:inset-x-2 after:bottom-0 after:h-[2px] after:bg-accent after:content-['']"
                         : "text-dim hover:text-text",
                 )}
             >
@@ -101,7 +102,7 @@ export default function NavDropdown({label, items}) {
                     size={13}
                     className={cn(
                         "text-faint transition-transform duration-[var(--dur)]",
-                        open && "rotate-180 text-gold",
+                        open && "rotate-180 text-text",
                     )}
                 />
             </button>
@@ -117,10 +118,7 @@ export default function NavDropdown({label, items}) {
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         transition={{duration: 0.16, ease: [0.23, 1, 0.32, 1]}}
                         style={{transformOrigin: "top left"}}
-                        className={cn(
-                            panel({frame: "glass"}),
-                            "db-seam absolute left-0 top-[calc(100%+12px)] w-[300px] p-2",
-                        )}
+                        className={cn(panel({frame: "glass"}), "absolute left-0 top-[calc(100%+12px)] w-[300px] p-2")}
                     >
                         {items.map((it) => (
                             <NavMenuItem key={it.label} item={it} onDone={() => setOpen(false)} />

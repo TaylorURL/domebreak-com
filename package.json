@@ -3,7 +3,7 @@
   "productName": "DomeBreak",
   "private": true,
   "license": "UNLICENSED",
-  "version": "2026.39.0",
+  "version": "2026.40.0",
   "type": "module",
   "description": "DomeBreak - online multiplayer missile defense/offense game.",
   "main": "electron/main.cjs",
@@ -24,7 +24,6 @@
     "postinstall": "node scripts/dev-brand-electron.cjs"
   },
   "dependencies": {
-    "@fontsource/chakra-petch": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@supabase/supabase-js": "^2.110.0",

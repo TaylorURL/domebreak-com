@@ -1,5 +1,4 @@
 import {fmtPop} from "../lib/format.js";
-import {VIT_GREEN} from "../lib/status.js";
 import {cn} from "../lib/cn.js";
 import Icon from "./Icon.jsx";
 
@@ -11,7 +10,8 @@ import Icon from "./Icon.jsx";
 //   • up + title — a bare caret with a caller-supplied tooltip, for dense rows
 //     where a per-item rate would be noise (e.g. a city that is rebuilding).
 // Renders nothing when flat (capped/wrecked/steady) so unchanging figures stay
-// uncluttered. Presentation only.
+// uncluttered. A trend is a number, so it reads in the same dim ink every other
+// number does; the caret is what says which way it is going. Presentation only.
 export default function PopTrend({rate, base, up, title, label = false, className}) {
     let pctMin = null;
     if (rate > 0 && base > 0) {
@@ -27,8 +27,7 @@ export default function PopTrend({rate, base, up, title, label = false, classNam
             : "Population growing");
     return (
         <span
-            className={cn("inline-flex items-center gap-[2px] leading-none", className)}
-            style={{color: VIT_GREEN}}
+            className={cn("inline-flex items-center gap-[2px] leading-none text-dim", className)}
             title={tip}
             aria-label={tip}
         >

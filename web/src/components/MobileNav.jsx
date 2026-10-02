@@ -14,8 +14,10 @@ import NavMenuItem from "./NavMenuItem.jsx";
 import PlayCta from "./PlayCta.jsx";
 
 // Mobile navigation: a hamburger that opens a full-height drawer with the same
-// grouped menus as the desktop dropdowns, the featured Play Free link, the
-// play CTA, and account actions. Shown only below the md breakpoint.
+// grouped menus as the desktop dropdowns, the play CTA, and account actions.
+// The CTA at the foot is the drawer's one call to action; the Play Free row in
+// the menus is the way to the band, not a second button. Shown only below the
+// md breakpoint.
 //
 // The drawer is portalled into <body> rather than left where it is declared. It
 // is positioned against the viewport, but the nav header it sits in takes a
@@ -83,46 +85,26 @@ export default function MobileNav({onSignIn}) {
                         // phone's retracting toolbar makes 100vh taller than what is on screen,
                         // and the rows at the bottom of the menu end up behind it. Overscroll is
                         // contained so a flick past either end scrolls the menu, not the page.
-                        className="db-scroll absolute right-0 top-0 flex h-[100dvh] max-h-[100dvh] w-[min(360px,88vw)] flex-col overflow-y-auto overscroll-contain border-l border-line bg-panel-solid shadow"
+                        className="db-scroll absolute right-0 top-0 flex h-[100dvh] max-h-[100dvh] w-[min(360px,88vw)] flex-col overflow-y-auto overscroll-contain border-l border-line bg-panel-solid"
                     >
-                        <div className="flex h-16 items-center justify-between border-b border-gold-line px-5">
+                        <div className="flex h-16 items-center justify-between border-b border-line px-5">
                             <div className="flex items-center gap-3">
-                                <GameIcon name="dome" size={20} className="text-gold" />
+                                <GameIcon name="dome" size={20} className="text-text" />
                                 <Wordmark className="text-[15px]" />
                             </div>
                             <button
                                 onClick={close}
                                 aria-label="Close menu"
-                                className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line text-dim transition-colors duration-[var(--dur-fast)] hover:border-blue hover:text-text"
+                                className="flex h-11 w-11 items-center justify-center border border-line text-dim transition-colors duration-[var(--dur-fast)] hover:border-line-2 hover:text-text"
                             >
                                 <X size={15} />
                             </button>
                         </div>
 
                         <div className="flex-1 px-3 py-4">
-                            <button
-                                onClick={() => {
-                                    close();
-                                    scrollToId("play");
-                                }}
-                                className="group/item mb-3 flex w-full items-center gap-3 db-notch-sm border border-gold-line bg-gold-soft px-3 py-3 text-left transition-colors duration-[var(--dur-fast)] hover:border-gold"
-                            >
-                                <span className="db-led db-led-live" />
-                                <span className="min-w-0">
-                                    <span className="block font-display text-[12.5px] font-semibold uppercase tracking-[0.1em] text-gold">
-                                        Play Free
-                                    </span>
-                                    <span className="mt-1 block font-mono text-[10.5px] text-faint">
-                                        Free · online multiplayer
-                                    </span>
-                                </span>
-                            </button>
-
                             {NAV_MENUS.map((group) => (
                                 <div key={group.label} className="mt-4 first:mt-0">
-                                    <div className="px-3 pb-1 font-display text-[10px] font-semibold uppercase tracking-[0.24em] text-faint">
-                                        {group.label}
-                                    </div>
+                                    <div className="px-3 pb-1 text-[12px] font-medium text-faint">{group.label}</div>
                                     {group.items.map((it) => (
                                         <NavMenuItem key={it.label} item={it} onDone={close} />
                                     ))}
@@ -147,7 +129,7 @@ export default function MobileNav({onSignIn}) {
                                             <a
                                                 href="#/admin"
                                                 onClick={close}
-                                                className="flex items-center gap-3 db-notch-sm border border-transparent px-3 py-3 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-gold-line hover:bg-gold-soft hover:text-gold"
+                                                className="flex items-center gap-3 border border-transparent px-3 py-3 text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-line-2 hover:bg-accent-soft hover:text-text"
                                             >
                                                 <ShieldCheck size={15} />
                                                 <span>Admin Panel</span>
@@ -158,7 +140,7 @@ export default function MobileNav({onSignIn}) {
                                                 close();
                                                 signOut();
                                             }}
-                                            className="flex items-center gap-3 db-notch-sm border border-transparent px-3 py-3 text-left text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
+                                            className="flex items-center gap-3 border border-transparent px-3 py-3 text-left text-[13px] text-dim transition-colors duration-[var(--dur-fast)] hover:border-[rgba(224,87,79,0.45)] hover:bg-[rgba(224,87,79,0.12)] hover:text-danger"
                                         >
                                             <LogOut size={15} />
                                             <span>Sign Out</span>
@@ -179,7 +161,7 @@ export default function MobileNav({onSignIn}) {
                             </div>
 
                             {version && (
-                                <p className="mt-4 border-t border-hair pt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+                                <p className="mt-4 border-t border-hair pt-4 text-center font-mono text-[11px] text-faint tabular-nums">
                                     {`v${version}`}
                                 </p>
                             )}
@@ -198,7 +180,7 @@ export default function MobileNav({onSignIn}) {
                 aria-haspopup="menu"
                 aria-expanded={open}
                 aria-controls={DRAWER_ID}
-                className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line bg-field text-dim transition-colors duration-[var(--dur-fast)] hover:border-blue hover:text-text"
+                className="flex h-11 w-11 items-center justify-center border border-line bg-field text-dim transition-colors duration-[var(--dur-fast)] hover:border-line-2 hover:text-text"
             >
                 <Menu size={17} />
             </button>

@@ -1,14 +1,14 @@
-// Production — full-screen arsenal command. Three regions that fill the frame:
-//   • left rail   — treasury + economy readout and the category selector
-//   • centre      — the arsenal: large unit/warhead cards for the active category
-//   • right rail  — the live national build queue (current + pending, cancellable)
-// Units are picked → placed on the map; warheads queue straight onto the line.
-// Presentation only — all mutations go through the engine api.
+// Build — the arsenal, in the dock's drawer. A tab per category over a grid of
+// build tiles; the eight tiles the hotbar reaches carry their key. Picking a
+// unit arms placement on the map, a warhead queues straight onto the line, and
+// the line itself sits at the foot with what is building and what is behind it.
+// Presentation only — every mutation goes through the engine api.
 import {useState} from "react";
-import ScreenFrame from "./ScreenFrame.jsx";
+import {DrawerScreen, DrawerTabs} from "./ScreenFrame.jsx";
 import UnitIcon from "../common/UnitIcon.jsx";
 import Icon from "../common/Icon.jsx";
 import Points from "../common/Points.jsx";
+import Meter from "../common/Meter.jsx";
 import {
     armamentOf,
     gdpOf,
@@ -27,44 +27,28 @@ import {
     WARHEADS,
 } from "../../game/engine.js";
 import {FALLOUT, INTERCEPT_CAP, WARHEAD_ICON} from "../../game/data/constants.js";
-import {fmtGdp, fmtKm, fmtNet, fmtPct} from "../lib/format.js";
-import {prodIcon, prodLabel, prodTime} from "../lib/prod.js";
+import {fmtGdp, fmtKm, fmtNet} from "../lib/format.js";
+import {prodEta, prodGroups, prodIcon, prodLabel, prodSite, prodTime, PROD_CATEGORIES} from "../lib/prod.js";
+import {hotbarKeyOf} from "../lib/hotbar.js";
 import {cn} from "../lib/cn.js";
 import {miniButton} from "../lib/variants.js";
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-// Space assets (the Space Command HQ + everything that requires it) group under
-// their own category regardless of kind; everything else falls to kind/domain.
-const isSpace = (key, u) => key === "spacehq" || u.requiresUnit === "spacehq";
-const catOf = (key, u) =>
-    isSpace(key, u)
-        ? "Space"
-        : u.kind === "industry"
-          ? "Industry"
-          : u.domain === "land"
-            ? "Army"
-            : u.domain === "sea"
-              ? "Naval"
-              : u.kind === "offense"
-                ? "Strike"
-                : u.kind === "defense"
-                  ? "Air Defense"
-                  : "Support";
-// Category selector: icon + the order they read down the rail. Munitions is the
-// warhead line; "All" shows every section at once.
-const CATS = [
-    {id: "all", name: "All Systems", icon: "systems"},
-    {id: "Support", name: "Support", icon: "support"},
-    {id: "Air Defense", name: "Air Defense", icon: "air-defense"},
-    {id: "Strike", name: "Strike", icon: "strike"},
-    {id: "Army", name: "Army", icon: "army"},
-    {id: "Naval", name: "Naval", icon: "naval"},
-    {id: "Space", name: "Space", icon: "space"},
-    {id: "Industry", name: "Industry", icon: "industry"},
-    {id: "Munitions", name: "Munitions", icon: "munitions"},
-];
+const TABS = [...PROD_CATEGORIES.map((id) => ({id, label: id})), {id: "Munitions", label: "Munitions"}];
 
-export default function ProductionScreen({world, api, mySlot, placing, setPlacing, onClose, head}) {
+// One readout in the strip under the tabs: a mono figure over its name.
+function Readout({label, value, tone}) {
+    return (
+        <div className="flex flex-col gap-[3px] min-w-0 px-3 py-2 border-r border-line last:border-r-0">
+            <b className={cn("font-mono tabular-nums text-[12.5px] font-semibold leading-none truncate", tone)}>
+                {value}
+            </b>
+            <span className="text-[10px] leading-none text-faint truncate">{label}</span>
+        </div>
+    );
+}
+
+export default function ProductionScreen({world, api, mySlot, placing, setPlacing, onClose}) {
     const me = world.nations.find((n) => n.slot === mySlot);
     const points = me?.points ?? 0;
     const income = incomeOf(world, mySlot),
@@ -72,185 +56,97 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         net = income - upkeep;
     const industryCount = industryCountOf(world, mySlot),
         industryCap = industryCapOf(world, mySlot);
-    const industryPending = industryPendingOf(world, mySlot);
-    const industryUsed = industryCount + industryPending;
+    const industryUsed = industryCount + industryPendingOf(world, mySlot);
     const ammo = me?.ammo || {};
     const cur = me?.prod?.current || null;
     const queue = me?.prod?.queue || [];
     const mine = world.units.filter((u) => u.slot === mySlot);
-    const counts = {};
-    for (const u of mine) counts[u.type] = (counts[u.type] || 0) + 1;
     const queuedOf = (kind, type) =>
         (cur?.item.kind === kind && cur?.item.type === type ? 1 : 0) +
         queue.filter((it) => it.kind === kind && it.type === type).length;
 
-    const [cat, setCat] = useState("all");
+    const [tab, setTab] = useState(PROD_CATEGORIES[0]);
 
-    // Picking a unit arms placement and drops back to the map (which the popup
-    // covers); clicking the armed unit again just disarms without closing.
-    const pick = (key) => {
-        if (placing === key) setPlacing(null);
-        else {
-            setPlacing(key);
-            onClose();
-        }
-    };
+    // Picking a unit arms placement and drops back to the map; clicking the
+    // armed unit again disarms it without closing the drawer.
+    const pick = (key) => setPlacing(placing === key ? null : key);
 
-    // Group unit defs by category (hidden units excluded).
-    const groups = {};
-    for (const [key, u] of Object.entries(UNITS)) {
-        if (u.hidden) continue;
-        (groups[catOf(key, u)] ||= []).push([key, u]);
-    }
-    // Space category has an explicit ordering rule: Space Command HQ leads (it's
-    // the prerequisite for everything else in the section), then the rest by cost
-    // ascending — cheapest orbital platform to most expensive.
-    if (groups.Space)
-        groups.Space.sort(([ak, au], [bk, bu]) => {
-            if (ak === "spacehq") return -1;
-            if (bk === "spacehq") return 1;
-            return (au.cost || 0) - (bu.cost || 0);
-        });
-    const countFor = (id) =>
-        id === "all"
-            ? Object.values(groups).reduce((a, g) => a + g.length, 0) + WARHEAD_ORDER.length
-            : id === "Munitions"
-              ? WARHEAD_ORDER.length
-              : groups[id]?.length || 0;
-
+    const groups = prodGroups();
     const label = (it) => prodLabel(it, me?.iso);
-    const icon = prodIcon;
-    const timeOf = prodTime;
 
-    // Compact per-unit stat sheet for arsenal cards — reads UNITS[type] directly.
-    const km = fmtKm;
+    // The full stat sheet a tile carries in its tooltip — the tile itself shows
+    // the icon, the name and the two figures a decision is made on.
     const statsFor = (u) => {
         const rows = [];
         if (u.kind === "defense") {
-            rows.push(["Intercept", `${Math.round(Math.min(INTERCEPT_CAP, u.intercept) * 100)}%`]);
-            rows.push(["Engage Range", km(u.range)]);
-            if (u.minRange) rows.push(["Min Range", km(u.minRange)]);
-            rows.push(["Reload", `${u.reload.toFixed(1)}s`]);
-            rows.push(["Shot Cost", <Points value={u.fireCost} size={10} />]);
+            rows.push(`Intercept ${Math.round(Math.min(INTERCEPT_CAP, u.intercept) * 100)}%`);
+            rows.push(`Engage range ${fmtKm(u.range)}`);
+            if (u.minRange) rows.push(`Min range ${fmtKm(u.minRange)}`);
+            rows.push(`Reload ${u.reload.toFixed(1)}s`);
+            rows.push(`Shot cost ${u.fireCost}`);
         } else if (u.kind === "offense") {
-            rows.push(["Damage", `${Math.round(u.damage)}`]);
-            rows.push(["Strike Range", km(u.range)]);
-            rows.push(["Reload", `${u.reload.toFixed(1)}s`]);
-            if (u.speed) rows.push(["Missile Spd", `${u.speed} km/s`]);
+            rows.push(`Damage ${Math.round(u.damage)}`);
+            rows.push(`Strike range ${fmtKm(u.range)}`);
+            rows.push(`Reload ${u.reload.toFixed(1)}s`);
+            if (u.speed) rows.push(`Missile speed ${u.speed} km/s`);
         } else if (u.detect) {
-            rows.push(["Detection", km(u.radarKm || u.range)]);
-            rows.push(["Track Grade", u.warnOnly ? "Warning Only" : "Fire Control"]);
+            rows.push(`Detection ${fmtKm(u.radarKm || u.range)}`);
+            rows.push(u.warnOnly ? "Warning only" : "Fire control");
         } else if (u.kind === "industry") {
-            rows.push(["Output", `+${u.output}/s`]);
-            rows.push(["GDP", `+$${u.gdpAdd}T`]);
+            rows.push(`Output +${u.output}/s`);
+            rows.push(`GDP +$${u.gdpAdd}T`);
         }
-        if (u.navalSpeed) rows.push(["Speed", `${u.navalSpeed} kn`]);
-        if (u.airSpeed) rows.push(["Air Speed", `${u.airSpeed} kn`]);
+        if (u.navalSpeed) rows.push(`Speed ${u.navalSpeed} kn`);
+        if (u.airSpeed) rows.push(`Air speed ${u.airSpeed} kn`);
         return rows;
     };
 
-    const unitCard = (key, u) => {
-        // null when buildable, else a short reason (locked by tech/prereq/cap).
-        // Locked cards render greyed with a lock glyph and the reason as the line
-        // + tooltip, and can't arm placement.
+    const unitTile = (key, u) => {
+        // null when buildable, else a short reason (locked by tech, prereq or
+        // cap). A locked tile drops to 40% and reads its requirement where the
+        // cost sits; it cannot arm placement.
         const lock = unitLockReason(world, mySlot, key);
-        const cost = u.cost;
-        const afford = points >= cost && (net >= 0 || u.kind === "industry");
+        const afford = points >= u.cost && (net >= 0 || u.kind === "industry");
         const qn = queuedOf("unit", key);
         const spec = HANGAR_SPEC[key];
         const wing = spec ? Object.values(spec).reduce((a, b) => a + b, 0) : 0;
         const arm = armamentOf(key, me?.iso);
-        const line = lock
-            ? lock
-            : u.wing
-              ? `Air wing · ${wing} aircraft`
-              : arm
-                ? `Fires ${arm}`
-                : u.kind === "industry"
-                  ? `+${u.output}/s income · +$${u.gdpAdd}T GDP`
-                  : `${cap(u.kind)}${u.range ? ` · ${fmtKm(u.range)}` : ""}`;
-        const rows = lock ? [] : statsFor(u);
+        // The key the command deck binds this type to, so the tile states the
+        // shortcut that places it without leaving the map.
+        const slotKey = hotbarKeyOf(key);
+        const line = u.wing
+            ? `Air wing of ${wing} aircraft`
+            : arm
+              ? `Fires ${arm}`
+              : u.kind === "industry"
+                ? `+${u.output}/s income, +$${u.gdpAdd}T GDP`
+                : `${cap(u.kind)}${u.range ? `, ${fmtKm(u.range)}` : ""}`;
         return (
             <button
                 key={key}
-                className={cn(
-                    "db-ucard db-notch-sm db-brackets group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform,background-color] duration-[var(--dur-fast)] ease-out-db",
-                    !lock && "hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
-                    placing === key
-                        ? "active border-gold bg-gold-soft"
-                        : lock
-                          ? "locked db-brackets-hover opacity-[0.55] grayscale-[0.85] cursor-not-allowed border-dashed"
-                          : cn("db-brackets-hover", !afford && "poor opacity-50"),
-                )}
+                className={cn("db-tile", placing === key && "sel", lock && "locked", !lock && !afford && "opacity-60")}
                 onClick={() => !lock && pick(key)}
                 disabled={!!lock}
-                aria-disabled={!!lock}
-                aria-label={
-                    lock ? `${unitLabel(key, me?.iso)}, locked: ${lock}` : `${unitLabel(key, me?.iso)}, ${cost} points`
-                }
-                title={lock || u.hint || `${cap(u.kind)} · builds in ${u.buildTime}s`}
+                aria-label={lock ? `${unitLabel(key, me?.iso)}, locked: ${lock}` : `${unitLabel(key, me?.iso)}`}
+                title={[lock || line, u.desc, ...statsFor(u), `Upkeep ${u.upkeep}/s`].filter(Boolean).join(" · ")}
             >
-                {lock && (
-                    <Icon
-                        name="lock"
-                        size={13}
-                        className="db-ucard-lock absolute top-2 right-2.5 text-faint opacity-85"
-                    />
-                )}
-                <span
-                    className={cn(
-                        "db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db",
-                        placing === key
-                            ? "border-gold-line bg-gold-soft text-gold"
-                            : !lock && "group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft",
-                    )}
-                    data-kind={u.kind}
-                    data-domain={u.domain || "land"}
-                >
-                    <UnitIcon name={UNIT_ICON[key]} size={30} />
-                </span>
-                <div className="db-ucard-body flex-1 min-w-0 flex flex-col gap-1">
-                    <div className="db-ucard-top flex items-baseline gap-2">
-                        <b className="db-ucard-name flex-1 min-w-0 font-display font-bold text-[12.5px] whitespace-nowrap overflow-hidden text-ellipsis">
-                            {unitLabel(key, me?.iso)}
-                        </b>
-                        <Points value={cost} className="db-ucard-cost font-mono text-xs text-gold" />
-                    </div>
-                    <span className={cn("db-ucard-line text-[10.5px] leading-[1.3] text-dim", lock && "text-faint")}>
-                        {line}
+                {slotKey && !lock && <span className="db-kbd absolute right-[6px] top-[6px]">{slotKey}</span>}
+                <UnitIcon name={UNIT_ICON[key]} size={26} className={placing === key ? "text-text" : "text-dim"} />
+                <b className="font-semibold text-[12.5px] leading-[1.2]">{unitLabel(key, me?.iso)}</b>
+                {lock ? (
+                    <span className="font-mono text-[11px] leading-[1.3] text-faint">{lock}</span>
+                ) : (
+                    <span className="flex items-center justify-between gap-1 font-mono text-[11px] font-medium text-faint">
+                        <Points value={u.cost} size={10} />
+                        <span>{u.buildTime}s</span>
                     </span>
-                    {rows.length > 0 && (
-                        <dl className="db-ucard-stats grid grid-cols-2 gap-x-2 gap-y-0.5 mt-[5px] mb-px pt-1.5 border-t border-line-soft">
-                            {rows.map(([k, v]) => (
-                                <div
-                                    key={k}
-                                    className="flex items-baseline justify-between gap-1.5 min-w-0 overflow-hidden"
-                                >
-                                    <dt className="flex-shrink flex-grow-0 basis-auto min-w-0 overflow-hidden text-ellipsis font-mono text-[8px] tracking-[0.06em] uppercase text-faint whitespace-nowrap">
-                                        {k}
-                                    </dt>
-                                    <dd className="flex-none m-0 font-mono tabular-nums text-[10.5px] text-text whitespace-nowrap">
-                                        {v}
-                                    </dd>
-                                </div>
-                            ))}
-                        </dl>
-                    )}
-                    <div className="db-ucard-foot flex flex-wrap gap-2 font-mono tabular-nums text-[9.5px] tracking-[0.3px] text-faint">
-                        <span className="inline-flex items-center gap-1">
-                            <Icon name="timer" size={11} />
-                            {u.buildTime}s
-                        </span>
-                        {u.kind !== "industry" && <span>−{u.upkeep}/s</span>}
-                        {qn > 0 && <span className="db-ucard-q text-gold">{qn} queued</span>}
-                        {placing === key && <span className="db-ucard-q hot text-gold-hi">Placing…</span>}
-                    </div>
-                </div>
+                )}
+                {qn > 0 && !lock && <span className="mt-auto font-mono text-[10px] text-dim">{qn} on the line</span>}
             </button>
         );
     };
 
-    const ammoCard = (key) => {
+    const ammoTile = (key) => {
         const wh = WARHEADS[key];
         const stock = ammo[key] || 0;
         const afford = points >= wh.prodCost;
@@ -260,284 +156,129 @@ export default function ProductionScreen({world, api, mySlot, placing, setPlacin
         return (
             <button
                 key={key}
-                className={cn(
-                    "db-ucard db-notch-sm db-brackets db-brackets-hover group/ucard relative flex gap-[11px] items-start text-left p-3 border border-line rounded-none bg-sunk text-text cursor-pointer transition-[border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-gold-line hover:-translate-y-px active:scale-[0.99]",
-                    !afford && "poor opacity-50",
-                )}
+                className={cn("db-tile", !afford && "opacity-60")}
                 onClick={(e) => {
                     for (let i = 0, n = e.shiftKey ? 5 : 1; i < n; i++) if (api.produceAmmo(key)?.error) break;
                 }}
                 aria-label={`${wh.name}, ${wh.prodCost} points, ${stock} in stock. Shift-click to queue five.`}
-                title={`${wh.name}: ${wh.desc}${fallout ? " · Contaminates ground zero with radioactive fallout." : ""}`}
+                title={[
+                    wh.desc,
+                    users.length ? `Fires from ${users.map((t) => unitLabel(t, me?.iso)).join(", ")}` : null,
+                    fallout ? "Contaminates ground zero with radioactive fallout" : null,
+                    "Shift-click to queue five",
+                ]
+                    .filter(Boolean)
+                    .join(" · ")}
             >
-                <span className="db-ucard-ico db-notch-sm flex-none w-[46px] h-[46px] grid place-items-center bg-white/[0.03] border border-line rounded-none transition-[border-color,background-color] duration-[var(--dur-fast)] ease-out-db group-hover/ucard:border-gold-line group-hover/ucard:bg-gold-soft">
-                    <UnitIcon name={WARHEAD_ICON[key]} size={30} />
+                <UnitIcon name={WARHEAD_ICON[key]} size={26} className="text-dim" />
+                <b className="font-semibold text-[12.5px] leading-[1.2]">{wh.name}</b>
+                <span className="flex items-center justify-between gap-1 font-mono text-[11px] font-medium text-faint">
+                    <Points value={wh.prodCost} size={10} />
+                    <span>{wh.prodTime}s</span>
                 </span>
-                <div className="db-ucard-body flex-1 min-w-0 flex flex-col gap-1">
-                    <div className="db-ucard-top flex items-baseline gap-2">
-                        <b className="db-ucard-name flex-1 min-w-0 font-display font-bold text-[12.5px] whitespace-nowrap overflow-hidden text-ellipsis">
-                            {wh.name}
-                        </b>
-                        <Points value={wh.prodCost} className="db-ucard-cost font-mono text-xs text-gold" />
-                    </div>
-                    <span className="db-ucard-line text-[10.5px] leading-[1.3] text-dim">{wh.desc}</span>
-                    {users.length > 0 && (
-                        <div
-                            className="db-ucard-fires flex items-center gap-1.5 mt-0.5"
-                            aria-label={`Fired by: ${users.map((t) => unitLabel(t, me?.iso)).join(", ")}`}
-                        >
-                            <span
-                                className="font-mono text-[9px] tracking-[0.4px] uppercase text-faint"
-                                aria-hidden="true"
-                            >
-                                Fires from
-                            </span>
-                            <span className="flex items-center gap-1" aria-hidden="true">
-                                {users.map((t) => (
-                                    <span
-                                        key={t}
-                                        title={unitLabel(t, me?.iso)}
-                                        className="grid place-items-center w-[15px] h-[15px] text-dim"
-                                    >
-                                        <UnitIcon name={UNIT_ICON[t]} size={13} />
-                                    </span>
-                                ))}
-                            </span>
-                        </div>
-                    )}
-                    {fallout && (
-                        <span className="db-ucard-tag db-contam self-start mt-0.5 inline-flex items-center gap-1 font-mono text-[9px] tracking-[0.3px] py-px px-[5px] rounded-none border border-[rgba(140,255,58,0.5)] bg-[rgba(140,255,58,0.1)] text-[#a6ff5c]">
-                            <Icon name="radiation" size={10} />
-                            Leaves fallout
-                        </span>
-                    )}
-                    <div className="db-ucard-foot flex flex-wrap gap-2 font-mono text-[9.5px] tracking-[0.3px] text-faint">
-                        <span className="inline-flex items-center gap-1">
-                            <Icon name="timer" size={11} />
-                            {wh.prodTime}s
-                        </span>
-                        <span className="db-ucard-stock text-dim">{stock} in stock</span>
-                        <span
-                            className="db-ucard-shift inline-flex items-center gap-0.5 text-faint border border-line rounded-sm px-1 leading-[1.5]"
-                            aria-hidden="true"
-                        >
-                            <Icon name="shift" size={9} />
-                            ×5
-                        </span>
-                        {qn > 0 && <span className="db-ucard-q text-gold">{qn} queued</span>}
-                    </div>
-                </div>
+                <span className="mt-auto font-mono text-[10px] text-dim">
+                    {stock} in stock{qn > 0 ? ` · ${qn} on the line` : ""}
+                </span>
             </button>
         );
     };
 
-    const section = (id) => {
-        if (id === "Munitions") {
-            return (
-                <section key="Munitions" className="db-arsec">
-                    <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
-                        Munitions <span className="font-mono text-[10px] text-faint">{WARHEAD_ORDER.length}</span>
-                    </h3>
-                    <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
-                        {WARHEAD_ORDER.map(ammoCard)}
-                    </div>
-                </section>
-            );
-        }
-        const g = groups[id];
-        if (!g?.length) return null;
-        return (
-            <section key={id} className="db-arsec">
-                <h3 className="db-arsec-h flex items-center gap-2.5 mb-3 font-display font-semibold text-xs tracking-[0.12em] uppercase text-dim before:content-[''] before:w-[3px] before:h-[13px] before:bg-gold after:content-[''] after:flex-1 after:h-px after:bg-line-soft">
-                    {id} <span className="font-mono text-[10px] text-faint">{g.length}</span>
-                </h3>
-                <div className="db-ucard-grid grid grid-cols-[repeat(auto-fill,minmax(238px,1fr))] gap-[10px]">
-                    {g.map(([k, u]) => unitCard(k, u))}
-                </div>
-            </section>
-        );
-    };
-
-    const shown =
-        cat === "all"
-            ? [...CATS.filter((c) => c.id !== "all" && c.id !== "Munitions").map((c) => c.id), "Munitions"]
-            : [cat];
+    const queueCount = (cur ? 1 : 0) + queue.length;
+    const site = cur ? prodSite(cur.item, world, mySlot) : null;
 
     return (
-        <ScreenFrame title="Production" subtitle="Arsenal & national build line" bare head={head} onClose={onClose}>
-            <div className="db-prod grid grid-cols-[236px_minmax(0,1fr)_304px] h-full">
-                <aside className="db-prod-rail db-scroll flex flex-col gap-3 p-[18px] overflow-auto bg-panel border-r border-line-soft">
-                    <div className="db-prod-bank db-notch-sm flex flex-col gap-px py-3 px-3.5 bg-sunk border border-line rounded-none">
-                        <span className="db-prod-bank-l font-mono text-[9px] tracking-[0.2em] uppercase text-faint">
-                            Treasury
-                        </span>
-                        <Points
-                            value={Math.floor(points)}
-                            size={17}
-                            className="db-prod-bank-v font-mono text-[22px] font-bold text-gold"
-                        />
-                        <span
-                            className={cn(
-                                "db-prod-bank-net inline-flex items-center gap-1.5 font-mono text-[11px]",
-                                net < 0 ? "neg text-red" : "pos text-good",
-                            )}
+        <DrawerScreen
+            title="Build"
+            labelledBy="db-drawer-build"
+            caption={
+                <>
+                    <Points value={Math.floor(points)} size={10} className="text-text" /> · Industry{" "}
+                    <b>
+                        {industryUsed} / {industryCap}
+                    </b>
+                </>
+            }
+            onClose={onClose}
+            tabs={<DrawerTabs items={TABS} value={tab} onChange={setTab} label="Arsenal categories" />}
+            foot={
+                <div className="db-scroll max-h-[172px] overflow-y-auto px-4 pt-3 pb-[14px]">
+                    <h4 className="db-sec m-0 mb-2">Queue{queueCount > 0 ? ` · ${queueCount}` : ""}</h4>
+                    {queueCount === 0 && (
+                        <p className="m-0 text-[11.5px] leading-[1.4] text-faint">
+                            The line sits idle. Pick a system to put it to work.
+                        </p>
+                    )}
+                    {cur && (
+                        <button
+                            className="flex items-center gap-[10px] w-full text-left"
+                            onClick={() => api.cancelProd(-1)}
+                            title="Building. Click to cancel for a refund"
                         >
-                            <i className={cn("db-led", net < 0 ? "db-led-live" : "db-led-ok")} aria-hidden="true" />
-                            {fmtNet(net, 1)}/s
-                        </span>
-                    </div>
-                    <div className="db-prod-econ grid grid-cols-2 gap-[7px]">
-                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
-                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
-                                Income
-                            </span>
-                            <b className="pos font-mono text-[13px] text-good">+{income.toFixed(1)}</b>
-                        </div>
-                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
-                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
-                                Upkeep
-                            </span>
-                            <b className="neg font-mono text-[13px] text-red">−{upkeep.toFixed(1)}</b>
-                        </div>
-                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
-                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">GDP</span>
-                            <b className="font-mono text-[13px]">{fmtGdp(gdpOf(world, mySlot))}</b>
-                        </div>
-                        <div
-                            className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none"
-                            title={`${industryCount} standing${industryPending ? ` + ${industryPending} in production` : ""} / ${industryCap} population-supported cap`}
-                        >
-                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
-                                Industry
-                            </span>
-                            <b className={cn("font-mono text-[13px]", industryUsed >= industryCap && "neg text-red")}>
-                                {industryUsed}/{industryCap}
+                            <UnitIcon name={prodIcon(cur.item)} size={16} className="text-text" />
+                            <b className="font-semibold text-[12.5px] whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                                {label(cur.item)}
                             </b>
-                        </div>
-                        <div className="db-notch-sm flex flex-col gap-0.5 py-2 px-2.5 bg-sunk border border-line rounded-none">
-                            <span className="font-mono text-[8.5px] tracking-[0.18em] uppercase text-faint">
-                                Fielded
+                            <Meter
+                                frac={cur.progress}
+                                className="flex-1 min-w-[40px]"
+                                ariaLabel={`${label(cur.item)} progress`}
+                            />
+                            <span className="font-mono text-[11.5px] font-medium text-dim whitespace-nowrap">
+                                {prodEta(cur)}s{site ? ` · ${site}` : ""}
                             </span>
-                            <b className="font-mono text-[13px]">{mine.length}</b>
-                        </div>
-                    </div>
-                    {net < 0 && (
-                        <div className="db-prod-warn db-notch-sm text-[10px] leading-[1.35] text-red py-2 px-2.5 border border-[rgba(224,87,79,0.4)] rounded-none bg-[rgba(224,87,79,0.08)]">
-                            In deficit. Build Industry or scrap units to recover.
-                        </div>
+                        </button>
                     )}
-                    <nav
-                        className="db-prod-cats flex flex-col gap-0.5 mt-1"
-                        role="tablist"
-                        aria-label="Arsenal categories"
-                    >
-                        {CATS.map((c) => (
-                            <button
-                                key={c.id}
-                                className={cn(
-                                    "db-prod-cat flex items-center gap-[10px] py-[9px] px-[11px] border border-transparent border-l-2 rounded-none bg-transparent text-dim cursor-pointer text-left transition-[color,background-color,border-color] duration-[var(--dur-fast)] ease-out-db hover:text-text hover:bg-sunk active:scale-[0.98]",
-                                    cat === c.id && "active text-gold bg-gold-soft border-gold-line border-l-gold",
-                                )}
-                                role="tab"
-                                aria-selected={cat === c.id}
-                                aria-label={`${c.name}, ${countFor(c.id)} systems`}
-                                onClick={() => setCat(c.id)}
-                            >
-                                <Icon
-                                    name={c.icon}
-                                    size={18}
-                                    className={cn("db-prod-cat-g", cat === c.id && "text-gold")}
-                                />
-                                <span className="db-prod-cat-n flex-1 font-display font-semibold text-[11.5px] tracking-[0.08em] uppercase">
-                                    {c.name}
-                                </span>
-                                <span className="db-prod-cat-c font-mono text-[10px] text-faint">{countFor(c.id)}</span>
-                            </button>
-                        ))}
-                    </nav>
-                </aside>
-
-                <main className="db-prod-main db-scroll overflow-auto py-5 px-[22px] flex flex-col gap-[22px]">
-                    {placing && (
-                        <div className="db-prod-placing db-notch-sm text-[11px] leading-[1.4] text-text py-2.5 px-3 border border-gold-line rounded-none bg-gold-soft">
-                            Placing <b>{unitLabel(placing, me?.iso)}</b>, click{" "}
-                            {UNITS[placing].coastal
-                                ? "your coastline"
-                                : UNITS[placing].domain === "sea"
-                                  ? "your coastal waters"
-                                  : "your territory"}{" "}
-                            to site it. Hold <b>Shift</b> to place several.
-                            <button className={cn(miniButton(), "ml-2")} onClick={() => setPlacing(null)}>
-                                Cancel
-                            </button>
-                        </div>
-                    )}
-                    {shown.map(section)}
-                </main>
-
-                <aside className="db-prod-queue flex flex-col p-[18px] overflow-hidden bg-panel border-l border-line-soft">
-                    <h3 className="db-queue-h flex items-center gap-2 mb-3 pb-2 border-b border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
-                        Build Queue{" "}
-                        {(cur ? 1 : 0) + queue.length > 0 && (
-                            <span className="ml-auto text-faint">{(cur ? 1 : 0) + queue.length}</span>
-                        )}
-                    </h3>
-                    <div
-                        className="db-queue-list db-scroll flex flex-col gap-1.5 overflow-auto"
-                        aria-live="polite"
-                        aria-label="National build queue"
-                    >
-                        {!cur && queue.length === 0 && (
-                            <div className="db-queue-empty text-[10.5px] leading-[1.4] text-faint py-2">
-                                The line sits idle. Pick a system to put it to work.
-                            </div>
-                        )}
-                        {cur && (
-                            <button
-                                className="db-qitem building db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 pb-3 border border-gold-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
-                                onClick={() => api.cancelProd(-1)}
-                                title="Building. Click to cancel for a refund"
-                            >
-                                <i
-                                    className="db-qitem-fill absolute inset-0 right-auto bg-gold-soft pointer-events-none"
-                                    style={{width: `${fmtPct(cur.progress)}%`}}
-                                />
-                                <UnitIcon name={icon(cur.item)} size={16} />
-                                <span className="db-qitem-name relative flex-1 min-w-0 text-[11px] whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {label(cur.item)}
-                                </span>
-                                <b className="db-qitem-pct relative font-mono text-[10px] text-gold">
-                                    {fmtPct(cur.progress, {suffix: true})}
-                                </b>
-                                {/* The line's own progress, read as lit ticks rather than a
-                                    smooth bar so a glance can count how far along it is. */}
-                                <span className="db-seg absolute left-0 right-0 bottom-0 h-[4px] bg-sunk pointer-events-none">
-                                    <i className="block h-full bg-gold" style={{width: `${fmtPct(cur.progress)}%`}} />
-                                </span>
-                            </button>
-                        )}
-                        {queue.map((it, i) => (
-                            <button
-                                key={i}
-                                className="db-qitem db-notch-sm group relative overflow-hidden flex items-center gap-2 py-[9px] px-2.5 border border-line rounded-none bg-sunk text-text cursor-pointer text-left transition-[border-color] duration-[var(--dur-fast)] ease-out-db hover:border-red"
-                                onClick={() => api.cancelProd(i)}
-                                title={`${label(it)} · ${timeOf(it)}s. Click to cancel`}
-                            >
-                                <span className="db-qitem-n w-3.5 font-mono text-[10px] text-faint">{i + 2}</span>
-                                <UnitIcon name={icon(it)} size={16} />
-                                <span className="db-qitem-name relative flex-1 min-w-0 text-[11px] whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {label(it)}
-                                </span>
-                                <Icon
-                                    name="close"
-                                    size={11}
-                                    className="db-qitem-x relative text-faint group-hover:text-red"
-                                />
-                            </button>
-                        ))}
-                    </div>
-                </aside>
+                    {queue.map((it, i) => (
+                        <button
+                            key={i}
+                            className="group flex items-center gap-[10px] w-full mt-2 text-left"
+                            onClick={() => api.cancelProd(i)}
+                            title={`${label(it)}, ${prodTime(it)}s. Click to cancel`}
+                        >
+                            <span className="w-4 font-mono text-[10px] text-faint">{i + 2}</span>
+                            <UnitIcon name={prodIcon(it)} size={16} className="text-dim" />
+                            <span className="flex-1 min-w-0 text-[12px] text-dim whitespace-nowrap overflow-hidden text-ellipsis">
+                                {label(it)}
+                            </span>
+                            <span className="font-mono text-[11.5px] text-faint whitespace-nowrap">
+                                {prodTime(it)}s
+                            </span>
+                            <Icon name="close" size={11} className="text-faint group-hover:text-danger" />
+                        </button>
+                    ))}
+                </div>
+            }
+        >
+            <div className="grid grid-cols-4 border-b border-line">
+                <Readout label="Income" value={`+${income.toFixed(1)}`} />
+                <Readout label="Upkeep" value={upkeep > 0 ? `−${upkeep.toFixed(1)}` : upkeep.toFixed(1)} />
+                <Readout label="GDP" value={fmtGdp(gdpOf(world, mySlot), 1)} />
+                <Readout label="Fielded" value={mine.length} />
             </div>
-        </ScreenFrame>
+            {net < 0 && (
+                <p className="m-0 mx-3 mt-3 px-3 py-2 text-[11.5px] leading-[1.4] text-text border-l-[3px] border-danger bg-[rgba(224,87,79,0.08)]">
+                    In deficit at {fmtNet(net, 1)}/s. Build industry or scrap units to recover.
+                </p>
+            )}
+            {placing && (
+                <div className="mx-3 mt-3 px-3 py-2 text-[11.5px] leading-[1.4] text-text border-l-[3px] border-accent bg-accent-soft">
+                    Placing <b className="font-semibold">{unitLabel(placing, me?.iso)}</b>. Click{" "}
+                    {UNITS[placing].coastal
+                        ? "your coastline"
+                        : UNITS[placing].domain === "sea"
+                          ? "your coastal waters"
+                          : "your territory"}{" "}
+                    to site it, and hold Shift to place several.
+                    <button className={cn(miniButton(), "ml-2 align-middle")} onClick={() => setPlacing(null)}>
+                        Cancel
+                    </button>
+                </div>
+            )}
+            <div className="grid grid-cols-3 gap-2 p-3 items-start">
+                {tab === "Munitions"
+                    ? WARHEAD_ORDER.map(ammoTile)
+                    : (groups[tab] || []).map(([k, u]) => unitTile(k, u))}
+            </div>
+        </DrawerScreen>
     );
 }

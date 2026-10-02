@@ -9,72 +9,67 @@
 // Escape, focus restore) comes from useModal.
 import {nationName} from "../../game/engine.js";
 import {useModal} from "../hooks/useModal.js";
-import {button, card, overlay, sub} from "../lib/variants.js";
+import {button, overlay} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import Flag from "../common/Flag.jsx";
 
-// Per-kind copy + accent. `foe` is the other belligerent's display name.
+// Per-kind copy. `foe` is the other belligerent's display name. `danger` marks
+// the cards that announce a war against you or the loss of one: those carry the
+// red edge rule, and every other card carries the blue one.
 function content(kind, foe) {
     switch (kind) {
         case "victory":
             return {
                 title: "Victory",
-                tone: "text-good [text-shadow:0_0_26px_rgba(95,227,154,0.55)]",
                 body: `${foe} has surrendered. Every territory you occupied is yours to keep.`,
             };
         case "defeat":
             return {
                 title: "Defeat",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
+                danger: true,
                 body: `You have surrendered to ${foe}. The land they occupied is lost, and your nation is shaken for a year to come.`,
             };
         case "whitepeace":
             return {
-                title: "White Peace",
-                tone: "text-dim",
+                title: "White peace",
                 body: `You and ${foe} agree to end the war. All occupied territory returns to its rightful owner, so no ground changes hands.`,
             };
         case "offer":
             return {
-                title: "Peace Offer",
-                tone: "text-dim",
+                title: "Peace offer",
                 body: `${foe} offers a white peace: end the war now, with both sides returning to their pre-war borders.`,
             };
         case "ally-offer":
             return {
-                title: "Alliance Proposal",
-                tone: "text-[#5fa8ff] [text-shadow:0_0_24px_rgba(95,168,255,0.45)]",
+                title: "Alliance proposal",
                 body: `${foe} proposes a mutual-defense pact. Neither of you will make war on the other, and an attack on one draws in the other.`,
             };
         case "ally-formed":
             return {
-                title: "Alliance Forged",
-                tone: "text-good [text-shadow:0_0_26px_rgba(95,227,154,0.45)]",
+                title: "Alliance forged",
                 body: `${foe} accepts your alliance. Your nations now stand together. An attack on either is an attack on both.`,
             };
         case "ally-refused":
             return {
-                title: "Proposal Declined",
-                tone: "text-dim",
+                title: "Proposal declined",
                 body: `${foe} declines your offer of alliance.`,
             };
         case "war-declared":
             return {
-                title: "War Declared",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
+                title: "War declared",
+                danger: true,
                 body: `${foe} has declared war on you.`,
             };
         case "called-to-arms":
             return {
-                title: "Called to Arms",
-                tone: "text-danger [text-shadow:0_0_24px_rgba(224,87,79,0.55)]",
+                title: "Called to arms",
+                danger: true,
                 body: `${foe} attacked your ally, so you are now at war with them.`,
             };
         case "refused":
         default:
             return {
-                title: "Offer Rejected",
-                tone: "text-dim",
+                title: "Offer rejected",
                 body: `${foe} refuses your peace offer. The war goes on.`,
             };
     }
@@ -105,7 +100,7 @@ export default function WarOutcomeModal({world, api, pop: popOverride, onDismiss
 
     const foeNation = world.nations.find((n) => n.slot === pop.foe);
     const foe = nationName(world, pop.foe);
-    const {title, tone, body} = content(pop.kind, foe);
+    const {title, body, danger} = content(pop.kind, foe);
 
     return (
         <div
@@ -116,22 +111,21 @@ export default function WarOutcomeModal({world, api, pop: popOverride, onDismiss
             ref={ref}
             tabIndex={-1}
         >
-            <div className={cn(card({size: "wide"}), "motion-safe:animate-[dbPop_240ms_var(--ease-out)]")}>
+            <div
+                className={cn(
+                    "db-hud-panel db-edge-rule pointer-events-auto w-[min(460px,94vw)] px-6 py-[22px] text-center motion-safe:animate-[dbPop_240ms_var(--ease-out)]",
+                    danger && "danger",
+                )}
+            >
                 {foeNation?.iso && (
-                    <span className="db-notch-sm db-brackets relative mx-auto mb-4 grid place-items-center w-[74px] h-[50px] overflow-hidden border border-line bg-sunk [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
+                    <span className="mx-auto mb-4 grid place-items-center w-[74px] h-[50px] overflow-hidden border border-line bg-sunk [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
                         <Flag iso={foeNation.iso} className="text-[26px]" />
                     </span>
                 )}
-                <div
-                    id="db-war-title"
-                    className={cn(
-                        "font-display text-[34px] font-bold tracking-[0.09em] uppercase text-center mb-3 leading-[1.08]",
-                        tone,
-                    )}
-                >
+                <div id="db-war-title" className="mb-2.5 text-[22px] font-semibold leading-[1.2] tracking-[-0.01em]">
                     {title}
                 </div>
-                <p className={sub()}>{body}</p>
+                <p className="m-0 mb-5 text-sm leading-[1.5] text-dim">{body}</p>
                 {isOffer || isAllyOffer ? (
                     <div className="flex gap-[10px]">
                         <button

@@ -6,8 +6,9 @@
 // alliance action goes through the same api entry points DiplomacyScreen
 // uses.
 import ScreenFrame from "./ScreenFrame.jsx";
+import Standing from "./Standing.jsx";
 import Flag from "../common/Flag.jsx";
-import {colorForSlot, DIPLOMACY} from "../../game/data/constants.js";
+import {DIPLOMACY} from "../../game/data/constants.js";
 import {miniButton} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
 import {fmtGdp, fmtPop} from "../lib/format.js";
@@ -23,7 +24,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
     if (!n) {
         return (
             <ScreenFrame title="Unknown Power" onClose={onClose}>
-                <p className="font-mono text-[12px] text-dim">This power is no longer in the roster.</p>
+                <p className="text-[12.5px] text-dim">This power is no longer in the roster.</p>
             </ScreenFrame>
         );
     }
@@ -46,20 +47,16 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
     const human = isHuman(n.slot);
     const seatLabel = isMe ? "You" : human ? "Player" : "AI";
-    const seatCls = isMe ? "text-gold-contrast bg-gold border-gold" : human ? "text-[#5fa8ff] border-[#3f5a80]" : "";
-    const commander = isMe ? "You" : human ? usernameOf.get(n.slot) || "Commander" : null;
+    const seatCls = isMe
+        ? "bg-accent-fill border-accent-fill text-accent-ink"
+        : human
+          ? "text-text border-line-2"
+          : "border-line text-dim";
+    const commander = !isMe && human ? usernameOf.get(n.slot) || "Commander" : null;
 
-    const standing = isMe
-        ? {label: "Home", tone: "text-dim"}
-        : neutral
-          ? {label: "Neutral", tone: "text-dim"}
-          : eliminated
-            ? {label: "Eliminated", tone: "text-dim"}
-            : rel === "war"
-              ? {label: "At War", tone: "text-red", led: "db-led-live"}
-              : rel === "ally"
-                ? {label: "Allied", tone: "text-[#5fa8ff]", led: "db-led-sensor"}
-                : {label: "At Peace", tone: "text-good", led: "db-led-ok"};
+    // Where you stand with this power, in the word and colours every screen
+    // gives it (see Standing). A power out of the war says so instead.
+    const standing = isMe ? "self" : neutral ? "neutral" : eliminated ? "eliminated" : rel;
 
     const call = (fn, ok) => {
         const r = fn();
@@ -71,55 +68,50 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
     const canAct = !isMe && !neutral && !eliminated;
     const graceSec = world.rules?.playerGraceSec ?? DIPLOMACY.playerGraceSec;
     const graceActive = graceSec > 0 && (world.time ?? 0) < graceSec;
-    const borderColor = n.color || colorForSlot(n.slot);
+
+    // One title row says who this is: the flag, the name, the seat and the
+    // standing, in the frame's own header, so the body below opens on the
+    // figures. The flag-icons mark is drawn 4:3 at the size of its font, so the
+    // font size on its holder is what sets it (an unlayered rule in that sheet
+    // outranks a width utility); the holder is a flex box so the mark sits on no
+    // text baseline and the hairline hugs it.
+    const title = (
+        <span className="flex items-center gap-[10px]">
+            <span className="flex flex-none text-[18px]">
+                <Flag iso={n.iso} className="border border-line-2" />
+            </span>
+            {n.name}
+        </span>
+    );
+    const caption = (
+        <span className="flex items-center justify-end gap-[8px] flex-wrap">
+            <span
+                className={cn(
+                    "inline-block px-[8px] py-[2px] text-[10.5px] font-medium border whitespace-nowrap",
+                    seatCls,
+                )}
+            >
+                {seatLabel}
+            </span>
+            {commander && <span className="text-[12px] text-dim">{commander}</span>}
+            <Standing rel={standing} className="text-[12px] font-medium" />
+        </span>
+    );
 
     return (
-        <ScreenFrame
-            title={n.name}
-            subtitle={`${seatLabel}${commander && !isMe ? ` · ${commander}` : ""}`}
-            onClose={onClose}
-        >
+        <ScreenFrame title={title} caption={caption} onClose={onClose}>
             <div className="flex flex-col gap-5">
-                <div className="db-notch db-brackets relative flex items-center gap-4 p-4 bg-sunk border border-line rounded-none">
-                    <span
-                        className="flex-none w-[72px] h-[48px] grid place-items-center overflow-hidden border-2 rounded-none [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
-                        style={{borderColor}}
-                    >
-                        <Flag iso={n.iso} />
-                    </span>
-                    <div className="flex flex-col gap-[6px] min-w-0">
-                        <b className="font-display font-semibold text-[18px] tracking-[0.02em]">{n.name}</b>
-                        <div className="flex items-center gap-[8px] flex-wrap">
-                            <span
-                                className={cn(
-                                    "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-sm text-dim whitespace-nowrap",
-                                    seatCls,
-                                )}
-                            >
-                                {seatLabel}
-                            </span>
-                            {commander && !isMe && <span className="text-[12px] text-dim">{commander}</span>}
-                            <span className={cn("inline-flex items-center gap-2 font-mono text-[11px]", standing.tone)}>
-                                {standing.led && <i className={cn("db-led", standing.led)} aria-hidden="true" />}
-                                {standing.label}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-[10px]">
                     <StatCell label="Cities" value={eliminated || neutral ? "—" : cities} />
                     <StatCell label="Forces" value={eliminated || neutral ? "—" : forces} />
                     <StatCell label="Population" value={eliminated || neutral ? "—" : fmtPop(pop)} />
-                    <StatCell label="GDP" value={eliminated || neutral ? "—" : fmtGdp(gdp, 1)} />
+                    <StatCell label="GDP" value={eliminated || neutral ? "—" : fmtGdp(gdp)} />
                 </div>
 
                 <div className="flex flex-col gap-[8px]">
-                    <span className="pb-1.5 border-b border-hair font-mono text-[10px] tracking-[0.22em] uppercase text-dim">
-                        Diplomacy
-                    </span>
+                    <span className="pb-1.5 border-b border-hair text-[11px] font-medium text-faint">Diplomacy</span>
                     {!canAct ? (
-                        <p className="font-mono text-[11.5px] text-dim">
+                        <p className="text-[12px] leading-[1.5] text-dim">
                             {isMe
                                 ? "This is your own power, so there is nothing to negotiate."
                                 : neutral
@@ -129,7 +121,7 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                     ) : rel === "war" ? (
                         <div className="flex flex-wrap gap-[8px]">
                             {online ? (
-                                <span className="font-mono text-[11px] text-faint">
+                                <span className="text-[12px] text-faint">
                                     Peace terms are single-player only for now.
                                 </span>
                             ) : (
@@ -173,12 +165,6 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
                         </div>
                     )}
                 </div>
-
-                <div className="flex justify-end">
-                    <button className={miniButton()} onClick={onClose}>
-                        Close
-                    </button>
-                </div>
             </div>
         </ScreenFrame>
     );
@@ -186,9 +172,9 @@ export default function CountryInfoPopup({world, api, mySlot, online, targetSlot
 
 function StatCell({label, value}) {
     return (
-        <div className="db-notch-sm flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded-none">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-faint">{label}</span>
-            <b className="font-mono text-lg">{value}</b>
+        <div className="flex flex-col-reverse gap-[3px] px-[14px] py-3 bg-sunk border border-line">
+            <span className="text-[10.5px] text-faint">{label}</span>
+            <b className="font-mono tabular-nums text-lg font-semibold leading-[1.2]">{value}</b>
         </div>
     );
 }

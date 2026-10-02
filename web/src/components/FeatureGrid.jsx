@@ -41,21 +41,19 @@ export default function FeatureGrid() {
         <section id="features" className="mx-auto max-w-[1400px] scroll-mt-20 px-5 py-20 sm:px-8 sm:py-28">
             <Reveal>
                 <Eyebrow>Capabilities</Eyebrow>
-                <h2 className="mt-5 max-w-3xl font-display text-[clamp(1.8rem,4vw,3rem)] font-bold uppercase leading-[1.03] text-text">
+                <h2 className="mt-5 max-w-3xl text-[clamp(1.8rem,4vw,3rem)] font-semibold leading-[1.03] tracking-[-0.02em] text-text">
                     One console. Total command.
                 </h2>
             </Reveal>
 
-            <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden db-notch border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
                 {FEATURES.map((f, i) => (
                     <Reveal key={f.title} delay={0.05 * i} className="group relative bg-bg">
-                        <div className="relative h-full db-brackets db-brackets-hover p-7 transition-colors duration-[var(--dur)] hover:bg-bg-2 sm:p-8">
-                            <span className="flex h-11 w-11 items-center justify-center db-notch-sm border border-line bg-gold-soft text-gold transition-colors duration-[var(--dur)] group-hover:border-gold-line">
+                        <div className="relative h-full p-7 transition-colors duration-[var(--dur)] hover:bg-bg-2 sm:p-8">
+                            <span className="flex h-11 w-11 items-center justify-center border border-line text-dim transition-colors duration-[var(--dur)] group-hover:border-line-2 group-hover:text-text">
                                 <GameIcon name={f.icon} size={22} />
                             </span>
-                            <h3 className="mt-5 font-display text-[13px] font-semibold uppercase tracking-[0.14em] text-text">
-                                {f.title}
-                            </h3>
+                            <h3 className="mt-5 text-[15px] font-semibold text-text">{f.title}</h3>
                             <p className="mt-3 text-[14.5px] leading-relaxed text-dim">{f.body}</p>
                         </div>
                     </Reveal>

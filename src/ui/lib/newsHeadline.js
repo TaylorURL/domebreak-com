@@ -1,5 +1,21 @@
 import {unitLabel} from "../../game/data/constants.js";
 import {nationName} from "../../game/engine.js";
+import {gameTime} from "./gameClock.js";
+
+// A few names are mass nouns, so a nation deploys Infantry rather than an
+// Infantry. Everything else in the arsenal is one countable thing.
+const MASS_NOUNS = new Set(["Infantry", "Artillery", "Close Air Support"]);
+
+// A unit's name with the article it takes, decided by the sound the name starts
+// with rather than by its letter. Every name in the arsenal agrees with its
+// first letter: an Early Warning Radar, an Aegis Ashore, an Attack Submarine,
+// an Oil Refinery, against a TEL, a THAAD Battery, a C-RAM and a SAM Battery,
+// which are read as words rather than letter by letter.
+export function unitPhrase(name) {
+    const n = (name || "").trim();
+    if (!n || MASS_NOUNS.has(n)) return n;
+    return `${/^[aeio]/i.test(n) ? "an" : "a"} ${n}`;
+}
 
 // Turn one engine event into a headline, or null to ignore it. Kept high-signal:
 // nukes, kills, construction, declarations, ceasefires, breakthroughs, and
@@ -22,7 +38,10 @@ export function headline(e, world, mySlot) {
         }
         case "built":
             if (e.kind !== "unit") return null; // ammo stockpiling is too frequent to headline
-            return {tone: e.slot === mySlot ? "good" : "info", text: `${nn(e.slot)} deploys a ${unitLabel(e.unit)}`};
+            return {
+                tone: e.slot === mySlot ? "good" : "info",
+                text: `${nn(e.slot)} deploys ${unitPhrase(unitLabel(e.unit))}`,
+            };
         case "war":
             return {tone: "danger", text: `${nn(e.a)} declares war on ${nn(e.b)}`};
         case "peace":
@@ -102,4 +121,62 @@ export function headline(e, world, mySlot) {
         default:
             return null;
     }
+}
+
+// The kinds the log filters by, in chip order. "all" is the resting filter.
+export const EVENT_KINDS = [
+    {id: "all", label: "All"},
+    {id: "strikes", label: "Strikes"},
+    {id: "diplomacy", label: "Diplomacy"},
+    {id: "territory", label: "Territory"},
+    {id: "build", label: "Build"},
+];
+
+const KIND_OF = {
+    destroy: "strikes",
+    launch: "strikes",
+    leadership: "strikes",
+    war: "diplomacy",
+    peace: "diplomacy",
+    alliance: "diplomacy",
+    breakalliance: "diplomacy",
+    callToArms: "diplomacy",
+    captured: "territory",
+    conquest: "territory",
+    built: "build",
+};
+
+// Which filter chip an event answers to.
+export function eventKind(e) {
+    return KIND_OF[e.type] || "strikes";
+}
+
+// Where an event happened, for a click that flies the camera to it, or null
+// when it happened to a nation rather than a place.
+export function eventFocus(e, world) {
+    if (e.lng != null && e.lat != null) return {lng: e.lng, lat: e.lat};
+    const c = e.cityId ? world.cities.find((x) => x.id === e.cityId) : null;
+    return c ? {lng: c.lng, lat: c.lat} : null;
+}
+
+// The whole feed as rows, newest first: the events that carry a headline, each
+// with its stamp, its filter kind and the place it happened. `limit` caps the
+// rows returned, for a surface that shows the latest few rather than the log.
+export function feedRows(world, mySlot, limit) {
+    const rows = [];
+    for (let i = world.events.length - 1; i >= 0; i--) {
+        const e = world.events[i];
+        const h = headline(e, world, mySlot);
+        if (!h) continue;
+        rows.push({
+            id: e.id,
+            clock: gameTime(e.t),
+            focus: eventFocus(e, world),
+            kind: eventKind(e),
+            text: h.text,
+            tone: h.tone,
+        });
+        if (limit && rows.length >= limit) break;
+    }
+    return rows;
 }

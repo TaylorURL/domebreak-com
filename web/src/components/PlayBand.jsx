@@ -25,7 +25,7 @@ export default function PlayBand({onSignIn}) {
                 <div className="max-w-xl">
                     <Reveal>
                         <Eyebrow>Out now · Free to play</Eyebrow>
-                        <h2 className="mt-6 font-display text-[clamp(2rem,5vw,3.4rem)] font-bold uppercase leading-[1.03] text-text">
+                        <h2 className="mt-6 text-[clamp(2rem,5vw,3.4rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-text">
                             Take command <span className="text-dim">for free</span>
                         </h2>
                         <p className="mt-5 max-w-lg text-[clamp(1rem,1.35vw,1.12rem)] leading-relaxed text-dim">
@@ -39,7 +39,7 @@ export default function PlayBand({onSignIn}) {
                         <ul className="mt-8 flex flex-col gap-3 border-t border-hair pt-6">
                             {PERKS.map((p) => (
                                 <li key={p} className="flex items-start gap-3 text-[14px] leading-relaxed text-dim">
-                                    <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center db-notch-sm border border-gold-line bg-gold-soft text-gold">
+                                    <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center border border-line-2 text-text">
                                         <Check size={11} strokeWidth={3} />
                                     </span>
                                     {p}
@@ -49,13 +49,13 @@ export default function PlayBand({onSignIn}) {
                     </Reveal>
 
                     <Reveal delay={0.18}>
-                        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+                        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-[12px] text-faint">
                             <span className="flex items-center gap-2">
                                 <GameIcon name="dome" size={15} className="text-dim" />
                                 Desktop · macOS + Windows
                             </span>
                             <span className="flex items-center gap-2">
-                                <span className="db-led db-led-live" />
+                                <span className="db-led db-led-ok" />
                                 Servers live
                             </span>
                         </div>
@@ -63,14 +63,12 @@ export default function PlayBand({onSignIn}) {
                 </div>
 
                 <Reveal delay={0.1}>
-                    <div className={cn(panel(), "db-seam p-7 sm:p-8")}>
-                        <div className="flex items-center gap-2 text-gold">
+                    <div className={cn(panel(), "p-7 sm:p-8")}>
+                        <div className="flex items-center gap-2 text-dim">
                             <GameIcon name="dome" size={22} />
-                            <span className="font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
-                                Get in the fight
-                            </span>
+                            <span className="text-[12px] font-medium text-faint">Get in the fight</span>
                         </div>
-                        <h3 className="mt-4 font-display text-[22px] font-bold uppercase tracking-[0.04em] text-text">
+                        <h3 className="mt-4 text-[22px] font-semibold tracking-[-0.01em] text-text">
                             Create your free account
                         </h3>
                         <p className="mt-2 text-[13px] leading-relaxed text-dim">
@@ -83,13 +81,13 @@ export default function PlayBand({onSignIn}) {
                             <button
                                 type="button"
                                 onClick={() => onSignIn?.("signup")}
-                                className={cn(button({variant: "default"}), "w-full")}
+                                className={cn(button({variant: "default", size: "lg"}), "w-full")}
                             >
                                 Create a Free Account
                             </button>
                         </div>
 
-                        <p className="mt-5 border-t border-hair pt-4 text-center font-mono text-[11px] leading-relaxed text-faint">
+                        <p className="mt-5 border-t border-hair pt-4 text-center text-[12.5px] leading-relaxed text-faint">
                             Already have an account?{" "}
                             <button
                                 type="button"

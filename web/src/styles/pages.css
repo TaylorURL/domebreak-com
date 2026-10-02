@@ -6,40 +6,39 @@
    utilities and the shared keyframes these rules read. Unlayered, so a rule
    added here reliably applies over Tailwind's utilities. */
 
-/* Extends .db-brackets-hover (web/src/styles/landing.css) to a frame whose
-   control sits inside it rather than being it. An installer card and a unit card
-   put the link in the card, so the keyboard lands on a child and the
-   :focus-visible the landing rule watches for never fires on the frame — the
-   card a reader has tabbed into would show nothing. */
-.db-brackets-hover:focus-within::before,
-.db-brackets-hover:focus-within::after {
-    border-color: var(--gold);
+/* The tab strip: a row of labels over one hairline, the active label and its
+   2px rule in the accent, the rule sitting on that hairline rather than under
+   it. The -1px margin is what puts the two on the same line, so a tab never
+   shifts its text between states. The wiki's category rail is the one that
+   scrolls, and it scrolls without a bar of its own: the strip is 48px tall and
+   a scrollbar inside it would take a third of the row. */
+.db-tabs {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
-/* The instrument tab: the short amber rule .db-hud-panel draws on its top edge,
-   for the page panels that are notched cards rather than HUD panels. It starts
-   at 8px so it clears the .db-notch cut and runs --db-tab wide. Pairs with the
-   scanlines on .db-scan, which draw on ::after. */
-.db-tab-rule::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 8px;
-    width: var(--db-tab, 72px);
-    height: 2px;
-    background: var(--gold);
-    pointer-events: none;
+.db-tabs::-webkit-scrollbar {
+    display: none;
 }
 
-/* A section heading's tab. The legal pages are prose rather than panels, so the
-   rule sits on the hairline that opens each section instead of on a frame. */
-.db-section-tab::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    left: 0;
-    width: 28px;
-    height: 2px;
-    background: var(--gold);
-    pointer-events: none;
+.db-tab {
+    flex-shrink: 0;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: var(--dim);
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.db-tab:hover {
+    color: var(--text);
+}
+
+.db-tab[aria-pressed="true"],
+.db-tab[aria-selected="true"] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
 }

@@ -4,17 +4,16 @@ import {ChevronDown} from "lucide-react";
 import HeroMap from "./HeroMap.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {Eyebrow, Wordmark} from "./Primitives.jsx";
-import {button} from "../lib/variants.js";
+import {button, ctaRow} from "../lib/variants.js";
 import {scrollToId} from "../lib/nav.js";
+import {FRAME_BOX_STYLE, FRAME_STYLE} from "../lib/heroFrame.js";
 
-// The stat strip under the rule. Each line is a lamp and a reading: the tone
-// says which instrument it came off — sensor for what the map counts, ok for
-// what is built, warn for the clock, live for the platforms it runs on.
+// The stat strip under the rule: an accent marker and a reading on each line.
 const SPECS = [
-    {tone: "sensor", label: "222 nations"},
-    {tone: "ok", label: "Defense & offense"},
-    {tone: "warn", label: "Real-time strategy"},
-    {tone: "live", label: "Desktop · macOS + Windows"},
+    {label: "222 nations"},
+    {label: "Defense & offense"},
+    {label: "Real-time strategy"},
+    {label: "Desktop · macOS + Windows"},
 ];
 
 const fadeUp = (reduce, delay) => ({
@@ -50,21 +49,26 @@ export default function Hero({onSignIn}) {
                 className="pointer-events-none absolute inset-y-0 left-0 z-0 w-full bg-[linear-gradient(90deg,var(--bg)_0%,var(--bg)_calc(100%-4rem),var(--chrome-soft)_calc(100%-1.5rem),transparent_100%)] md:w-[calc(608px+max(0px,(100vw-1400px)/2)+12rem)] md:bg-[linear-gradient(90deg,var(--bg)_0%,var(--bg)_calc(100%-12rem),var(--chrome-strong)_calc(100%-9rem),var(--chrome-soft)_calc(100%-6rem),transparent_100%)]"
             />
 
-            {/* The frame around the live scene: corner brackets on the open half
-                of the board, and the theatre it is showing read out beneath them
-                in mono. Decorative — the map itself is scenery, not a control. */}
+            {/* The frame around the live scene: one hairline over the open half of
+                the board, and the theatre it is showing read out beneath it.
+                Decorative — the map itself is scenery, not a control. Its box is
+                measured in lib/heroFrame.js, which the scene's camera aims into,
+                so the map's own labels land inside the hairline rather than
+                across it; it begins where the ground under the copy has faded
+                out, so it never reaches the column. */}
             <motion.div
                 aria-hidden
                 {...fadeUp(reduce, 0.5)}
-                className="pointer-events-none absolute right-8 top-[17%] z-10 hidden w-[42%] max-w-[620px] lg:block"
+                style={FRAME_STYLE}
+                className="pointer-events-none absolute z-10 hidden xl:block"
             >
-                <div className="relative db-brackets db-notch aspect-[620/470] border border-line [--db-bracket:14px]" />
-                <div className="mt-2 flex items-center justify-between gap-4 border border-line bg-panel px-3 py-[7px] font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
-                    <span className="flex items-center gap-2">
-                        <span className="db-led db-led-live" />
+                <div className="relative border border-line" style={FRAME_BOX_STYLE} />
+                <div className="mt-2 flex items-center justify-between gap-4 border border-line bg-panel px-3 py-[7px] text-[12px] text-faint">
+                    <span className="flex shrink-0 items-center gap-2">
+                        <span className="db-led db-led-accent" />
                         Threat board · Live
                     </span>
-                    <span className="hidden text-dim/80 xl:inline">Homeland defense · CONUS · Intercept grid</span>
+                    <span className="truncate text-dim">Homeland defense · CONUS · Intercept grid</span>
                 </div>
             </motion.div>
 
@@ -74,13 +78,11 @@ export default function Hero({onSignIn}) {
             >
                 <div className="relative max-w-xl">
                     <motion.div {...fadeUp(reduce, 0)}>
-                        <Eyebrow framed>Out now · Free to play</Eyebrow>
+                        <Eyebrow>Out now · Free to play</Eyebrow>
                         <h1 className="mt-6">
-                            <Wordmark stacked glow className="text-[clamp(3.25rem,8vw,6rem)]" />
+                            <Wordmark stacked className="text-[clamp(3.25rem,8vw,6rem)]" />
                         </h1>
-                        <p className="mt-5 font-display text-[12px] font-semibold uppercase tracking-[0.3em] text-dim sm:text-[13.5px]">
-                            Global Missile Command
-                        </p>
+                        <p className="mt-5 text-[14px] font-medium text-dim sm:text-[15px]">Global Missile Command</p>
                     </motion.div>
 
                     <motion.p
@@ -93,7 +95,7 @@ export default function Hero({onSignIn}) {
                     </motion.p>
 
                     <motion.div {...fadeUp(reduce, 0.24)} className="mt-8">
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className={ctaRow()}>
                             <PlayCta />
                             <button
                                 onClick={() => onSignIn("signup")}
@@ -103,12 +105,12 @@ export default function Hero({onSignIn}) {
                             </button>
                         </div>
 
-                        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 font-display text-[12px] font-semibold uppercase tracking-[0.14em]">
+                        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] font-medium">
                             <button
                                 onClick={() => scrollToId("play")}
-                                className="group inline-flex items-center gap-2 text-text transition-colors hover:text-gold-hi"
+                                className="group inline-flex items-center gap-2 text-text transition-colors hover:text-dim"
                             >
-                                <span className="db-led db-led-live" />
+                                <span className="db-led db-led-accent" />
                                 Free · Online Multiplayer
                                 <ChevronDown
                                     size={13}
@@ -129,11 +131,8 @@ export default function Hero({onSignIn}) {
                         className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-hair pt-6"
                     >
                         {SPECS.map((s) => (
-                            <span
-                                key={s.label}
-                                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-faint"
-                            >
-                                <span className={`db-led db-led-${s.tone}`} />
+                            <span key={s.label} className="flex items-center gap-2 text-[12px] text-faint">
+                                <span className="db-led db-led-accent" />
                                 {s.label}
                             </span>
                         ))}
@@ -148,7 +147,7 @@ export default function Hero({onSignIn}) {
                         reduce ? undefined : {transform: ["translateY(0px)", "translateY(6px)", "translateY(0px)"]}
                     }
                     transition={{duration: 2.4, repeat: Infinity, ease: "easeInOut"}}
-                    className="flex flex-col items-center gap-1 font-mono text-[10px] uppercase tracking-[0.28em] text-faint"
+                    className="flex flex-col items-center gap-1 text-[11px] text-faint"
                 >
                     <span>Scroll</span>
                     <ChevronDown size={14} />

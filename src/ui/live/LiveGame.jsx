@@ -1,22 +1,26 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import WorldMap from "../../map/WorldMap.jsx";
-import LiveHud from "../hud/LiveHud.jsx";
-import LayerBar from "../hud/LayerBar.jsx";
-import WarBar from "../hud/WarBar.jsx";
-import ProductionBar from "../hud/ProductionBar.jsx";
+import StatusStrip from "../hud/StatusStrip.jsx";
+import Dock from "../hud/Dock.jsx";
+import Drawer from "../hud/Drawer.jsx";
+import AlertStack from "../hud/AlertStack.jsx";
+import CommandDeck from "../hud/CommandDeck.jsx";
+import LayerToggles from "../hud/LayerToggles.jsx";
+import EventLog from "../hud/EventLog.jsx";
+import ObjectiveTracker from "../hud/ObjectiveTracker.jsx";
 import NationPanel from "../hud/NationPanel.jsx";
-import NewsTicker from "../hud/NewsTicker.jsx";
 import WarOutcomeModal from "../hud/WarOutcomeModal.jsx";
-import GraceIndicator from "../hud/GraceIndicator.jsx";
 import ChatBox from "../hud/ChatBox.jsx";
 import SkyLayer from "./SkyLayer.jsx";
 import CountryLabels from "./CountryLabels.jsx";
 import ContextMenu from "../hud/ContextMenu.jsx";
 import PinnedBar from "../hud/PinnedBar.jsx";
 import AdjustablePanel from "../hud/AdjustablePanel.jsx";
-import ObjectivesPanel from "../hud/ObjectivesPanel.jsx";
 import HudLayoutMenu from "../hud/HudLayoutMenu.jsx";
+import {HOTBAR} from "../lib/hotbar.js";
 import BattlePlanScreen from "../screens/BattlePlanScreen.jsx";
+import GoalsScreen from "../screens/GoalsScreen.jsx";
+import LogScreen from "../screens/LogScreen.jsx";
 import {useHudLayout} from "../hooks/useHudLayout.js";
 import {HUD_PANELS} from "../../game/platform/hudLayout.js";
 import {useBattlePlans} from "../hooks/useBattlePlans.js";
@@ -53,6 +57,7 @@ import {
     radarRangeOf,
     sensorsCover,
     unitLabel,
+    unitLockReason,
     UNITS,
 } from "../../game/engine.js";
 import {toGid3} from "../../game/data/iso3.js";
@@ -63,36 +68,25 @@ import {useLiveLayers} from "../hooks/useLiveLayers.js";
 import {useOwnershipLayer} from "../hooks/useOwnershipLayer.js";
 import {useDiplomacyLayer} from "../hooks/useDiplomacyLayer.js";
 import SelectionPanel from "./SelectionPanel.jsx";
+import TitleBarDrag from "../common/TitleBarDrag.jsx";
 
-// The three command screens, in the order the top bar lists them. A screen
-// covers the bar that opened it, so the same three sit in its header strip and
-// switching between them swaps the body rather than closing back to the map.
-const SCREEN_TABS = [
-    {id: "production", label: "Production"},
-    {id: "battle", label: "Battle Plan"},
-    {id: "diplomacy", label: "Diplomacy"},
-];
+// The desktop shell, where the status strip doubles as the window's title bar.
+const DESKTOP = typeof window !== "undefined" && !!window.dbShell;
 
-// The strip itself, handed to ScreenFrame's head slot. It stretches to the
-// header's bottom edge so the active tab's amber rule lands on the hairline
-// that closes the strip.
-function ScreenTabs({panel, onPanel}) {
-    return (
-        <div className="db-tabs self-stretch flex-none -mb-[13px] ml-3" role="tablist" aria-label="Command screens">
-            {SCREEN_TABS.map((t) => (
-                <button
-                    key={t.id}
-                    className="db-tab"
-                    role="tab"
-                    aria-selected={panel === t.id}
-                    onClick={() => onPanel(t.id)}
-                >
-                    {t.label}
-                </button>
-            ))}
-        </div>
-    );
-}
+// A targeting prompt in the lane over the map: what the next click will do, and
+// the control that calls it off.
+const PROMPT =
+    "flex items-center gap-[10px] bg-panel border border-line-2 text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] pointer-events-auto motion-safe:animate-[dbPop_200ms_var(--ease-out)]";
+
+// What the drawer is called when the dock opens it, for the region label.
+const DRAWER_LABEL = {
+    production: "Build",
+    battle: "Plan",
+    diplomacy: "Talks",
+    nation: "Nation",
+    goals: "Goals",
+    log: "Log",
+};
 
 const CITY_LAYERS = ["live-cities"];
 // Below this zoom, hovering a country shows a whole-country readout instead of a city.
@@ -137,7 +131,8 @@ export default function LiveGame({
     const moveRAF = useRef(0);
     const lastMoveEvt = useRef(null);
 
-    // null | "production" | "battle" | "diplomacy" — the top-bar command screens.
+    // null, or one of the six drawers the dock opens: "production" | "battle" |
+    // "diplomacy" | "nation" | "goals" | "log".
     const [panel, setPanel] = useState(null);
     const [placing, setPlacing] = useState(null);
     const [moving, setMoving] = useState(null);
@@ -211,8 +206,6 @@ export default function LiveGame({
     // commands. Plans are seeded from — and mirrored back onto — the world so they
     // persist across save/load and can be drafted in peacetime. See its GDD/ADR.
     const bp = useBattlePlans(w);
-    // One strip, rendered into whichever command screen is open.
-    const screenTabs = <ScreenTabs panel={panel} onPanel={setPanel} />;
     useBattlePlanReconciler({
         world: w,
         api,
@@ -239,23 +232,24 @@ export default function LiveGame({
     const teamColor = useCallback(
         (slot) =>
             slot === mySlot
-                ? "#f0f3f7"
+                ? "#ffffff"
                 : relation(slot) === "war"
-                  ? "#f0556a"
+                  ? "#e0574f"
                   : relation(slot) === "ally"
                     ? "#5fa8ff"
-                    : "#8b94a1",
+                    : "#8a8a8a",
         [mySlot, relation],
     );
-    // Your leadership airlift stands out from your white forces: a transport
-    // ferry reads BLUE while it's carrying leaders and YELLOW when flying empty
-    // (outbound to a pickup or back home), so a glance tells you which planes are
-    // actually moving command. Its fighter escorts read green — a distinct guard.
+    // Your leadership airlift stands apart from the rest of your white forces by
+    // brightness rather than hue: a transport ferry reads blue while it carries
+    // leaders and dim grey when it flies empty (outbound to a pickup or back
+    // home), so a glance tells you which planes move command. Its fighter
+    // escorts sit one step below white.
     const unitColor = useCallback(
         (u) => {
             if (u.slot !== mySlot) return teamColor(u.slot);
-            if (u.mission?.role === "leadershipFerry") return u.mission.cargo > 0 ? "#3d9bff" : "#f4c02a";
-            if (u.mission?.role === "leadershipEscort") return "#46d38a";
+            if (u.mission?.role === "leadershipFerry") return u.mission.cargo > 0 ? "#5fa8ff" : "#8a8a8a";
+            if (u.mission?.role === "leadershipEscort") return "#c8c8c8";
             return teamColor(u.slot);
         },
         [mySlot, teamColor],
@@ -273,6 +267,18 @@ export default function LiveGame({
         setTimeout(() => setErr(null), 1800);
     };
     const toggleLayer = (id) => setLayers((L) => ({...L, [id]: !L[id]}));
+    // Arming a placement, from the deck's hotbar, its 1-8 keys, or the Build
+    // drawer's tiles: one path, one lock check, and the same clearing of any
+    // other order in flight. Picking the armed unit again disarms it.
+    const armPlacing = (type) => {
+        if (!type) return;
+        if (placing === type) return setPlacing(null);
+        const lock = unitLockReason(w, mySlot, type);
+        if (lock) return flash(lock);
+        setPlacing(type);
+        setMoving(null);
+        setSelUnit(null);
+    };
     // Placing or relocating a radar-emitting unit: force the radar layer on so
     // the ghost's coverage ring (and the pulse over it) is visible while you
     // aim, then restore whatever the layer was before placement started. The
@@ -374,7 +380,12 @@ export default function LiveGame({
         setPlayerListOpen,
         countryPopupSlot,
         setCountryPopupSlot,
+        selUnit,
+        setSelUnit,
+        selCity,
+        setSelCity,
         onPause,
+        onHotbar: (i) => armPlacing(HOTBAR[i]?.type),
         overlayOpen,
         w,
         api,
@@ -505,7 +516,10 @@ export default function LiveGame({
         // Localized hover probe: zoomed out → whole-country readout; zoomed in → the
         // city under the cursor. (Units carry their own hover via their markers.)
         // Every setHover below preserves identity when the CONTENT is unchanged, so
-        // sweeping the cursor across one country costs zero re-renders.
+        // sweeping the cursor across one country costs zero re-renders. While a
+        // placement or a relocation owns the cursor nothing is probed, and the
+        // hover is let go, so the card from before it cannot come back stale once
+        // the order lands.
         if (!placing && !moving) {
             hoverPosRef.current.x = e.originalEvent.clientX;
             hoverPosRef.current.y = e.originalEvent.clientY;
@@ -519,7 +533,7 @@ export default function LiveGame({
                     setHover((h) => (h && h.kind === "city" && h.id === id ? h : {kind: "city", id}));
                 } else setHover((h) => (h && (h.kind === "city" || h.kind === "country") ? null : h));
             }
-        }
+        } else setHover(null);
     };
     const onMove = (e) => {
         lastMoveEvt.current = e;
@@ -537,6 +551,27 @@ export default function LiveGame({
         },
         [],
     );
+    // The readout describes what is under a still pointer on the map, so it goes
+    // the moment that stops being true: the pointer leaves the map for the HUD, or
+    // the camera starts moving the world out from under it (a wheel zoom, a key
+    // pan, a fly-to). A move still waiting on the frame gate is dropped with it,
+    // or it would bring the stale card straight back. The next pointer move over
+    // the map probes afresh.
+    useEffect(() => {
+        const m = mapRef.current;
+        if (!m) return;
+        const clear = () => {
+            lastMoveEvt.current = null;
+            setHover(null);
+        };
+        const box = m.getContainer();
+        box.addEventListener("mouseleave", clear);
+        m.on("movestart", clear);
+        return () => {
+            box.removeEventListener("mouseleave", clear);
+            m.off("movestart", clear);
+        };
+    }, [mapReady]);
     const onMapClick = (e) => {
         if (disembarkId) {
             const r = api.disembark(disembarkId, e.lngLat.lng, e.lngLat.lat);
@@ -703,9 +738,32 @@ export default function LiveGame({
     const selectedUnit = w.units.find((u) => u.id === selUnit);
     const movingUnit = w.units.find((u) => u.id === moving);
     const selectedCity = w.cities.find((c) => c.id === selCity);
+    // The readout is the map describing what is under the pointer, so it only
+    // speaks while the map is what the player is looking at. A dossier,
+    // scoreboard, controls reference, context menu, menu or modal silences it
+    // rather than having a card drawn over or under it, as does a placement or
+    // relocation, which stops the probe; and the unit the selection card already
+    // describes is not described a second time. An open drawer leaves the map
+    // beside it live, so the readout keeps working there.
+    const warModal = !w.over && ((!net && hasWarPopup) || (net && !!allyOfferPop) || !!warAlert);
+    const hoverMuted =
+        !!placing ||
+        !!moving ||
+        !!menu ||
+        countryPopupSlot != null ||
+        playerListOpen ||
+        helpOpen ||
+        overlayOpen ||
+        warModal ||
+        (eliminated && !spectating) ||
+        w.over;
+    const shownHover =
+        hoverMuted || (hover?.kind === "unit" && hover.id === selUnit && selectedUnit && !hudHidden) ? null : hover;
     const hoverEnt =
-        hover &&
-        (hover.kind === "unit" ? visUnits.find((u) => u.id === hover.id) : w.cities.find((c) => c.id === hover.id));
+        shownHover &&
+        (shownHover.kind === "unit"
+            ? visUnits.find((u) => u.id === shownHover.id)
+            : w.cities.find((c) => c.id === shownHover.id));
 
     return (
         <>
@@ -765,6 +823,8 @@ export default function LiveGame({
             </WorldMap>
             <SkyLayer
                 map={mapRef.current}
+                mySlot={mySlot}
+                relation={relation}
                 projectiles={w.projectiles.filter((p) => p.slot === mySlot || p.seenBy?.includes(mySlot))}
                 interceptors={w.interceptors.filter(
                     (it) => it.slot === mySlot || sensorsCover(mySensors, it.lng, it.lat),
@@ -774,187 +834,244 @@ export default function LiveGame({
             />
             <CountryLabels map={mapRef.current} labels={labels} />
 
-            {/* Top command bar (two-tier): LiveHud owns the whole strip — row 1 is
-                telemetry (date/points/economy), row 2 is speed + console nav + arsenal +
-                view controls. The arsenal gets its own row rather than a corner cluster,
-                so nothing floating can overlap it.
-                The lane clears the left nation panel (left-[272px]) and runs to right-4.
-                The wrapper is click-through (pointer-events-none) so the empty space around
-                the ticker/alert doesn't block the map; each child re-enables its own. */}
-            <div className="absolute top-[40px] left-[272px] right-4 z-6 flex flex-col items-center gap-[7px] pointer-events-none [&>*]:pointer-events-auto">
-                {/* The command bar and the Live Wire feed are one attached unit: the
-                    ticker is docked directly beneath LiveHud inside the same panel, so
-                    it moves, scales, and fades together with the top bar. */}
-                <AdjustablePanel
-                    panel={hud.topbar}
-                    onChange={(p) => setHud("topbar", p)}
-                    onReset={() => resetHudPanel("topbar")}
-                    label="Command bar"
-                    origin="top center"
-                    resizeDir={{x: 1, y: 0}}
-                    clickThrough
-                    className="relative w-full"
-                    contentClass="w-full flex flex-col items-center gap-[6px]"
-                    tabAlign="center"
-                >
-                    <LiveHud
+            {/* 1 Status strip: who you are, the clock and speed, the national
+                figures, the two vitals. One line, full width, above everything.
+                On the desktop it is also what the window is dragged by, so
+                while it is hidden or moved down clear of the title bar band,
+                the plain band stands in for it. */}
+            {DESKTOP && (hud.strip.hidden || hud.strip.dy >= 34) && <TitleBarDrag />}
+            <AdjustablePanel
+                panel={hud.strip}
+                onChange={(p) => setHud("strip", p)}
+                onReset={() => resetHudPanel("strip")}
+                label="Status Strip"
+                origin="top center"
+                resizeDir={{x: 0, y: 1}}
+                clickThrough
+                edgeSnap={false}
+                className="absolute inset-x-0 top-0 z-6"
+                contentClass="w-full"
+                tabAlign="center"
+            >
+                <StatusStrip
+                    world={w}
+                    api={api}
+                    myNation={myNation}
+                    mySlot={mySlot}
+                    keys={keys}
+                    online={!!net}
+                    meBadge={meBadge}
+                />
+            </AdjustablePanel>
+
+            {/* 3 Dock and its one drawer. Fixed furniture: the dock is the only
+                way into five of the six command screens, so neither moves. */}
+            {!hudHidden && (
+                <Dock
+                    panel={panel}
+                    keys={keys}
+                    onPanel={(id) => setPanel((p) => (p === id ? null : id))}
+                    onPause={onPause}
+                />
+            )}
+            {!hudHidden && panel && (
+                <Drawer label={DRAWER_LABEL[panel]}>
+                    {panel === "production" && (
+                        <ProductionScreen
+                            world={w}
+                            api={api}
+                            mySlot={mySlot}
+                            placing={placing}
+                            setPlacing={(t) => {
+                                setPlacing(t);
+                                setMoving(null);
+                                setSelUnit(null);
+                            }}
+                            onClose={() => setPanel(null)}
+                        />
+                    )}
+                    {panel === "battle" && (
+                        <BattlePlanScreen world={w} mySlot={mySlot} bp={bp} onClose={() => setPanel(null)} />
+                    )}
+                    {panel === "diplomacy" && (
+                        <DiplomacyScreen
+                            world={w}
+                            api={api}
+                            mySlot={mySlot}
+                            online={!!net}
+                            players={net?.players}
+                            onClose={() => setPanel(null)}
+                        />
+                    )}
+                    {panel === "nation" && (
+                        <NationPanel
+                            world={w}
+                            mySlot={mySlot}
+                            myNation={myNation}
+                            onFocus={goPin}
+                            onClose={() => setPanel(null)}
+                        />
+                    )}
+                    {panel === "goals" && (
+                        <GoalsScreen world={w} api={api} mySlot={mySlot} flash={flash} onClose={() => setPanel(null)} />
+                    )}
+                    {panel === "log" && (
+                        <LogScreen world={w} mySlot={mySlot} onFocus={goPin} onClose={() => setPanel(null)} />
+                    )}
+                </Drawer>
+            )}
+
+            {/* 2 The lane over the map: the alert stack, whatever targeting
+                prompt is live, and the last rejection. It starts at the dock's
+                edge, steps right when a drawer is open, and stops short of the
+                objective tracker, so nothing in it can land on anything else. */}
+            <div
+                className={cn(
+                    "absolute top-[66px] right-[372px] z-7 flex flex-col items-center gap-2 pointer-events-none",
+                    panel && !hudHidden ? "left-[480px]" : "left-[88px]",
+                )}
+            >
+                {!hudHidden && (
+                    <AlertStack
                         world={w}
                         api={api}
-                        myNation={myNation}
-                        panel={panel}
-                        keys={K}
-                        online={!!net}
-                        onPanel={hudHidden ? null : (id) => setPanel((p) => (p === id ? null : id))}
-                        globe={globe}
-                        onGlobe={onToggleGlobe}
-                        onHelp={() => setHelpOpen(true)}
-                        onMenu={onPause}
-                        meBadge={meBadge}
+                        mySlot={mySlot}
+                        onOpenPanel={setPanel}
+                        onOpenCountry={setCountryPopupSlot}
+                        flash={flash}
                     />
-                    <NewsTicker world={w} mySlot={mySlot} />
-                </AdjustablePanel>
+                )}
+                {eliminated && spectating && (
+                    <div className={PROMPT} role="status" aria-live="polite">
+                        <span className="text-dim">Spectating</span>
+                        <button className={miniButton()} onClick={onLeave}>
+                            Leave
+                        </button>
+                    </div>
+                )}
+                {moving && (
+                    <div className={PROMPT} role="status" aria-live="polite">
+                        {UNITS[movingUnit?.type]?.navalSpeed
+                            ? "Set sail: click an open-ocean destination."
+                            : UNITS[movingUnit?.type]?.landSpeed
+                              ? "March: click a land destination."
+                              : isSea(movingUnit?.type)
+                                ? "Relocating: click in your coastal waters."
+                                : "Relocating: click inside your territory, on land."}
+                        <button className={miniButton()} onClick={() => setMoving(null)}>
+                            Cancel
+                        </button>
+                    </div>
+                )}
+                {following && (
+                    <div className={PROMPT} role="status" aria-live="polite">
+                        Follow: click one of your ships to keep station on.
+                        <button className={miniButton()} onClick={() => setFollowing(null)}>
+                            Cancel
+                        </button>
+                    </div>
+                )}
+                {disembarkId && (
+                    <div className={PROMPT} role="status" aria-live="polite">
+                        Landing: click a coastal point inside your territory.
+                        <button className={miniButton()} onClick={() => setDisembarkId(null)}>
+                            Cancel
+                        </button>
+                    </div>
+                )}
+                {err && (
+                    <div
+                        className={cn(
+                            "bg-panel-2 border text-text py-[9px] px-[18px] text-[12.5px] backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]",
+                            err.kind === "err" ? "border-danger" : "border-line-2",
+                        )}
+                        role="alert"
+                        aria-live={err.kind === "err" ? "assertive" : "polite"}
+                    >
+                        {err.msg}
+                    </div>
+                )}
             </div>
+
+            {/* 4 The right column: the objective tracker over the player's pins. */}
+            <div className="absolute top-[66px] right-4 z-5 flex flex-col items-end gap-2">
+                {!hudHidden && (
+                    <AdjustablePanel
+                        panel={hud.tracker}
+                        onChange={(p) => setHud("tracker", p)}
+                        onReset={() => resetHudPanel("tracker")}
+                        label="Objective Tracker"
+                        origin="top right"
+                        resizeDir={{x: -1, y: 1}}
+                        className="relative"
+                        tabAlign="right"
+                    >
+                        <ObjectiveTracker world={w} mySlot={mySlot} onOpenGoals={() => setPanel("goals")} />
+                    </AdjustablePanel>
+                )}
+                <PinnedBar
+                    pins={pins}
+                    onGo={goPin}
+                    onRemove={(key) => setPins((p) => p.filter((x) => x.key !== key))}
+                />
+            </div>
+
+            {/* 5 Command deck: the stockpile, the hotbar, and what the line is
+                turning out. It owns the bottom band right of the drawer. */}
             {!hudHidden && (
                 <AdjustablePanel
-                    panel={hud.sidebar}
-                    onChange={(p) => setHud("sidebar", p)}
-                    onReset={() => resetHudPanel("sidebar")}
-                    label="Nation panel"
-                    origin="top left"
-                    resizeDir={{x: 1, y: 1}}
-                    className="absolute top-[40px] left-4 z-5"
-                    tabAlign="left"
-                >
-                    <NationPanel world={w} mySlot={mySlot} myNation={myNation} onFocus={goPin} />
-                </AdjustablePanel>
-            )}
-            {!hudHidden && (
-                <AdjustablePanel
-                    panel={hud.objectives}
-                    onChange={(p) => setHud("objectives", p)}
-                    onReset={() => resetHudPanel("objectives")}
-                    label="Objectives"
-                    origin="top right"
-                    resizeDir={{x: -1, y: 1}}
-                    // Docked clear of the whole top unit, command bar plus the
-                    // ticker beneath it, which runs to 197px at its tallest. A
-                    // panel that starts above that line has its header strip
-                    // hidden under the bar at every width the HUD is read at.
-                    className="absolute top-[206px] right-4 z-5"
-                    tabAlign="right"
-                >
-                    <ObjectivesPanel world={w} api={api} mySlot={mySlot} flash={flash} />
-                </AdjustablePanel>
-            )}
-            {!hudHidden && panel === "production" && (
-                <ProductionScreen
-                    world={w}
-                    api={api}
-                    mySlot={mySlot}
-                    placing={placing}
-                    setPlacing={(t) => {
-                        setPlacing(t);
-                        setMoving(null);
-                        setSelUnit(null);
-                    }}
-                    head={screenTabs}
-                    onClose={() => setPanel(null)}
-                />
-            )}
-            {!hudHidden && panel === "diplomacy" && (
-                <DiplomacyScreen
-                    world={w}
-                    api={api}
-                    mySlot={mySlot}
-                    online={!!net}
-                    players={net?.players}
-                    head={screenTabs}
-                    onClose={() => setPanel(null)}
-                />
-            )}
-            {!hudHidden && panel === "battle" && (
-                <BattlePlanScreen world={w} mySlot={mySlot} bp={bp} head={screenTabs} onClose={() => setPanel(null)} />
-            )}
-            <AdjustablePanel
-                panel={hud.bottomRight}
-                onChange={(p) => setHud("bottomRight", p)}
-                onReset={() => resetHudPanel("bottomRight")}
-                label="Map and war bar"
-                origin="bottom right"
-                resizeDir={{x: -1, y: -1}}
-                className="absolute bottom-4 right-4 z-5"
-                tabAlign="right"
-            >
-                <div className="flex flex-col items-end gap-2 pointer-events-none [&>*]:pointer-events-auto">
-                    {!hudHidden && <WarBar world={w} mySlot={mySlot} onOpenCountry={setCountryPopupSlot} />}
-                    <LayerBar layers={layers} onToggle={toggleLayer} />
-                </div>
-            </AdjustablePanel>
-            {!hudHidden && Boolean(myNation?.prod?.current || myNation?.prod?.queue?.length) && (
-                <AdjustablePanel
-                    panel={hud.prodQueue}
-                    onChange={(p) => setHud("prodQueue", p)}
-                    onReset={() => resetHudPanel("prodQueue")}
-                    label="Production queue"
+                    panel={hud.deck}
+                    onChange={(p) => setHud("deck", p)}
+                    onReset={() => resetHudPanel("deck")}
+                    label="Command Deck"
                     origin="bottom center"
                     resizeDir={{x: 0, y: -1}}
-                    clickThrough
-                    className="absolute bottom-4 inset-x-0 z-5 flex justify-center max-[1180px]:bottom-[76px]"
+                    className="absolute left-[480px] right-[440px] bottom-4 z-5 max-[1919px]:right-4"
+                    contentClass="w-full"
                     tabAlign="center"
                 >
-                    <ProductionBar world={w} api={api} mySlot={mySlot} />
+                    <CommandDeck world={w} mySlot={mySlot} myNation={myNation} placing={placing} onPlace={armPlacing} />
                 </AdjustablePanel>
             )}
-            <PinnedBar pins={pins} onGo={goPin} onRemove={(key) => setPins((p) => p.filter((x) => x.key !== key))} />
-            <HudLayoutMenu
-                layout={hud}
-                onToggle={setHud}
-                onResetAll={resetHudAll}
-                panels={net ? HUD_PANELS : HUD_PANELS.filter((p) => !p.online)}
-            />
 
-            {moving && (
-                <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
-                    role="status"
-                    aria-live="polite"
+            {/* 9 The corner log: the last three events. The Log drawer holds the rest. */}
+            <AdjustablePanel
+                panel={hud.log}
+                onChange={(p) => setHud("log", p)}
+                onReset={() => resetHudPanel("log")}
+                label="Event Log"
+                origin="bottom left"
+                resizeDir={{x: 1, y: -1}}
+                className="absolute left-[88px] bottom-4 z-5"
+                tabAlign="left"
+            >
+                <EventLog world={w} mySlot={mySlot} />
+            </AdjustablePanel>
+
+            {/* 7 Layer row and the HUD hub beside it. The hub sits outside every
+                adjustable panel, so it is still there when they are all hidden.
+                Both step up above the deck once the window is too narrow to hold
+                the deck and the row on one band. */}
+            <div className="absolute right-4 bottom-4 z-6 flex items-end gap-2 max-[1919px]:bottom-[128px]">
+                <AdjustablePanel
+                    panel={hud.layers}
+                    onChange={(p) => setHud("layers", p)}
+                    onReset={() => resetHudPanel("layers")}
+                    label="Layer Toggles"
+                    origin="bottom right"
+                    resizeDir={{x: -1, y: -1}}
+                    className="relative"
+                    tabAlign="right"
                 >
-                    {UNITS[movingUnit?.type]?.navalSpeed
-                        ? "Set Sail: click an open-ocean destination."
-                        : UNITS[movingUnit?.type]?.landSpeed
-                          ? "March: click a land destination."
-                          : isSea(movingUnit?.type)
-                            ? "Relocating: click in your coastal waters."
-                            : "Relocating: click inside your territory (on land)."}
-                    <button className={miniButton()} onClick={() => setMoving(null)}>
-                        Cancel
-                    </button>
-                </div>
-            )}
-            {following && (
-                <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
-                    role="status"
-                    aria-live="polite"
-                >
-                    Follow: click one of your ships to keep station on.
-                    <button className={miniButton()} onClick={() => setFollowing(null)}>
-                        Cancel
-                    </button>
-                </div>
-            )}
-            {disembarkId && (
-                <div
-                    className="db-notch-sm absolute top-[100px] left-1/2 -translate-x-1/2 z-6 flex items-center gap-[10px] bg-panel border border-gold-line text-text py-2 px-[14px] text-[13px] backdrop-blur-[10px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
-                    role="status"
-                    aria-live="polite"
-                >
-                    Landing: click a coastal point inside your territory.
-                    <button className={miniButton()} onClick={() => setDisembarkId(null)}>
-                        Cancel
-                    </button>
-                </div>
-            )}
+                    <LayerToggles layers={layers} onToggle={toggleLayer} globe={globe} onGlobe={onToggleGlobe} />
+                </AdjustablePanel>
+                <HudLayoutMenu
+                    layout={hud}
+                    onToggle={setHud}
+                    onResetAll={resetHudAll}
+                    panels={net ? HUD_PANELS : HUD_PANELS.filter((p) => !p.online)}
+                />
+            </div>
 
             {selectedUnit && !hudHidden && (
                 <SelectionPanel
@@ -979,7 +1096,7 @@ export default function LiveGame({
             {menu && <ContextMenu {...menu} onClose={() => setMenu(null)} />}
             {helpOpen && <ControlsOverlay keys={keys} onClose={() => setHelpOpen(false)} />}
             <HoverPopups
-                hover={hover}
+                hover={shownHover}
                 hoverEnt={hoverEnt}
                 pos={hoverPosRef.current}
                 countryByGid={countryByGid}
@@ -992,34 +1109,19 @@ export default function LiveGame({
                 teamColor={teamColor}
             />
 
-            {err && (
-                <div
-                    className={cn(
-                        "db-notch-sm absolute bottom-[122px] left-1/2 -translate-x-1/2 z-6 bg-panel-2 border border-line-soft text-text py-[9px] px-[18px] text-[12.5px] tracking-[0.3px] pointer-events-none backdrop-blur-[8px] motion-safe:animate-[dbPop_200ms_var(--ease-out)]",
-                        err.kind === "err" && "bg-[rgba(224,87,79,0.14)] border-danger text-[#ffd7dd]",
-                        err.kind === "warn" &&
-                            "bg-[rgba(140,255,58,0.12)] border-[rgba(140,255,58,0.55)] text-[#d6ff9e]",
-                    )}
-                    role="alert"
-                    aria-live={err.kind === "err" ? "assertive" : "polite"}
-                >
-                    {err.msg}
-                </div>
-            )}
-            {!hudHidden && <GraceIndicator world={w} />}
             {/* Player chat — online matches only. Stays up after the war ends so the
                 outcome screen can still talk. Movable via the shared HUD layout
-                system, docked bottom-left above the layout hub by default. */}
+                system, docked above the layer row by default. */}
             {net && (
                 <AdjustablePanel
                     panel={hud.comms}
                     onChange={(p) => setHud("comms", p)}
                     onReset={() => resetHudPanel("comms")}
                     label="Comms"
-                    origin="bottom left"
-                    resizeDir={{x: 1, y: -1}}
-                    className="absolute bottom-[68px] left-4 z-6"
-                    tabAlign="left"
+                    origin="bottom right"
+                    resizeDir={{x: -1, y: -1}}
+                    className="absolute bottom-[72px] right-4 z-6 max-[1919px]:bottom-[184px]"
+                    tabAlign="right"
                 >
                     <ChatBox net={net} mySlot={mySlot} overlayOpen={overlayOpen} />
                 </AdjustablePanel>
@@ -1043,7 +1145,7 @@ export default function LiveGame({
                     <div className={cn(card({size: "wide"}), "motion-safe:animate-[dbPop_240ms_var(--ease-out)]")}>
                         <div
                             id="db-eliminated-title"
-                            className="font-display text-[40px] font-bold tracking-[4px] uppercase text-center mb-3 text-danger [text-shadow:0_0_24px_rgba(255,91,110,0.5)]"
+                            className="text-[34px] font-semibold tracking-tight text-center mb-3 text-danger"
                         >
                             Eliminated
                         </div>
@@ -1061,19 +1163,6 @@ export default function LiveGame({
                     </div>
                 </div>
             )}
-            {/* Spectator ribbon — the only chrome left once you opt to keep watching. */}
-            {eliminated && spectating && (
-                <div
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-6 flex items-center gap-3 bg-panel border border-line-soft text-text py-[7px] px-[14px] rounded text-[12.5px] tracking-[0.3px] backdrop-blur-[8px] shadow-sm motion-safe:animate-[dbPop_200ms_var(--ease-out)]"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <span className="font-mono uppercase tracking-[1px] text-dim">Spectating</span>
-                    <button className={miniButton()} onClick={onLeave}>
-                        Leave
-                    </button>
-                </div>
-            )}
             {w.over && (
                 <div
                     className={overlay({placement: "center"})}
@@ -1085,12 +1174,12 @@ export default function LiveGame({
                         <div
                             id="db-outcome-title"
                             className={cn(
-                                "font-display text-[40px] font-bold tracking-[4px] uppercase text-center mb-3",
+                                "text-[34px] font-semibold tracking-tight text-center mb-3",
                                 w.winnerSlot === mySlot
-                                    ? "text-good [text-shadow:0_0_26px_rgba(62,227,139,0.55)]"
+                                    ? "text-good"
                                     : w.winnerSlot === null
                                       ? "text-dim"
-                                      : "text-danger [text-shadow:0_0_24px_rgba(255,91,110,0.5)]",
+                                      : "text-danger",
                             )}
                         >
                             {w.winnerSlot === mySlot ? "Victory" : w.winnerSlot === null ? "Annihilation" : "Defeated"}
@@ -1128,25 +1217,25 @@ export default function LiveGame({
 
             <div
                 className={cn(
-                    "absolute inset-0 z-60 grid place-items-center [background:radial-gradient(120%_120%_at_50%_42%,#0b0e13_0%,#05070b_72%)] transition-opacity duration-[520ms] ease-out-db",
+                    "absolute inset-0 z-60 grid place-items-center bg-bg transition-opacity duration-[520ms] ease-out-db",
                     !booting && "opacity-0 pointer-events-none",
                 )}
                 aria-hidden={!booting}
             >
                 <div className="text-center motion-safe:animate-[dbRowIn_500ms_var(--ease-out)_both]">
+                    {/* flag-icons draws its mark 4:3 at the size of its font, and
+                        its own width rule outranks a utility, so the holder's
+                        font size is what sets it. */}
                     {myNation?.iso && (
-                        <Flag
-                            iso={myNation.iso}
-                            className="text-[30px] rounded-[3px] shadow-[0_6px_20px_-8px_rgba(0,0,0,0.7)]"
-                        />
+                        <span className="flex justify-center text-[40px]">
+                            <Flag iso={myNation.iso} />
+                        </span>
                     )}
-                    <div className="mt-4 font-display text-[26px] font-bold tracking-[8px] uppercase text-text">
+                    <div className="mt-4 text-[24px] font-semibold tracking-tight text-text">
                         {myNation?.name || "Command"}
                     </div>
-                    <div className="mt-2 font-mono text-[11px] tracking-[3px] uppercase text-dim">
-                        Establishing theater command
-                    </div>
-                    <div className="db-boot-bar w-[190px] h-0.5 mt-[22px] mx-auto bg-[rgba(255,255,255,0.08)] rounded-[2px] overflow-hidden">
+                    <div className="mt-1.5 text-[12px] text-dim">Establishing theater command</div>
+                    <div className="db-boot-bar w-[190px] h-0.5 mt-[22px] mx-auto bg-line overflow-hidden">
                         <i />
                     </div>
                 </div>

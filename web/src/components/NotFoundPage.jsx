@@ -6,7 +6,7 @@ import Reveal from "./Reveal.jsx";
 import {Eyebrow} from "./Primitives.jsx";
 import PlayCta from "./PlayCta.jsx";
 import {cn} from "../lib/cn.js";
-import {button} from "../lib/variants.js";
+import {button, ctaRow} from "../lib/variants.js";
 
 // Anything under a hash this site does not route. Without it an unknown route
 // rendered the landing page under the landing page's title and canonical, so a
@@ -31,13 +31,13 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
 
                     <div className="relative mx-auto max-w-[820px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow framed>No Such Route</Eyebrow>
-                            <h1 className="mt-5 font-display text-[clamp(2rem,5vw,3.2rem)] font-bold uppercase leading-[1.04] text-text">
+                            <Eyebrow>No such page</Eyebrow>
+                            <h1 className="mt-5 text-[clamp(2rem,5vw,3.2rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-text">
                                 Off the map
                             </h1>
                             {asked && (
-                                <p className="db-notch-sm mt-5 inline-flex max-w-full items-center gap-2 overflow-hidden border border-line bg-bg-2 px-3 py-[7px] font-mono text-[12px] text-dim">
-                                    <span className="db-led db-led-live" />
+                                <p className="mt-5 inline-flex max-w-full items-center gap-2 overflow-hidden border border-line bg-bg-2 px-3 py-[7px] font-mono text-[12px] text-dim">
+                                    <span className="db-led db-led-accent" />
                                     <span className="truncate">{asked}</span>
                                 </p>
                             )}
@@ -46,7 +46,7 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
                                 wiki, and the download page.
                             </p>
 
-                            <div className="mt-9 flex flex-wrap items-center gap-3">
+                            <div className={cn(ctaRow(), "mt-9")}>
                                 <PlayCta />
                                 <a href="#/" className={cn(button({variant: "default", size: "lg"}), "gap-2")}>
                                     <ArrowLeft size={15} />

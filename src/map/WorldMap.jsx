@@ -6,6 +6,10 @@
  * (faded in only when zoomed in), depth-graded ocean from Natural-Earth
  * bathymetry (+ animated coastal shimmer / drifting isobaths), then the
  * political fills/borders which thin out on zoom-in so the real terrain reads.
+ *
+ * The board is black and white: a black ground, land in greys, borders as
+ * hairlines. The political wash that says who owns what is painted on top of
+ * the country-tint layer by whoever is driving the map.
  */
 import {useCallback, useEffect, useMemo, useRef} from "react";
 import maplibregl from "maplibre-gl";
@@ -124,25 +128,25 @@ const MERC_LAT = 85.05112878;
 
 // Ocean color by Natural-Earth depth band (0 = continental shelf, 6 = abyss).
 // Bands nest and stack, so drawing shallow->deep yields the depth gradient.
-// Monochrome depth ramp — near-black abyss up to a dark-grey continental shelf.
+// Neutral greys — black abyss up to a dark-grey continental shelf.
 const OCEAN_DEPTH_COLOR = [
     "match",
     ["get", "depth"],
     0,
-    "#2b3037",
+    "#2b2b2b",
     1,
-    "#24282e",
+    "#242424",
     2,
-    "#1e2127",
+    "#1e1e1e",
     3,
-    "#181a1f",
+    "#181818",
     4,
-    "#131519",
+    "#131313",
     5,
-    "#0f1013",
+    "#0e0e0e",
     6,
-    "#0a0b0d",
-    "#181a1f",
+    "#080808",
+    "#181818",
 ];
 
 // Level-of-detail: far out keep the current flat command-map look; zooming in
@@ -156,16 +160,16 @@ const COUNTRY_FILL_COLOR = [
     ["linear"],
     ["zoom"],
     2,
-    "#767b84",
+    "#6e6e6e",
     3.2,
-    "#4c515a",
+    "#4a4a4a",
     4.2,
-    "#3a3f47",
+    "#383838",
     5.5,
-    "#2e3239",
+    "#2c2c2c",
 ];
-const COUNTRY_LINE_COLOR = ["interpolate", ["linear"], ["zoom"], 2, "#9ba1ab", 4, "#686e77", 6, "#464b53"];
-const COUNTRY_LINE_WIDTH = ["interpolate", ["linear"], ["zoom"], 2, 0.6, 6, 1.5];
+const COUNTRY_LINE_COLOR = ["interpolate", ["linear"], ["zoom"], 2, "#9a9a9a", 4, "#666666", 6, "#444444"];
+const COUNTRY_LINE_WIDTH = ["interpolate", ["linear"], ["zoom"], 2, 0.6, 6, 1.2];
 
 function buildStyle(globe) {
     return {
@@ -194,7 +198,7 @@ function buildStyle(globe) {
             regions: {type: "vector", url: tilesUrl("regions")},
         },
         layers: [
-            {id: "bg", type: "background", paint: {"background-color": "#08090b"}},
+            {id: "bg", type: "background", paint: {"background-color": "#000000"}},
             // Real geography, fully desaturated to greyscale so it reads as a mono command map.
             {
                 id: "relief",
@@ -222,7 +226,7 @@ function buildStyle(globe) {
                 type: "fill",
                 source: "bathymetry",
                 filter: ["<=", ["get", "depth"], 1],
-                paint: {"fill-color": "#464d55", "fill-opacity": 0.06},
+                paint: {"fill-color": "#4a4a4a", "fill-opacity": 0.06},
             },
             // Drifting isobaths / coastline (translate + opacity driven in water.js).
             {
@@ -230,7 +234,7 @@ function buildStyle(globe) {
                 type: "line",
                 source: "bathymetry",
                 paint: {
-                    "line-color": "#535a63",
+                    "line-color": "#555555",
                     "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 6, 1.1],
                     "line-opacity": 0.11,
                 },
@@ -240,7 +244,7 @@ function buildStyle(globe) {
                 type: "fill",
                 source: "regions",
                 "source-layer": "regions",
-                paint: {"fill-color": "#1b1e23", "fill-opacity": REGIONS_FILL_OPACITY},
+                paint: {"fill-color": "#151515", "fill-opacity": REGIONS_FILL_OPACITY},
             },
             {
                 id: "country-fill",
@@ -249,17 +253,18 @@ function buildStyle(globe) {
                 "source-layer": "countries",
                 paint: {"fill-color": COUNTRY_FILL_COLOR, "fill-opacity": COUNTRY_FILL_OPACITY},
             },
-            // Subtle national tint washed over the grey land — per-country flag color
-            // is injected at runtime (LiveGame) once colors.json loads; fades out as
-            // you zoom in and the real relief takes over.
+            // The political wash over the grey land. The colour that says where a
+            // country stands is painted here at runtime (MapLayers in a match, the
+            // scene itself on the menu and the landing page); it fades out as you
+            // zoom in and the real relief takes over.
             {
                 id: "country-tint",
                 type: "fill",
                 source: "countries",
                 "source-layer": "countries",
                 paint: {
-                    "fill-color": "#767b84",
-                    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 2, 0.16, 3.4, 0.1, 5, 0],
+                    "fill-color": "rgba(0,0,0,0.34)",
+                    "fill-opacity": ["interpolate", ["linear"], ["zoom"], 2, 1, 3.4, 0.82, 5, 0],
                 },
             },
             {

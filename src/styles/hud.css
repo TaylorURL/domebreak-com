@@ -1,6 +1,7 @@
-/* The persistent in-match HUD: the top telemetry bar, the news ticker, the ammo
-   and war bars, the docked panels and their popovers, the context menu, the
-   pinned bar, and the tactical scrollbars every dark overflow region uses.
+/* The persistent in-match HUD: the status strip, the dock and its drawer, the
+   alert stack, the command deck, the objective tracker, the event log, the
+   layer row, their popovers and tooltips, the context menu, the pinned bar, and
+   the tactical scrollbars every dark overflow region uses.
 
    Imported by src/index.css, which owns the tokens, the shared chrome
    utilities and the shared keyframes these rules read. Anything added here
@@ -10,12 +11,12 @@
 @layer vfx {
     /* Tactical scrollbars. .db-scroll is the reusable dark-panel scrollbar and
        .db-savelist is an alias of it carried by the save list. Apply db-scroll to
-       any dark overflow region (e.g. the in-game NationPanel roster) so it never
+       any dark overflow region (e.g. a drawer's scrolling body) so it never
        falls back to the raw white browser scrollbar. */
     .db-savelist,
     .db-scroll {
         scrollbar-width: thin;
-        scrollbar-color: #575f6a transparent;
+        scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
     }
 
     .db-savelist::-webkit-scrollbar,
@@ -26,27 +27,27 @@
 
     .db-savelist::-webkit-scrollbar-track,
     .db-scroll::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.035);
+        background: transparent;
         border-left: 1px solid var(--hair);
     }
 
     .db-savelist::-webkit-scrollbar-thumb,
     .db-scroll::-webkit-scrollbar-thumb {
-        background: #575f6a;
-        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.24);
+        border-radius: 0;
         border: 3px solid transparent;
         background-clip: padding-box;
     }
 
     .db-savelist::-webkit-scrollbar-thumb:hover,
     .db-scroll::-webkit-scrollbar-thumb:hover {
-        background: #78818d;
+        background: rgba(255, 255, 255, 0.4);
         background-clip: padding-box;
     }
 
     .db-savelist::-webkit-scrollbar-thumb:active,
     .db-scroll::-webkit-scrollbar-thumb:active {
-        background: #949ca7;
+        background: rgba(255, 255, 255, 0.55);
         background-clip: padding-box;
     }
 
@@ -59,45 +60,28 @@
         background: var(--panel-solid);
     }
 
-    /* A clipped surface paints nothing past its own edge, so a floating popover's
-       lift goes on a wrapper. drop-shadow reads the child's alpha, so the shadow
-       follows the notched outline rather than boxing it. */
+    /* A floating popover's lift goes on a wrapper rather than on the panel, so a
+       panel that clips its own content keeps its shadow. */
     .db-hud-lift {
         filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.6));
     }
 
-    /* The Live Wire strip dissolves its headlines at both ends instead of cutting
-       them off at the frame. Static, so nothing to stand down. */
-    .db-ticker-track {
-        mask-image: linear-gradient(90deg, transparent 0, #000 22px, #000 calc(100% - 22px), transparent 100%);
-    }
-
-    /* The war strip's standing alarm: the panel hairline swells to danger and back
-       while a war is open. Border colour only, so it stays inside the notch. */
-    .db-war-pulse {
-        animation: dbWarPulse 1.8s var(--ease-io) infinite;
-    }
-
-    @keyframes dbWarPulse {
-        0%,
-        100% {
-            border-color: var(--line);
-        }
-        50% {
-            border-color: var(--danger);
-        }
+    /* The HUD tooltip (ui/hud/HudTooltip.jsx) arrives over the fast step
+       rather than blinking on. It is placed through top and left, so the
+       entrance's scale never fights the placement, and both motion gates stand
+       it down to a plain appearance. */
+    .db-tip {
+        animation: dbPop var(--dur-fast) var(--ease-out);
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .db-war-pulse {
+        .db-tip {
             animation: none;
-            border-color: var(--danger);
         }
     }
 
-    [data-reduce-motion="true"] .db-war-pulse {
+    [data-reduce-motion="true"] .db-tip {
         animation: none;
-        border-color: var(--danger);
     }
 
     @keyframes dbDropInY {

@@ -1,57 +1,58 @@
-// Diplomacy — full-screen theatre manager. A roster of every power in the world:
-// flag, name, the seat commanding it (You / a human Player in multiplayer / AI),
-// holdings, fielded forces, GDP, standing toward you, and the war/peace/alliance
-// controls. Presentation only — declareWar/offerPeace/proposeAlliance/breakAlliance
+// Talks — every power in the theatre, in the dock's drawer. The war board sits
+// at the top whenever the player is at war (the alert stack's War Board button
+// opens this drawer), then the roster: flag, name, the seat commanding it, its
+// holdings and standing toward you, and the war/peace/alliance controls.
+// Presentation only — declareWar / offerPeace / proposeAlliance / breakAlliance
 // go through the api.
 import {useState} from "react";
-import ScreenFrame from "./ScreenFrame.jsx";
+import {DrawerScreen} from "./ScreenFrame.jsx";
+import Standing from "./Standing.jsx";
 import Flag from "../common/Flag.jsx";
+import Icon from "../common/Icon.jsx";
 import {colorForSlot, DIPLOMACY} from "../../game/data/constants.js";
 import {miniButton, input} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
-import {fmtGdp} from "../lib/format.js";
+import {fmtGdp, plural} from "../lib/format.js";
 import {useRoster} from "../lib/roster.js";
+import {gdpOf} from "../../game/engine.js";
 
-// One theatre readout: a mono kicker over a mono figure on a notched sunk cell,
-// with an LED where the number carries a state a glance should catch.
-function Cell({label, value, valueClass, led}) {
+// One figure in the strip under the header.
+function Readout({label, value, tone}) {
     return (
-        <div className="db-notch-sm flex-1 min-w-[150px] flex flex-col gap-[3px] px-[14px] py-3 bg-sunk border border-line rounded-none">
-            <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-faint">{label}</span>
-            <b className={cn("inline-flex items-center gap-2 font-mono text-lg", valueClass)}>
-                {led && <i className={cn("db-led", led)} aria-hidden="true" />}
-                {value}
-            </b>
+        <div className="flex flex-col gap-[3px] min-w-0 px-3 py-2 border-r border-line last:border-r-0">
+            <b className={cn("font-mono tabular-nums text-[13px] font-semibold leading-none", tone)}>{value}</b>
+            <span className="text-[10px] leading-none text-faint truncate">{label}</span>
         </div>
     );
 }
 
-// A power's standing toward you, stated by a lamp as well as a word.
-function Standing({label, tone = "text-dim", led}) {
+// One of a power's holdings on its roster row: the figure in mono, and the word
+// it counts in, agreeing with it, in the faint ink of the line around it.
+function Holding({n, one, many}) {
     return (
-        <span className={cn("inline-flex items-center gap-2 font-mono text-[11px]", tone)}>
-            {led && <i className={cn("db-led", led)} aria-hidden="true" />}
-            {label}
-        </span>
+        <>
+            <span className="font-mono tabular-nums text-dim">{n}</span> {plural(n, one, many)}
+        </>
     );
 }
 
-export default function DiplomacyScreen({world, api, mySlot, online, players, onClose, head}) {
+export default function DiplomacyScreen({world, api, mySlot, online, players, onClose}) {
     const [q, setQ] = useState("");
     const {isHuman} = useRoster(players);
     const me = world.nations.find((n) => n.slot === mySlot);
-    // Only the ACTIVE (participating) powers are diplomatic actors — the passive neutral
-    // world never wars or allies, so it never appears here. In an all-active match this
-    // is every nation.
+    // Only the ACTIVE (participating) powers are diplomatic actors — the passive
+    // neutral world never wars or allies, so it never appears here.
     const roster = world.nations.filter((n) => n.active !== false);
-    // Precompute holdings/forces per slot in one pass each (indexed by slot, so it's
-    // cheap regardless of how many cities/units exist).
+    // Precompute holdings/forces per slot in one pass each (indexed by slot, so
+    // it stays cheap regardless of how many cities/units exist).
     const cityCount = {},
         forceCount = {};
     for (const c of world.cities) if (c.alive) cityCount[c.slot] = (cityCount[c.slot] || 0) + 1;
     for (const u of world.units) if (u.hp > 0) forceCount[u.slot] = (forceCount[u.slot] || 0) + 1;
     const citiesOf = (slot) => cityCount[slot] || 0;
     const forcesOf = (slot) => forceCount[slot] || 0;
+    const myCities = citiesOf(mySlot),
+        myUnits = forcesOf(mySlot);
     // Your standing toward a slot: "war" | "ally" | "peace" (absent reads as peace).
     const rel = (n) =>
         n.slot === mySlot
@@ -61,9 +62,9 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
               : me?.relations[n.slot] === "ally"
                 ? "ally"
                 : "peace";
-    // Diplomatic sort priority — the powers that matter to you rise to the top: you,
-    // then human players, then everyone you're at war with, then your allies, then
-    // the rest. Ties within a bucket fall back to alive-then-holdings.
+    // Diplomatic sort priority — the powers that matter to you rise to the top:
+    // you, then human players, then everyone you're at war with, then your
+    // allies, then the rest. Ties within a bucket fall back to alive-then-holdings.
     const priority = (n) =>
         n.slot === mySlot
             ? 0
@@ -77,8 +78,8 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
     const nations = [...roster].sort(
         (a, b) => priority(a) - priority(b) || b.alive - a.alive || citiesOf(b.slot) - citiesOf(a.slot),
     );
-    // Rank is TRUE standings (alive-then-holdings), computed off a separate sort so the
-    // diplomatic display order above never distorts each power's real rank.
+    // Rank is TRUE standings (alive-then-holdings), computed off a separate sort
+    // so the diplomatic display order above never distorts each power's real rank.
     const standings = [...roster].sort((a, b) => b.alive - a.alive || citiesOf(b.slot) - citiesOf(a.slot));
     const rankOf = new Map(standings.map((n, i) => [n.slot, i + 1]));
 
@@ -88,157 +89,151 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
     const atWar = roster.filter((n) => n.slot !== mySlot && me?.relations[n.slot] === "war").length;
     const allied = roster.filter((n) => n.slot !== mySlot && me?.relations[n.slot] === "ally").length;
     const needle = q.trim().toLowerCase();
-    // The active powers are few (≤8), so the default view simply shows them all; the
-    // search box filters that roster by name/ISO.
     const shown = needle
         ? nations.filter((n) => n.name.toLowerCase().includes(needle) || n.iso.toLowerCase() === needle)
         : nations;
 
+    // The war board: every live war in the theatre, each pair once, the ones
+    // you are in first.
+    const wars = [];
+    for (const a of roster) {
+        if (!a.alive) continue;
+        for (const b of roster) {
+            if (b.slot <= a.slot || !b.alive) continue;
+            if (a.relations?.[b.slot] === "war") wars.push({a, b, mine: a.slot === mySlot || b.slot === mySlot});
+        }
+    }
+    wars.sort((x, y) => y.mine - x.mine);
+
+    // The seat tag says who commands a power, in the same tags the dossier and
+    // the scoreboard use. Ally blue is kept for an alliance, so a human seat
+    // reads in the text colour rather than in a colour that means allied.
     const seat = (n) =>
         n.slot === mySlot
-            ? {label: "You", cls: "text-gold-contrast bg-gold border-gold"}
+            ? {label: "You", cls: "bg-accent-fill border-accent-fill text-accent-ink"}
             : isHuman(n.slot)
-              ? {label: "Player", cls: "text-[#5fa8ff] border-[#3f5a80]"}
-              : {label: "AI", cls: ""};
-
-    const rowGrid =
-        "grid grid-cols-[52px_minmax(200px,2fr)_96px_76px_76px_88px_116px_190px] items-center gap-3 px-[14px] py-[11px] border-b border-hair";
+              ? {label: "Player", cls: "border-line-2 text-text"}
+              : {label: "AI", cls: "border-line text-dim"};
 
     return (
-        <ScreenFrame
-            title="Diplomacy"
-            subtitle="Theatre powers & standings"
-            bare
-            head={head}
+        <DrawerScreen
+            title="Talks"
+            labelledBy="db-drawer-talks"
+            caption={
+                <>
+                    <b>{myCities}</b> {plural(myCities, "city", "cities")} · <b>{myUnits}</b> {plural(myUnits, "unit")}
+                </>
+            }
             onClose={onClose}
             foot={
-                <span className="block px-[22px] py-[11px] border-t border-hair font-mono text-[10px] tracking-[0.12em] text-faint text-center">
-                    The active powers contesting this match: human players and AI great powers
-                </span>
+                <p className="m-0 px-4 py-[10px] text-[11px] leading-[1.4] text-faint">
+                    The active powers contesting this match: human players and AI great powers.
+                </p>
             }
         >
-            <div className="flex flex-col gap-4 h-full px-6 py-5 overflow-hidden">
-                <div className="flex gap-[10px] flex-wrap">
-                    <Cell label="Powers Standing" value={aliveCount} />
-                    <Cell
-                        label="You Are At War With"
-                        value={atWar}
-                        valueClass={atWar ? "text-red" : undefined}
-                        led={atWar ? "db-led-live" : null}
-                    />
-                    <Cell
-                        label="Your Alliances"
-                        value={allied}
-                        valueClass={allied ? "text-[#5fa8ff]" : undefined}
-                        led={allied ? "db-led-sensor" : null}
-                    />
-                    <Cell label="Your Holdings" value={`${citiesOf(mySlot)} cities`} />
-                    <Cell label="Your Forces" value={`${forcesOf(mySlot)} units`} />
-                </div>
+            <div className="grid grid-cols-3 border-b border-line">
+                <Readout label="Powers Standing" value={aliveCount} />
+                <Readout label="At War With" value={atWar} tone={atWar ? "text-red" : undefined} />
+                <Readout label="Alliances" value={allied} tone={allied ? "text-ally" : undefined} />
+            </div>
 
+            {/* The war board holds four wars in view and scrolls the rest inside
+                itself, so a theatre at war everywhere never crowds the roster
+                below it down to a row. Each line is 18px with 7px between, so
+                93px is exactly four. */}
+            {wars.length > 0 && (
+                <section className="px-4 py-3 border-b border-line">
+                    <h4 className="db-sec m-0 mb-2">War Board</h4>
+                    <ul className="db-scroll m-0 p-0 list-none flex flex-col gap-[7px] max-h-[93px] overflow-y-auto">
+                        {wars.map(({a, b, mine}) => (
+                            <li
+                                key={`${a.slot}-${b.slot}`}
+                                className={cn(
+                                    "flex-none flex items-center gap-[8px] h-[18px] text-[12px]",
+                                    mine ? "text-text" : "text-dim",
+                                )}
+                            >
+                                <i className={cn("db-mark", mine && "war")} aria-hidden="true" />
+                                <Flag iso={a.iso} className="w-[18px] h-[12px] flex-none" />
+                                <span className="min-w-0 truncate">{a.name}</span>
+                                <Icon name="swords" size={12} className="flex-none text-faint" />
+                                <Flag iso={b.iso} className="w-[18px] h-[12px] flex-none" />
+                                <span className="min-w-0 truncate">{b.name}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
+
+            <div className="px-4 pt-3 pb-1">
                 <input
-                    className={cn(input(), "mb-[10px]")}
-                    placeholder="Search all powers by name…"
+                    className={cn(input(), "px-3 py-2 text-[12.5px]")}
+                    placeholder="Search powers by name"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    aria-label="Search all powers by name"
+                    aria-label="Search powers by name"
                 />
+            </div>
 
-                <div className="db-scroll flex-1 overflow-auto flex flex-col" role="table">
-                    <div
-                        className={cn(
-                            rowGrid,
-                            "sticky top-0 z-[1] bg-panel-solid border-b border-line font-mono text-[9px] tracking-[0.2em] uppercase text-faint",
-                        )}
-                        role="row"
-                    >
-                        <span className="text-right font-mono text-xs text-faint" role="columnheader">
-                            Rank
-                        </span>
-                        <span role="columnheader">Power</span>
-                        <span role="columnheader">Seat</span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
-                            Cities
-                        </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
-                            Forces
-                        </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
-                            GDP
-                        </span>
-                        <span role="columnheader">Standing</span>
-                        <span className="text-right" role="columnheader">
-                            Relations
-                        </span>
-                    </div>
-                    {shown.map((n) => {
-                        const isMe = n.slot === mySlot;
-                        const standing = rel(n); // "self" | "war" | "ally" | "peace"
-                        const war = standing === "war";
-                        const s = seat(n);
-                        return (
-                            <div
-                                key={n.slot}
-                                className={cn(rowGrid, !n.alive && "opacity-50", isMe && "bg-gold-soft")}
-                                role="row"
-                                aria-current={isMe ? "true" : undefined}
-                            >
-                                <span className="text-right font-mono text-xs text-faint" role="cell">
-                                    №{rankOf.get(n.slot)}
+            <ul className="m-0 p-0 list-none" aria-label="Powers">
+                {shown.map((n) => {
+                    const isMe = n.slot === mySlot;
+                    const standing = rel(n); // "self" | "war" | "ally" | "peace"
+                    const war = standing === "war";
+                    const s = seat(n);
+                    const cities = citiesOf(n.slot),
+                        units = forcesOf(n.slot);
+                    return (
+                        <li
+                            key={n.slot}
+                            className={cn(
+                                "flex flex-col gap-[7px] px-4 py-3 border-b border-line",
+                                !n.alive && "opacity-50",
+                                isMe && "bg-accent-soft",
+                            )}
+                        >
+                            <div className="flex items-center gap-[10px] min-w-0">
+                                <span
+                                    className="flex-none w-[26px] h-[17px] grid place-items-center overflow-hidden border [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
+                                    style={{borderColor: n.color || colorForSlot(n.slot)}}
+                                >
+                                    <Flag iso={n.iso} />
                                 </span>
-                                <span className="flex items-center gap-[11px] min-w-0" role="rowheader">
-                                    <span
-                                        className="flex-none w-[34px] h-[22px] grid place-items-center overflow-hidden border rounded-[3px] [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
-                                        style={{borderColor: n.color || colorForSlot(n.slot)}}
-                                    >
-                                        <Flag iso={n.iso} />
-                                    </span>
-                                    <b className="font-display font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">
-                                        {n.name}
-                                    </b>
+                                <b className="flex-1 min-w-0 font-semibold text-[13px] truncate">{n.name}</b>
+                                <span
+                                    className={cn("flex-none px-[8px] py-[2px] text-[10px] font-medium border", s.cls)}
+                                >
+                                    {s.label}
                                 </span>
-                                <span role="cell">
-                                    <span
-                                        className={cn(
-                                            "inline-block px-[10px] py-[3px] font-mono text-[10px] tracking-[0.5px] border border-line rounded-sm text-dim",
-                                            s.cls,
-                                        )}
-                                    >
-                                        {s.label}
-                                    </span>
+                                <span className="flex-none font-mono text-[10px] tabular-nums text-faint">
+                                    {rankOf.get(n.slot)}
                                 </span>
-                                <span className="text-right font-mono text-xs" role="cell">
-                                    {n.alive ? citiesOf(n.slot) : "—"}
-                                </span>
-                                <span className="text-right font-mono text-xs" role="cell">
-                                    {n.alive ? forcesOf(n.slot) : "—"}
-                                </span>
-                                <span className="text-right font-mono text-xs" role="cell">
-                                    {fmtGdp(n.gdp, 1)}
-                                </span>
-                                <span role="cell">
-                                    {isMe ? (
-                                        <Standing label="Home" />
-                                    ) : !n.alive ? (
-                                        <Standing label="Eliminated" />
-                                    ) : war ? (
-                                        <Standing label="At War" tone="text-red" led="db-led-live" />
-                                    ) : standing === "ally" ? (
-                                        <Standing label="Allied" tone="text-[#5fa8ff]" led="db-led-sensor" />
+                            </div>
+                            <div className="flex items-center gap-2 min-w-0">
+                                <Standing rel={!isMe && !n.alive ? "eliminated" : standing} />
+                                <span className="ml-auto text-[11px] text-faint whitespace-nowrap">
+                                    {n.alive ? (
+                                        <>
+                                            <Holding n={cities} one="city" many="cities" /> ·{" "}
+                                            <Holding n={units} one="unit" /> ·{" "}
+                                            <span className="font-mono tabular-nums text-dim">
+                                                {fmtGdp(gdpOf(world, n.slot))}
+                                            </span>
+                                        </>
                                     ) : (
-                                        <Standing label="At Peace" tone="text-good" led="db-led-ok" />
+                                        "—"
                                     )}
                                 </span>
-                                <span className="flex justify-end gap-[6px]" role="cell">
-                                    {isMe || !n.alive ? (
-                                        <span className="text-faint">—</span>
-                                    ) : war ? (
+                            </div>
+                            {!isMe && n.alive && (
+                                <div className="flex justify-end gap-[6px]">
+                                    {war ? (
                                         online ? (
                                             <span
-                                                className="font-mono text-[10px] text-faint"
-                                                title="Peace terms are single-player only for now"
+                                                className="text-[11px] text-faint"
+                                                title="Peace terms are single player only for now"
                                             >
-                                                Peace: solo only
+                                                Peace terms are single player only
                                             </span>
                                         ) : (
                                             <button
@@ -281,12 +276,12 @@ export default function DiplomacyScreen({world, api, mySlot, online, players, on
                                             </button>
                                         </>
                                     )}
-                                </span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        </ScreenFrame>
+                                </div>
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
+        </DrawerScreen>
     );
 }

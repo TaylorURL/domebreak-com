@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-        <meta content="#08090b" name="theme-color" />
+        <meta content="#000000" name="theme-color" />
 
         <title>DomeBreak: Real-Time Missile Defense on the World Map</title>
         <meta
@@ -30,7 +30,7 @@
         <meta property="og:image:height" content="630" />
         <meta
             property="og:image:alt"
-            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+            content="The DomeBreak wordmark and the line Global Missile Command beside the in-game command map of the United States"
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="DomeBreak: Real-Time Missile Defense on the World Map" />
@@ -41,7 +41,7 @@
         <meta name="twitter:image" content="https://domebreak.com/og.jpg" />
         <meta
             name="twitter:image:alt"
-            content="The DomeBreak command map: interceptor rings over North America with incoming missile tracks arcing in"
+            content="The DomeBreak wordmark and the line Global Missile Command beside the in-game command map of the United States"
         />
 
         <!-- Perf: warm up the connections the page reaches for. -->
@@ -52,14 +52,11 @@
             Every face is served from this origin. Loaded from Google Fonts they cost
             two cold connections and a stylesheet before the first character could be
             measured; served from here they are files the document asks for itself.
-            Inter and JetBrains Mono are variable, so one file each covers 400 through
-            700. Chakra Petch is static, so the display face is three files and only
-            the semibold — the weight the wordmark, headings and buttons set in — is
-            worth the preload.
+            Inter and JetBrains Mono are both variable, so one file each covers 400
+            through 700 and the page sets every word and every number in the two.
         -->
         <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/inter-latin.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/jetbrains-mono-latin.woff2" />
-        <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/chakra-petch-latin-600.woff2" />
         <style>
             @font-face {
                 font-family: "Inter";
@@ -81,45 +78,14 @@
                     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
                     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
             }
-            @font-face {
-                font-family: "Chakra Petch";
-                font-style: normal;
-                font-weight: 500;
-                font-display: swap;
-                src: url("/fonts/chakra-petch-latin-500.woff2") format("woff2");
-                unicode-range:
-                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-                    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-            }
-            @font-face {
-                font-family: "Chakra Petch";
-                font-style: normal;
-                font-weight: 600;
-                font-display: swap;
-                src: url("/fonts/chakra-petch-latin-600.woff2") format("woff2");
-                unicode-range:
-                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-                    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-            }
-            @font-face {
-                font-family: "Chakra Petch";
-                font-style: normal;
-                font-weight: 700;
-                font-display: swap;
-                src: url("/fonts/chakra-petch-latin-700.woff2") format("woff2");
-                unicode-range:
-                    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-                    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-            }
 
             /*
                 What the browser draws for the moment before the faces above
                 arrive. The overrides are measured rather than guessed: at 100px,
                 the same sample string sets 2743.51px wide in Inter against
-                2562.7px in Arial (107.06%), 3240px in JetBrains Mono against
-                3251.07px in Menlo (99.66%), and 2355.1px in Chakra Petch against
-                2362.21px in Arial (99.7%), and the ascent and descent are the
-                measured 97/24, 102/30 and 99.2/30.8 divided by that same factor.
+                2562.7px in Arial (107.06%) and 3240px in JetBrains Mono against
+                3251.07px in Menlo (99.66%), and the ascent and descent are the
+                measured 97/24 and 102/30 divided by that same factor.
                 Sized this way the fallback occupies the line the real face will,
                 so the swap changes the shapes and moves nothing.
             */
@@ -139,15 +105,6 @@
                 size-adjust: 99.66%;
                 ascent-override: 102.35%;
                 descent-override: 30.1%;
-                line-gap-override: 0%;
-            }
-            @font-face {
-                font-family: "Chakra Petch Fallback";
-                font-display: swap;
-                src: local("Arial");
-                size-adjust: 99.7%;
-                ascent-override: 99.5%;
-                descent-override: 30.89%;
                 line-gap-override: 0%;
             }
         </style>
@@ -201,7 +158,7 @@
 
         <style>
             html {
-                background: #08090b;
+                background: #000000;
             }
         </style>
         <script>
@@ -411,9 +368,12 @@
             // addressed elsewhere drops it here, while the parser is still inside
             // the body and nothing has been painted, rather than showing the
             // landing page for the moment before the bundle renders the route that
-            // was actually asked for.
+            // was actually asked for. #/ and #/home are the home page spelled out,
+            // the same call isHomeRoute makes in src/hooks/useHashRoute.js, so
+            // they keep it.
             (function () {
-                if (location.hash.slice(0, 2) !== "#/") return;
+                var hash = location.hash;
+                if (hash.slice(0, 2) !== "#/" || /^#\/(home\/?)?$/.test(hash)) return;
                 var painted = document.querySelector("[data-prerendered]");
                 if (painted) painted.remove();
             })();

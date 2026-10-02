@@ -31,19 +31,19 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                             <div
                                 className={cn(
                                     panel({frame: "glass"}),
-                                    "db-seam mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                                    "mx-auto w-full max-w-[560px] p-[26px] text-center sm:p-10",
                                 )}
                             >
-                                <span className="db-notch-sm mx-auto flex h-14 w-14 items-center justify-center border border-gold-line bg-gold-soft text-gold">
+                                <span className="mx-auto flex h-14 w-14 items-center justify-center border border-line text-text">
                                     {checking ? <Loader2 size={26} className="animate-spin" /> : <UserPlus size={26} />}
                                 </span>
 
                                 <div className="mt-6 flex justify-center">
-                                    <Eyebrow framed>{checking ? "Checking Access" : "Free · Account required"}</Eyebrow>
+                                    <Eyebrow>{checking ? "Checking access" : "Free · Account required"}</Eyebrow>
                                 </div>
 
-                                <h1 className="mt-4 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-bold uppercase leading-[1.05] text-text">
-                                    {checking ? "One Moment" : "Create a Free Account"}
+                                <h1 className="mt-4 text-[clamp(1.6rem,4vw,2.3rem)] font-semibold leading-[1.06] tracking-[-0.02em] text-text">
+                                    {checking ? "One moment" : "Download DomeBreak with a free account"}
                                 </h1>
                                 <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">
                                     {checking
@@ -62,7 +62,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                         </button>
                                         <button
                                             onClick={() => onSignIn("signin")}
-                                            className={cn(button({variant: "default", size: "md"}), "w-full max-w-xs")}
+                                            className={cn(button({variant: "default", size: "lg"}), "w-full max-w-xs")}
                                         >
                                             <LogIn size={15} />
                                             <span>Sign In</span>

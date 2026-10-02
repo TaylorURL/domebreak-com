@@ -3,6 +3,22 @@ import Flag from "../common/Flag.jsx";
 import {GREAT_POWERS} from "../../game/sim/newGame.js";
 import {button, card, chip, input, label, menuTitle, row} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+import {plural} from "../lib/format.js";
+
+// The "You" seat on the nation you will command: the accent's fill step, the
+// one blue that carries white ink.
+const YOU_TAG =
+    "flex-none min-w-[34px] text-center text-[10.5px] font-semibold px-2 py-[3px] rounded-none border border-accent-fill bg-accent-fill text-accent-ink";
+
+// How many cities a nation holds, said in words: the figure in mono and the
+// noun it counts in faint beside it, so a bare number never stands alone.
+function CityCount({n}) {
+    return (
+        <span className="flex-none text-xs text-faint whitespace-nowrap">
+            <span className="font-mono text-dim">{n}</span> {plural(n, "city", "cities")}
+        </span>
+    );
+}
 
 // Nation select: claim the ONE country you command. Rival powers (up to 8, chosen
 // on the rules step) are seeded as live AI nations elsewhere on the map, and every
@@ -30,14 +46,14 @@ export default function NewGame({data, onStart, onBack, settings}) {
     const sel = data?.countries.find((c) => c.iso === iso);
     const countryRow = (active) =>
         cn(
-            "flex items-center gap-2.5 px-2.5 py-2 rounded-sm border text-left text-text transition-colors duration-[var(--dur-fast)]",
+            "flex items-center gap-2.5 px-2.5 py-2 rounded-none border text-left text-text transition-colors duration-[var(--dur-fast)]",
             active
-                ? "border-gold-line bg-gold-soft text-gold"
-                : "border-transparent bg-transparent hover:border-line-soft hover:bg-[rgba(255,255,255,0.045)]",
+                ? "border-accent bg-accent-soft"
+                : "border-transparent bg-transparent hover:border-line hover:bg-[rgba(255,255,255,0.04)]",
         );
     return (
         <div className="absolute inset-0 z-10 grid place-items-center overflow-auto p-6">
-            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_130%_95%_at_50%_42%,transparent_42%,rgba(4,6,9,0.32)_76%,rgba(4,6,9,0.6)_100%)]" />
+            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_130%_95%_at_50%_42%,transparent_45%,rgba(0,0,0,0.85)_100%)]" />
             <div className={cn(card(), "db-newgame w-[min(460px,94vw)] text-left max-h-[90vh] overflow-auto")}>
                 <div className="db-card-head">
                     <div className={menuTitle({sm: true})}>New Game</div>
@@ -47,21 +63,16 @@ export default function NewGame({data, onStart, onBack, settings}) {
                     id="db-newgame-nation-label"
                     className={cn(label(), "flex flex-wrap items-center gap-x-2 gap-y-1.5")}
                 >
-                    <span>Choose Your Nation: Every Rival Power Is a Live AI</span>
+                    <span>Choose Your Nation</span>
                     {sel && (
-                        <span
-                            className={cn(
-                                chip({subtle: true}),
-                                "max-w-full inline-flex items-center gap-1.5 normal-case tracking-normal",
-                            )}
-                        >
+                        <span className={cn(chip({subtle: true}), "max-w-full inline-flex items-center gap-1.5")}>
                             <Flag iso={sel.iso} />
                             <span className="truncate">{sel.name}</span>
                         </span>
                     )}
                 </div>
                 <div
-                    className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded-sm p-1.5 bg-sunk"
+                    className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line p-1.5 bg-sunk"
                     role="list"
                     aria-labelledby="db-newgame-nation-label"
                 >
@@ -78,9 +89,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {sel.name}
                             </span>
-                            <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
-                                You
-                            </span>
+                            <span className={YOU_TAG}>You</span>
                         </button>
                     )}
                     {powers.map((c) => (
@@ -97,12 +106,8 @@ export default function NewGame({data, onStart, onBack, settings}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {c.name}
                             </span>
-                            <span className="font-mono text-xs text-dim">{c.count}</span>
-                            {iso === c.iso && (
-                                <span className="flex-none min-w-[34px] text-center font-display text-[10px] font-bold tracking-[1px] uppercase px-2 py-[3px] rounded-sm border border-gold bg-gold text-gold-contrast">
-                                    You
-                                </span>
-                            )}
+                            <CityCount n={c.count} />
+                            {iso === c.iso && <span className={YOU_TAG}>You</span>}
                         </button>
                     ))}
                 </div>
@@ -118,7 +123,7 @@ export default function NewGame({data, onStart, onBack, settings}) {
                 />
                 {searchList.length > 0 && (
                     <div
-                        className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line-soft rounded-sm p-1.5 bg-sunk"
+                        className="db-country-list flex flex-col gap-1 max-h-[34vh] overflow-auto mt-1.5 border border-line p-1.5 bg-sunk"
                         role="list"
                         style={{maxHeight: "18vh"}}
                     >
@@ -139,15 +144,16 @@ export default function NewGame({data, onStart, onBack, settings}) {
                                 <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                     {c.name}
                                 </span>
-                                <span className="font-mono text-xs text-dim">{c.count}</span>
+                                <CityCount n={c.count} />
                             </button>
                         ))}
                     </div>
                 )}
                 {sel && (
-                    <p className="mt-3.5 font-mono text-[11px] text-dim tracking-[0.02em]">
-                        Every rival power is a live AI · {settings?.speed ?? 1}&times; ·{" "}
-                        {(settings?.globe ?? true) ? "Globe" : "Flat"} view
+                    <p className="mt-3.5 text-[11px] text-dim">
+                        Every rival power is a live AI, at{" "}
+                        <span className="font-mono tabular-nums">{settings?.speed ?? 1}&times;</span> speed on the{" "}
+                        {(settings?.globe ?? true) ? "globe" : "flat"} view.
                     </p>
                 )}
                 <div className={cn(row(), "justify-end mt-[18px] pt-4 border-t border-hair")}>

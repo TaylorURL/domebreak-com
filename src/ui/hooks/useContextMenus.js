@@ -105,7 +105,7 @@ export function useContextMenus({
                 const graceActive = graceSec > 0 && (w.time ?? 0) < graceSec;
                 items.push({
                     label: graceActive
-                        ? `Declare War on ${nationName(c.slot)} (Grace)`
+                        ? `Declare War on ${nationName(c.slot)} · Grace Period`
                         : `Declare War on ${nationName(c.slot)}`,
                     danger: true,
                     disabled: graceActive,
@@ -138,7 +138,7 @@ export function useContextMenus({
             );
         if (mine)
             items.push({
-                label: UNITS[u.type].navalSpeed ? "Set Sail" : UNITS[u.type].landSpeed ? "March" : "Move (Relocate)",
+                label: UNITS[u.type].navalSpeed ? "Set Sail" : UNITS[u.type].landSpeed ? "March" : "Relocate",
                 onClick: () => {
                     setMoving(u.id);
                     setPlacing(null);
@@ -173,7 +173,7 @@ export function useContextMenus({
             for (const at of [...new Set(UNITS[u.type].wing)]) {
                 const stocked = hangarCount(w, myNation, u.id, at);
                 items.push({
-                    label: `Order ${labelOf(at, mySlot)} · ${stocked}/${hangarCapOf(u.type, at)} (${UNITS[at].cost} pts)`,
+                    label: `Order ${labelOf(at, mySlot)} · ${stocked}/${hangarCapOf(u.type, at)} · ${UNITS[at].cost} Pts`,
                     disabled: stocked >= hangarCapOf(u.type, at),
                     onClick: () => {
                         const r = api.queueAircraft(u.id, at);
@@ -211,11 +211,11 @@ export function useContextMenus({
                             );
                         },
                     });
-                if (!nearby.length) items.push({label: "No troops in lift range", disabled: true, onClick: () => {}});
+                if (!nearby.length) items.push({label: "No Troops in Lift Range", disabled: true, onClick: () => {}});
             }
             if (loaded)
                 items.push({
-                    label: `Disembark here (${loaded} aboard)`,
+                    label: `Disembark Here · ${loaded} Aboard`,
                     onClick: () => {
                         setDisembarkId(u.id);
                         setMoving(null);
@@ -227,7 +227,7 @@ export function useContextMenus({
         }
         if (mine)
             items.push({
-                label: `Dismantle (Sell +${Math.round(SCRAP_REFUND_FRAC * 100)}%)`,
+                label: `Dismantle · +${Math.round(SCRAP_REFUND_FRAC * 100)}% Refund`,
                 danger: true,
                 onClick: () => {
                     api.scrap(u.id);

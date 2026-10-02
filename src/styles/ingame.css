@@ -1,7 +1,8 @@
-/* Full-screen game screens: the ScreenFrame shell (.db-screen) that Production,
-   Battle Plan and Diplomacy render inside, the tab strip they share, the country
-   info popup and the war outcome card, plus the map popovers that read as HUD
-   instruments (the selection panel and the hover readouts).
+/* The drawer screens: the shared shell (.db-drawer-screen) that Build, Plan,
+   Talks, Nation, Goals and Log render inside the dock's drawer, the tab row
+   they share, the build tile, the key badge and the few controls the drawer
+   sets at a smaller size than the shared button family does. The modal shell
+   (.db-screen) that the country dossier floats in is here too.
 
    Imported by src/index.css, which owns the tokens, the shared chrome
    utilities and the shared keyframes these rules read. Anything added here
@@ -9,63 +10,53 @@
    utilities. */
 
 @layer vfx {
-    /* The ScreenFrame shell. The same tactical surface as .db-card one size up
-       again: the 8px corner cut, --panel-2 glass heavy enough to hold its own
-       over a live map, and a --line hairline. It floats inside a scrim rather
-       than filling the viewport, so the cut corners and the hairline read as a
-       frame instead of being sliced off by the screen edge.
-
-       A clipped surface paints nothing outside its own edge, so there is no
-       drop shadow here; the scrim behind it is what gives it depth. The
-       scanlines ride on the .db-scan utility the shell carries, which owns the
-       ::after, so nothing here may claim that pseudo-element. */
+    /* The modal shell. The heavier --panel-2 glass a dialog needs over a live
+       map, one hairline, square corners. The drawer is not a modal and does not
+       use this. */
     .db-screen {
         background: var(--panel-2);
         border: 1px solid var(--line);
-        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-        backdrop-filter: blur(14px) saturate(1.15);
+        backdrop-filter: blur(10px);
     }
 
-    /* The header strip's tab rule: 2px of amber across the title block, starting
-       where the corner cut lets the top edge begin. It is drawn from the title
-       block rather than the strip so it measures the title rather than the
-       whole width — the same instrument-label idea as .db-hud-panel's tab.
-       The offsets undo the strip's own padding (22px in, 16px down). */
-    .db-screen-titles::before {
-        content: "";
-        position: absolute;
-        top: -16px;
-        left: -14px;
-        right: -14px;
-        height: 2px;
-        background: var(--gold);
-        pointer-events: none;
+    /* The drawer screen fills the drawer the dock opens and scrolls inside it;
+       the header and the tab row hold their place while the body moves. */
+    .db-drawer-screen {
+        min-width: 0;
     }
 
-    /* Tab strip. Rule weight is the only thing that separates a resting tab from
-       the active one — the label never shifts, because the border is always
-       there and only its colour changes. The strip's own 1px --line rule runs
-       the full width behind them. */
+    /* The header's right-hand caption: a dim sentence with its figures in
+       mono, so a number in it lines up with every other number on screen. */
+    .db-cap b {
+        color: var(--text);
+        font: 600 12px var(--mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Tab row. The label never shifts: the rule under a tab is always there and
+       only its colour changes. The row wraps onto a second line rather than
+       running past the drawer's edge, so a screen carrying more tabs than the
+       drawer is wide still shows every one of them. */
     .db-tabs {
         display: flex;
-        align-items: stretch;
         flex-wrap: wrap;
+        gap: 0 2px;
+        padding: 8px 12px 0;
         border-bottom: 1px solid var(--line);
     }
 
     .db-tab {
-        font-family: var(--display);
+        flex: none;
+        padding: 8px 10px 10px;
+        font-family: var(--sans);
         font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+        font-weight: 500;
         white-space: nowrap;
         color: var(--dim);
         background: transparent;
         border: 0;
         border-bottom: 2px solid transparent;
         margin-bottom: -1px;
-        padding: 12px 18px;
         transition:
             color var(--dur-fast) var(--ease-out),
             border-color var(--dur-fast) var(--ease-out);
@@ -77,50 +68,84 @@
 
     .db-tab.active,
     .db-tab[aria-selected="true"] {
-        color: var(--gold);
-        border-bottom-color: var(--gold);
+        color: var(--text);
+        border-bottom-color: var(--accent);
+    }
+
+    /* A section heading inside a drawer body. */
+    .db-sec {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--dim);
+    }
+
+    /* The key badge: the hotkey that reaches a tile or a dock item, set in mono
+       at the size a corner can hold. */
+    .db-kbd {
+        display: inline-grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        border: 1px solid var(--line-2);
+        font: 500 10px var(--mono);
+        color: var(--faint);
+    }
+
+    /* A build tile. Selected takes the blue border and the accent wash;
+       locked drops to 40% and reads its requirement where the cost sits. */
+    .db-tile {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 112px;
+        padding: 10px 10px 9px;
+        text-align: left;
+        color: var(--text);
+        background: transparent;
+        border: 1px solid var(--line);
+        transition:
+            border-color var(--dur-fast) var(--ease-out),
+            background-color var(--dur-fast) var(--ease-out);
+    }
+
+    .db-tile:hover:not(:disabled) {
+        border-color: var(--line-2);
+    }
+
+    .db-tile.sel {
+        border-color: var(--accent);
+        background: var(--accent-soft);
+    }
+
+    .db-tile.locked {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* The log's 6px square marker: faint for a routine report, red for a war
+       event. */
+    .db-mark {
+        width: 6px;
+        height: 6px;
+        flex: none;
+        background: var(--faint);
+    }
+
+    .db-mark.war {
+        background: var(--red);
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .db-tab {
+        .db-tab,
+        .db-tile {
             transition: none;
         }
     }
 
-    [data-reduce-motion="true"] .db-tab {
+    [data-reduce-motion="true"] .db-tab,
+    [data-reduce-motion="true"] .db-tile {
         transition: none;
-    }
-
-    /* A wrapper carrying the brackets for a surface that has already spent both
-       of its own pseudo-elements — a .db-hud-panel cannot draw them itself,
-       because the panel's tab rule and scanlines are its ::before and ::after.
-       The bracket layer takes no pointer events, so the hover that closes the
-       arms in has to come from the wrapper. */
-    .db-bracket-host:hover .db-brackets,
-    .db-bracket-host:focus-within .db-brackets {
-        --db-bracket: 14px;
-    }
-
-    .db-bracket-host:hover .db-brackets::before,
-    .db-bracket-host:hover .db-brackets::after,
-    .db-bracket-host:focus-within .db-brackets::before,
-    .db-bracket-host:focus-within .db-brackets::after {
-        border-color: var(--gold);
-    }
-
-    /* The selection panel is a .db-hud-panel, so its header strip would other-
-       wise read as the shared mono micro-caps. The thing in that strip is the
-       selected unit's name, which belongs in the display face at a size a
-       glance can catch — this overrides `.db-hud-panel > header` in
-       src/index.css for that one panel, and keeps the hairline that closes the
-       strip. The doubled class is load-bearing: src/index.css is imported after
-       this file, so a single-class selector at equal specificity would lose. */
-    .db-selpanel.db-hud-panel > header {
-        font-family: var(--display);
-        font-size: 13.5px;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        text-transform: none;
-        color: var(--text);
     }
 }

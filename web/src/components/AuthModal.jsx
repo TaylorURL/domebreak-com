@@ -92,24 +92,24 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                         animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(8px) scale(0.98)"}}
                         transition={{duration: 0.22, ease: [0.23, 1, 0.32, 1]}}
-                        className={cn(panel(), "db-seam w-[min(420px,94vw)] p-7")}
+                        className={cn(panel(), "w-[min(420px,94vw)] p-7")}
                     >
                         <button
                             onClick={onClose}
                             aria-label="Close"
-                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center db-notch-sm border border-line text-dim transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue hover:text-text active:scale-95"
+                            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center border border-line text-dim transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:border-line-2 hover:text-text"
                         >
                             <X size={15} />
                         </button>
 
-                        <div className="flex items-center gap-2 text-gold">
+                        <div className="flex items-center gap-2 text-dim">
                             <GameIcon name="dome" size={22} />
-                            <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.28em] text-faint">
-                                <span className="db-led db-led-warn" />
+                            <span className="flex items-center gap-2 text-[12px] font-medium text-faint">
+                                <span className="db-led db-led-accent" />
                                 {signup ? "Create account" : "Sign in"}
                             </span>
                         </div>
-                        <h2 className="mt-4 font-display text-[22px] font-bold uppercase tracking-[0.04em] text-text">
+                        <h2 className="mt-4 text-[22px] font-semibold tracking-[-0.01em] text-text">
                             {signup ? "Create your account" : "Sign in"}
                         </h2>
                         <p className="mt-2 text-[13px] leading-relaxed text-dim">
@@ -174,7 +174,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                             </div>
 
                             <div className="min-h-[16px]">
-                                {status === "error" && <p className="font-mono text-[11.5px] text-danger">{error}</p>}
+                                {status === "error" && <p className="text-[12.5px] text-danger">{error}</p>}
                             </div>
 
                             <button
@@ -202,7 +202,7 @@ export default function AuthModal({open, onClose, initialMode = "signin"}) {
                                     setStatus("idle");
                                     setError("");
                                 }}
-                                className="font-mono text-[12px] text-dim transition-colors hover:text-text"
+                                className="text-[12.5px] text-dim transition-colors hover:text-text"
                             >
                                 {signup ? "Already have an account? Sign in" : "New here? Create an account"}
                             </button>

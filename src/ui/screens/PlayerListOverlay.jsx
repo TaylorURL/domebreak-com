@@ -1,7 +1,7 @@
 import Flag from "../common/Flag.jsx";
-import {colorForSlot} from "../../game/data/constants.js";
 import {overlay, card, menuTitle, iconButton} from "../lib/variants.js";
 import Icon from "../common/Icon.jsx";
+import Standing from "./Standing.jsx";
 import {cn} from "../lib/cn.js";
 import {fmtGdp, fmtPop} from "../lib/format.js";
 import {useRoster} from "../lib/roster.js";
@@ -15,6 +15,10 @@ import {gdpOf, populationOf, populationTrendOf} from "../../game/engine.js";
 // engine queries only; never mutates. In multiplayer the netClient's roster
 // supplies each human's username; AI seats stay labelled AI in both single-
 // and multi-player.
+//
+// The Power column takes whatever the fixed figure columns leave, and the
+// Commander column only what its seat tag and name need, so a full nation
+// name fits beside its flag.
 export default function PlayerListOverlay({world, mySlot, players, onOpenCountry, onClose}) {
     const {usernameOf, isHuman} = useRoster(players);
 
@@ -35,29 +39,33 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
             b.alive - a.alive || citiesOf(b.slot) - citiesOf(a.slot) || gdpOf(world, b.slot) - gdpOf(world, a.slot),
     );
 
+    // An eliminated power is out of the war whatever it was to you, so it says
+    // that rather than its last standing.
     const relOf = (n) => {
         if (n.slot === mySlot) return "self";
+        if (!n.alive) return "eliminated";
         const r = me?.relations[n.slot];
         return r === "war" ? "war" : r === "ally" ? "ally" : "peace";
     };
+    // The seat tag says who commands a power; the name beside it is only for a
+    // human other than you, since the tag already reads "You" on your own row.
     const seatOf = (n) => {
-        if (n.slot === mySlot) return {label: "You", cls: "text-gold-contrast bg-gold border-gold"};
-        if (isHuman(n.slot)) return {label: "Player", cls: "text-[var(--ally)] border-[rgba(95,168,255,0.45)]"};
+        if (n.slot === mySlot) return {label: "You", cls: "bg-accent-fill border-accent-fill text-accent-ink"};
+        if (isHuman(n.slot)) return {label: "Player", cls: "text-text border-line-2"};
         return {label: "AI", cls: ""};
     };
     const commanderOf = (n) => {
-        if (n.slot === mySlot) return "You";
-        if (isHuman(n.slot)) return usernameOf.get(n.slot) || "Commander";
+        if (n.slot !== mySlot && isHuman(n.slot)) return usernameOf.get(n.slot) || "Commander";
         return null;
     };
 
     const rowGrid =
-        "grid grid-cols-[36px_minmax(180px,2fr)_minmax(140px,1.2fr)_64px_64px_72px_78px_92px] items-center gap-3 px-[14px] py-[10px] border-b border-hair";
+        "grid grid-cols-[28px_minmax(200px,1fr)_minmax(96px,max-content)_56px_60px_76px_76px_96px] items-center gap-3 px-[14px] py-[10px] border-b border-hair";
 
     return (
         <div className={overlay({placement: "center"})} onClick={onClose}>
             <div
-                className={cn(card(), "db-card-scroll w-[min(900px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
+                className={cn(card(), "db-card-scroll w-[min(960px,96vw)] max-h-[86vh] overflow-y-auto text-left")}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="db-players-title"
@@ -68,8 +76,8 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                         <div className={menuTitle({sm: true})} id="db-players-title">
                             Players
                         </div>
-                        <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-dim mt-1.5">
-                            Every active power in this match · release Tab to close
+                        <div className="text-[12px] text-dim mt-1.5">
+                            Every active power in this match. Release Tab to close.
                         </div>
                     </div>
                     <button
@@ -85,25 +93,25 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                     <div
                         className={cn(
                             rowGrid,
-                            "sticky top-0 z-[1] bg-panel-solid border-b border-line font-mono text-[10px] tracking-[0.22em] uppercase text-faint",
+                            "sticky top-0 z-[1] bg-panel-solid border-b border-line text-[11px] font-medium text-faint",
                         )}
                         role="row"
                     >
-                        <span className="text-right font-mono text-xs text-faint" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             #
                         </span>
                         <span role="columnheader">Power</span>
                         <span role="columnheader">Commander</span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Cities
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Forces
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             Pop
                         </span>
-                        <span className="text-right font-mono text-xs" role="columnheader">
+                        <span className="text-right" role="columnheader">
                             GDP
                         </span>
                         <span role="columnheader">Standing</span>
@@ -121,7 +129,7 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                 className={cn(
                                     rowGrid,
                                     !n.alive && "opacity-50",
-                                    isMe && "bg-gold-soft",
+                                    isMe && "bg-accent-soft",
                                     open && "cursor-pointer hover:bg-[rgba(255,255,255,0.03)]",
                                 )}
                                 role={open ? "button" : "row"}
@@ -144,20 +152,17 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                     {i + 1}
                                 </span>
                                 <span className="flex items-center gap-[11px] min-w-0" role="rowheader">
-                                    <span
-                                        className="flex-none w-[30px] h-[20px] grid place-items-center overflow-hidden border rounded-[3px] [&>*]:w-full [&>*]:h-full [&>*]:object-cover"
-                                        style={{borderColor: n.color || colorForSlot(n.slot)}}
-                                    >
+                                    <span className="flex-none w-[30px] h-[20px] grid place-items-center overflow-hidden border border-line [&>*]:w-full [&>*]:h-full [&>*]:object-cover">
                                         <Flag iso={n.iso} />
                                     </span>
-                                    <b className="font-display font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <b className="font-semibold text-[13px] whitespace-nowrap overflow-hidden text-ellipsis">
                                         {n.name}
                                     </b>
                                 </span>
                                 <span className="flex items-center gap-[8px] min-w-0" role="cell">
                                     <span
                                         className={cn(
-                                            "inline-block px-[8px] py-[2px] font-mono text-[9.5px] tracking-[0.5px] border border-line rounded-full text-dim whitespace-nowrap",
+                                            "inline-block px-[8px] py-[2px] text-[10.5px] font-medium border border-line rounded-none text-dim whitespace-nowrap",
                                             s.cls,
                                         )}
                                     >
@@ -189,20 +194,10 @@ export default function PlayerListOverlay({world, mySlot, players, onOpenCountry
                                     )}
                                 </span>
                                 <span className="text-right font-mono text-xs" role="cell">
-                                    {n.alive ? fmtGdp(gdpOf(world, n.slot), 1) : "—"}
+                                    {n.alive ? fmtGdp(gdpOf(world, n.slot)) : "—"}
                                 </span>
                                 <span role="cell">
-                                    {isMe ? (
-                                        <span className="font-mono text-[11px] text-dim">Home</span>
-                                    ) : !n.alive ? (
-                                        <span className="font-mono text-[11px] text-dim">Eliminated</span>
-                                    ) : r === "war" ? (
-                                        <span className="font-mono text-[11px] text-red">At War</span>
-                                    ) : r === "ally" ? (
-                                        <span className="font-mono text-[11px] text-[var(--ally)]">Allied</span>
-                                    ) : (
-                                        <span className="font-mono text-[11px] text-good">At Peace</span>
-                                    )}
+                                    <Standing rel={r} />
                                 </span>
                             </div>
                         );

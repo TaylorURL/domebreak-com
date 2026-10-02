@@ -1,12 +1,16 @@
 // The stacked global keydown effects LiveGame owns: Escape's cascade of "close whatever's
-// open" handling, the command-screen hotkeys (Production / Diplomacy / Research), the
-// controls-reference toggle, game-speed hotkeys, and keyboard zoom. Camera pan (WASD) is
-// its own hook (usePanControls); it has enough private state (held-key set, ease-segment
-// timer) to stay separate.
+// open" handling, the dock hotkeys that toggle each command drawer, the controls-reference
+// toggle, the hotbar placement keys, game-speed hotkeys, and keyboard zoom. Camera pan
+// (WASD) is its own hook (usePanControls); it has enough private state (held-key set,
+// ease-segment timer) to stay separate.
 import {isTyping, keyToken} from "../../game/platform/keybindings.js";
 import {GAME_SPEEDS} from "../../game/data/constants.js";
 import {clamp} from "../../lib/math.js";
 import {useWindowEvent} from "../../lib/hooks/useWindowEvent.js";
+
+// The six dock items, in dock order. The binding id and the drawer id are the
+// same token, so one lookup covers both.
+export const DOCK_ACTIONS = ["production", "battle", "diplomacy", "nation", "goals", "log"];
 
 export function useKeyboardControls({
     menu,
@@ -27,7 +31,12 @@ export function useKeyboardControls({
     setPlayerListOpen,
     countryPopupSlot,
     setCountryPopupSlot,
+    selUnit,
+    setSelUnit,
+    selCity,
+    setSelCity,
     onPause,
+    onHotbar,
     overlayOpen,
     w,
     api,
@@ -37,18 +46,27 @@ export function useKeyboardControls({
 }) {
     useWindowEvent("keydown", (e) => {
         if (e.key !== "Escape") return;
+        // A selection only counts while it is on screen: a unit that has died
+        // since it was picked has taken its card with it, and clearing its stale
+        // id would spend a press on nothing the player can see.
+        const selected =
+            (selUnit != null && w.units.some((u) => u.id === selUnit)) ||
+            (selCity != null && w.cities.some((c) => c.id === selCity));
         if (menu) setMenu(null);
         else if (disembarkId) setDisembarkId(null);
         else if (moving) setMoving(null);
         else if (following) setFollowing?.(null);
         else if (placing) setPlacing(null);
         else if (attackMode) setAttackMode(false);
-        // An open command screen (Production / Research / Diplomacy) closes on
-        // Escape before Escape falls through to the pause menu; the Tab
-        // scoreboard and the country dossier popup close ahead of them.
+        // The dossier popup and the Tab scoreboard sit on top of the map, so they
+        // close first; the selection card and its ring go next, then the open
+        // drawer, and only an empty screen lets Escape through to the pause menu.
         else if (countryPopupSlot != null) setCountryPopupSlot?.(null);
         else if (playerListOpen) setPlayerListOpen(false);
-        else if (panel) setPanel(null);
+        else if (selected) {
+            setSelUnit?.(null);
+            setSelCity?.(null);
+        } else if (panel) setPanel(null);
         else onPause?.();
     });
 
@@ -74,9 +92,9 @@ export function useKeyboardControls({
     // release so the scoreboard never lingers.
     useWindowEvent("blur", () => setPlayerListOpen(false));
 
-    // Command-screen hotkeys: toggle the Production and Diplomacy screens
-    // open/closed (Escape also closes them). Bindings are configurable in Settings;
-    // defaults are E / R.
+    // Dock hotkeys: each one toggles its drawer open or closed (Escape also closes
+    // the open one). Bindings are configurable in Settings; defaults B / P / T /
+    // N / G / L, matching the key badge on each dock item.
     useWindowEvent("keydown", (e) => {
         if (
             overlayOpen ||
@@ -90,7 +108,7 @@ export function useKeyboardControls({
         )
             return;
         const code = keyToken(e);
-        const target = code === K.production ? "production" : code === K.diplomacy ? "diplomacy" : null;
+        const target = DOCK_ACTIONS.find((id) => K[id] === code);
         if (!target) return;
         e.preventDefault();
         setPanel((p) => (p === target ? null : target));
@@ -115,16 +133,35 @@ export function useKeyboardControls({
         }
     });
 
-    // Game speed hotkeys, RTS-style: pause toggle + speed up/down step the speed
-    // (bindings configurable in Settings; defaults Space / = / −), and the fixed
-    // 1–5 number keys jump straight to a speed level.
+    // Hotbar placement: the fixed 1-8 keys arm the unit sitting in that command-deck
+    // slot, the same path clicking the slot or its Build tile takes.
+    useWindowEvent("keydown", (e) => {
+        if (
+            overlayOpen ||
+            playerListOpen ||
+            countryPopupSlot != null ||
+            w.over ||
+            e.metaKey ||
+            e.ctrlKey ||
+            e.altKey ||
+            isTyping(e.target)
+        )
+            return;
+        const slot = /^(?:Digit|Numpad)([1-8])$/.exec(keyToken(e));
+        if (!slot) return;
+        e.preventDefault();
+        onHotbar?.(+slot[1] - 1);
+    });
+
+    // Game speed hotkeys, RTS-style: the pause toggle and speed up/down step the
+    // speed (bindings configurable in Settings; defaults Space / = / −). The speed
+    // segment control in the status strip sets a level directly.
     const nearest = () =>
         GAME_SPEEDS.reduce((b, s, i) => (Math.abs(s - w.speed) < Math.abs(GAME_SPEEDS[b] - w.speed) ? i : b), 0);
     const stepTo = (i) => api.setSpeed(GAME_SPEEDS[clamp(i, 0, GAME_SPEEDS.length - 1)]);
     useWindowEvent("keydown", (e) => {
         if (overlayOpen || w.over || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
         const code = keyToken(e);
-        const lvl = /^(?:Digit|Numpad)([1-5])$/.exec(code);
         if (code === K.pause) {
             e.preventDefault();
             w.paused ? api.play() : api.pause();
@@ -134,9 +171,6 @@ export function useKeyboardControls({
         } else if (code === K.speedDown) {
             e.preventDefault();
             stepTo(nearest() - 1);
-        } else if (lvl) {
-            e.preventDefault();
-            stepTo(+lvl[1] - 1);
         }
     });
 

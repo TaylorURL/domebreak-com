@@ -3,6 +3,7 @@ import Flag from "../common/Flag.jsx";
 import {GREAT_POWERS} from "../../game/sim/newGame.js";
 import {chip, input} from "../lib/variants.js";
 import {cn} from "../lib/cn.js";
+import {plural} from "../lib/format.js";
 
 // Multi-select for pinning the exact nations the AI will field. Empty selection =
 // fully random (buildSetup fills the roster from the power pool). Picks here are
@@ -39,7 +40,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
     // A row on the dark card: the hover wash lifts off the surface rather than
     // sinking into it, and a hairline appears where the pointer rests.
     const pickRow =
-        "flex items-center gap-2.5 px-2.5 py-2 rounded-sm border border-transparent bg-transparent transition-colors duration-[var(--dur-fast)] hover:border-line-soft hover:bg-[rgba(255,255,255,0.045)] text-left text-text";
+        "flex items-center gap-2.5 px-2.5 py-2 rounded-none border border-transparent bg-transparent transition-colors duration-[var(--dur-fast)] hover:border-line hover:bg-[rgba(255,255,255,0.04)] text-left text-text";
     return (
         <div className="flex flex-col gap-2.5">
             {selected.length > 0 ? (
@@ -51,7 +52,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                             role="listitem"
                             className={cn(
                                 chip({subtle: true}),
-                                "inline-flex items-center gap-1.5 normal-case tracking-normal hover:text-text hover:border-line",
+                                "inline-flex items-center gap-1.5 hover:text-text hover:border-line-2",
                             )}
                             onClick={() => toggle(iso)}
                             aria-label={`Remove ${nameOf(iso)}`}
@@ -75,7 +76,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                         <button
                             key={c.iso}
                             type="button"
-                            className="inline-flex items-center gap-1.5 font-display text-[11px] font-semibold tracking-[0.5px] text-dim border border-line-soft rounded-sm px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-gold hover:border-gold-line"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-dim border border-line rounded-none px-2 py-1 transition-colors duration-[var(--dur-fast)] hover:text-text hover:border-line-2"
                             onClick={() => toggle(c.iso)}
                             aria-label={`Pin ${c.name}`}
                         >
@@ -97,7 +98,7 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
             />
             {searchList.length > 0 && (
                 <div
-                    className="db-country-list flex flex-col gap-1 overflow-auto border border-line-soft rounded-sm p-1.5 bg-sunk"
+                    className="db-country-list flex flex-col gap-1 overflow-auto border border-line p-1.5 bg-sunk"
                     role="list"
                     style={{maxHeight: "20vh"}}
                 >
@@ -118,7 +119,11 @@ export default function AiNationPicker({data, selected, excludeIso, onChange}) {
                             <span className="flex-1 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
                                 {c.name}
                             </span>
-                            <span className="font-mono text-xs text-dim">{c.count}</span>
+                            {/* The city count in words, as NewGame's list sets it. */}
+                            <span className="flex-none text-xs text-faint whitespace-nowrap">
+                                <span className="font-mono text-dim">{c.count}</span>{" "}
+                                {plural(c.count, "city", "cities")}
+                            </span>
                         </button>
                     ))}
                 </div>

@@ -35,24 +35,21 @@ export default function StartMenu({
         // Command rail: all menu chrome lives in a slim left-anchored console so the
         // live attract war owns the center of the globe, uncovered.
         <div className="absolute inset-0 z-10 block overflow-hidden p-0">
-            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(4,6,9,0.42)_82%,rgba(4,6,9,0.72)_100%)]" />
+            <div className="absolute inset-0 -z-1 bg-[radial-gradient(ellipse_120%_100%_at_66%_46%,transparent_46%,rgba(0,0,0,0.5)_82%,rgba(0,0,0,0.8)_100%)]" />
             <aside
                 className="absolute top-0 left-0 bottom-0 w-96 max-w-[84vw] flex flex-col pt-[46px] pr-[46px] pb-[26px] pl-10 text-left pointer-events-none animate-[dbRailIn_520ms_var(--ease-out-db)_both] motion-reduce:animate-none
-                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(7,9,13,0.82)_0%,rgba(7,9,13,0.58)_52%,rgba(7,9,13,0)_100%)] before:backdrop-blur-[9px] before:[backdrop-filter:blur(9px)_saturate(1.1)] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]
-                after:content-[''] after:absolute after:top-5 after:left-5 after:w-4 after:h-4 after:border-t after:border-l after:border-line-soft"
+                before:content-[''] before:absolute before:inset-0 before:-z-1 before:bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.64)_52%,rgba(0,0,0,0)_100%)] before:backdrop-blur-[9px] before:[mask-image:linear-gradient(90deg,#000_58%,transparent_100%)]"
             >
                 <div className="mb-[34px]">
-                    <div className="flex items-center gap-[7px] mb-4 font-mono text-[10px] tracking-[2.5px] uppercase text-faint">
-                        <span className="db-led db-led-live" />
+                    <div className="flex items-center gap-2 mb-4 text-[11px] font-medium text-faint">
+                        <span className="db-led db-led-ok" />
                         System Online
                     </div>
-                    <h1 className="font-display font-bold text-[46px] tracking-[0.09em] leading-[44px] text-dim">
+                    <h1 className="font-semibold text-[46px] tracking-[0.08em] leading-[44px] text-dim">
                         DOME
-                        <span className="db-title-glow block text-text">BREAK</span>
+                        <span className="block text-text">BREAK</span>
                     </h1>
-                    <p className="font-display font-semibold text-dim tracking-[0.12em] uppercase text-xs mt-3 mb-0">
-                        Global Missile Command
-                    </p>
+                    <p className="text-dim text-[13px] mt-3 mb-0">Global missile command</p>
                 </div>
                 <nav className="flex flex-col gap-[9px] w-full mx-0 mb-[22px] pointer-events-auto">
                     {updateAvailable && (
@@ -92,7 +89,7 @@ export default function StartMenu({
                                 Play
                             </button>
                             <div
-                                className="flex items-center gap-[7px] px-1 py-0.5 font-mono text-[10px] tracking-[1.5px] uppercase text-faint"
+                                className="flex items-center gap-2 px-1 py-0.5 text-[11px] font-medium text-faint"
                                 aria-label={
                                     onlineCount != null
                                         ? `${onlineCount} commanders online`
@@ -100,7 +97,13 @@ export default function StartMenu({
                                 }
                             >
                                 <span className={cn("db-led", onlineCount != null ? "db-led-ok" : "db-led-warn")} />
-                                {onlineCount != null ? `${onlineCount} Online` : "Connecting…"}
+                                {onlineCount != null ? (
+                                    <span>
+                                        <span className="font-mono tabular-nums">{onlineCount}</span> Online
+                                    </span>
+                                ) : (
+                                    "Connecting…"
+                                )}
                             </div>
                             <button
                                 className={cn(menuButton({variant: "back"}), "text-left")}
@@ -136,55 +139,53 @@ export default function StartMenu({
                         </>
                     )}
                 </nav>
-                <div className="db-notch-sm db-scan relative w-full m-0 pointer-events-auto px-4 py-3 border border-line-soft bg-panel text-left">
+                <div className="relative w-full m-0 pointer-events-auto px-4 py-3 border border-line bg-panel-2 text-left">
                     <div className="flex items-center justify-between gap-2">
-                        <span className="font-display font-bold text-[13px] tracking-[0.5px] text-text">
-                            {profile?.username || "—"}
-                        </span>
+                        <span className="font-semibold text-[13px] text-text">{profile?.username || "—"}</span>
                         <button
-                            className="font-display text-[10px] font-semibold tracking-[1px] uppercase text-faint bg-none border border-line rounded-sm px-2 py-[3px] hover:text-danger hover:border-danger"
+                            className="text-[11px] font-medium text-faint bg-transparent border border-line rounded-none px-2 py-[3px] transition-colors hover:text-danger hover:border-danger"
                             onClick={onSignOut}
                             aria-label="Sign out of commander account"
                         >
                             Sign Out
                         </button>
                     </div>
-                    <div className="text-faint text-[11px] tracking-[0.3px] mt-1">
+                    <div className="text-faint text-[11px] mt-1">
                         {profile ? `Commander since ${since || "—"}` : "—"}
                     </div>
                     <div
-                        className="flex flex-wrap gap-x-2.5 gap-y-1 mt-2 font-mono text-[11px] text-dim"
+                        className="flex flex-wrap gap-x-2.5 gap-y-1 mt-2 text-[11px] text-dim [&_b]:font-mono [&_b]:tabular-nums [&_b]:font-medium [&_b]:text-text"
                         role="group"
                         aria-label="Career record"
                     >
                         <span title="Wins" aria-label={stats ? `${stats.wins} wins` : "Wins unavailable"}>
-                            {stats ? `${stats.wins}W` : "—"}
+                            {stats ? <b>{stats.wins}W</b> : "—"}
                         </span>
                         <span title="Losses" aria-label={stats ? `${stats.losses} losses` : "Losses unavailable"}>
-                            {stats ? `${stats.losses}L` : "—"}
+                            {stats ? <b>{stats.losses}L</b> : "—"}
                         </span>
                         <span
                             title="Total matches played"
                             aria-label={stats ? `${total} matches played` : "Matches unavailable"}
                         >
-                            {stats ? `${total} Matches` : "—"}
+                            {stats ? <b>{total}</b> : "—"} Matches
                         </span>
                         <span
                             title="Win rate"
                             aria-label={stats ? `${winRate} percent win rate` : "Win rate unavailable"}
                         >
-                            {stats ? `${winRate}% Win Rate` : "—"}
+                            {stats ? <b>{winRate}%</b> : "—"} Win Rate
                         </span>
                         <span
                             title="Total time in command"
                             aria-label={hours != null ? `${hours} hours playtime` : "Playtime unavailable"}
                         >
-                            {hours != null ? `${hours}h Playtime` : "—"}
+                            {hours != null ? <b>{hours}h</b> : "—"} Playtime
                         </span>
                     </div>
                 </div>
-                <div className="mt-auto mb-0 flex items-center gap-3 font-mono text-[10px] tracking-[1.5px] uppercase pointer-events-auto text-faint">
-                    <span>v{__APP_VERSION__}</span>
+                <div className="mt-auto mb-0 flex items-center gap-3 text-[11px] pointer-events-auto text-faint">
+                    <span className="font-mono tabular-nums">v{__APP_VERSION__}</span>
                     <a
                         href={WEBSITE_URL}
                         target="_blank"

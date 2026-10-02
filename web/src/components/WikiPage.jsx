@@ -19,20 +19,16 @@ function share(value, max) {
 // the roster. Mono number, micro-label, ticks a glance can count.
 function StatTile({label, value, unit, pct}) {
     return (
-        <div className="db-notch-sm flex flex-col gap-1 border border-line bg-sunk px-3 py-2">
-            <span className="font-display text-[9px] font-semibold uppercase tracking-[0.22em] text-faint">
-                {label}
-            </span>
+        <div className="flex flex-col gap-1 border border-line bg-sunk px-3 py-2">
+            <span className="text-[11px] text-faint">{label}</span>
             <span className="font-mono text-[15px] leading-none text-text tabular-nums">
                 {value}
-                {unit && (
-                    <span className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">{unit}</span>
-                )}
+                {unit && <span className="ml-1 font-mono text-[10.5px] text-faint">{unit}</span>}
             </span>
             {/* The number above carries the value; the meter is the same fact in
                 a shape, so it is not read out twice. */}
             <span aria-hidden className="db-seg mt-1 block h-1.5 w-full bg-line-soft">
-                <span className="block h-full bg-gold" style={{width: `${pct}%`}} />
+                <span className="block h-full bg-accent" style={{width: `${pct}%`}} />
             </span>
         </div>
     );
@@ -42,28 +38,21 @@ function StatTile({label, value, unit, pct}) {
 function StatRow({k, v}) {
     return (
         <div className="flex items-baseline justify-between gap-4 border-t border-hair py-2 first:border-t-0">
-            <span className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-faint">{k}</span>
+            <span className="text-[12.5px] text-faint">{k}</span>
             <span className="text-right font-mono text-[13px] text-text tabular-nums">{v}</span>
         </div>
     );
 }
 
 // One filter in the rail. The label never moves between states: the resting
-// hairline under the strip and the active 2px amber rule are both drawn over the
-// tab rather than added to its box.
+// hairline under the strip and the active 2px accent rule sit on the same line,
+// which is what .db-tab's negative margin buys (web/src/styles/pages.css). The
+// tab has no side padding, so the first label starts on the content's left edge
+// and lines up with the headings below; the rail's gap spaces the rest.
 function FilterTab({active, onClick, children}) {
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            aria-pressed={active}
-            className={cn(
-                "relative shrink-0 cursor-pointer px-[18px] py-3 font-display text-[12px] font-semibold uppercase tracking-[0.12em] transition-colors duration-[var(--dur-fast)] ease-out-db",
-                active ? "db-notch-sm bg-gold-soft text-gold" : "text-dim hover:text-text",
-            )}
-        >
+        <button type="button" onClick={onClick} aria-pressed={active} className="db-tab py-3 text-[13px]">
             {children}
-            {active && <span aria-hidden className="absolute inset-x-0 bottom-0 h-0.5 bg-gold" />}
         </button>
     );
 }
@@ -73,18 +62,16 @@ function UnitCard({unit, categoryLabel}) {
         <article
             className={cn(
                 panel(),
-                "flex h-full flex-col bg-bg-2 p-6 transition-colors duration-[var(--dur)] hover:border-gold-line",
+                "flex h-full flex-col bg-bg-2 p-6 transition-colors duration-[var(--dur)] hover:border-line-2",
             )}
         >
             <header className="flex items-start gap-4">
-                <span className="db-notch-sm flex h-14 w-14 shrink-0 items-center justify-center border border-gold-line bg-gold-soft text-gold">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center border border-line text-dim">
                     <GameIcon name={unit.icon} size={30} />
                 </span>
                 <div className="min-w-0 flex-1">
-                    <h3 className="font-display text-[15px] font-bold uppercase tracking-[0.06em] text-text">
-                        {unit.label}
-                    </h3>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
+                    <h3 className="text-[16px] font-semibold text-text">{unit.label}</h3>
+                    <p className="mt-1 text-[12px] text-faint">
                         {categoryLabel}
                         {unit.maxCount === 1 && <span className="ml-2 text-danger">Unique</span>}
                     </p>
@@ -121,18 +108,14 @@ function UnitCard({unit, categoryLabel}) {
                 <div className="mt-5 flex flex-col gap-2 border-t border-hair pt-4">
                     {unit.deployedFrom && (
                         <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-faint">
-                                Deployed from
-                            </span>
-                            <span className="text-right font-mono text-[11.5px] text-text">{unit.deployedFrom}</span>
+                            <span className="text-[12px] text-faint">Deployed from</span>
+                            <span className="text-right text-[12.5px] text-text">{unit.deployedFrom}</span>
                         </div>
                     )}
                     {unit.requiresUnit && (
                         <div className="flex items-baseline justify-between gap-3">
-                            <span className="font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-faint">
-                                Requires
-                            </span>
-                            <span className="text-right font-mono text-[11.5px] text-text">{unit.requiresUnit}</span>
+                            <span className="text-[12px] text-faint">Requires</span>
+                            <span className="text-right text-[12.5px] text-text">{unit.requiresUnit}</span>
                         </div>
                     )}
                 </div>
@@ -184,8 +167,8 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                     <div aria-hidden className="pointer-events-none absolute inset-0 db-vignette" />
                     <div className="relative mx-auto max-w-[1400px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow framed>Field Manual</Eyebrow>
-                            <h1 className="mt-5 max-w-4xl font-display text-[clamp(2rem,5vw,3.6rem)] font-bold uppercase leading-[1.02] text-text">
+                            <Eyebrow>Field manual</Eyebrow>
+                            <h1 className="mt-5 max-w-4xl text-[clamp(2rem,5vw,3.6rem)] font-semibold leading-[1.04] tracking-[-0.02em] text-text">
                                 The DomeBreak <span className="text-dim">arsenal</span>
                             </h1>
                             <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-dim">
@@ -197,8 +180,8 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                     </div>
                 </section>
 
-                <div className="sticky top-16 z-40 border-y border-line bg-chrome-strong backdrop-blur-[10px]">
-                    <div className="mx-auto flex max-w-[1400px] items-stretch overflow-x-auto px-5 sm:px-8 db-scroll">
+                <div className="sticky top-16 z-40 border-t border-line bg-chrome-strong backdrop-blur-[10px]">
+                    <div className="db-tabs mx-auto max-w-[1400px] gap-9 px-5 sm:px-8">
                         <FilterTab active={activeCategory === "all"} onClick={() => selectCategory("all")}>
                             All
                         </FilterTab>
@@ -216,28 +199,25 @@ export default function WikiPage({onSignIn, onShowShortcuts}) {
                             <Reveal>
                                 <div className="flex flex-col gap-2 border-b border-line pb-6 sm:flex-row sm:items-end sm:justify-between">
                                     <div>
-                                        <span className={chip({tone: "subtle", shape: "notch"})}>
+                                        <span className={chip({tone: "subtle"})}>
                                             {`§ ${String(CATEGORIES_WITH_UNITS.findIndex((x) => x.id === c.id) + 1).padStart(2, "0")}`}
                                         </span>
-                                        <h2 className="mt-3 font-display text-[clamp(1.4rem,3vw,2.1rem)] font-bold uppercase leading-tight text-text">
+                                        <h2 className="mt-3 text-[clamp(1.4rem,3vw,2.1rem)] font-semibold leading-tight tracking-[-0.02em] text-text">
                                             {c.label}
                                         </h2>
                                         <p className="mt-2 max-w-2xl text-[14px] text-dim">{c.blurb}</p>
                                     </div>
-                                    <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-faint">
-                                        <span className="db-led db-led-sensor" />
-                                        {c.units.length} unit{c.units.length === 1 ? "" : "s"}
+                                    <span className="inline-flex items-center gap-2 text-[12.5px] text-faint">
+                                        <span className="db-led db-led-accent" />
+                                        <span className="font-mono tabular-nums">{c.units.length}</span> unit
+                                        {c.units.length === 1 ? "" : "s"}
                                     </span>
                                 </div>
                             </Reveal>
 
                             <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                                 {c.units.map((u, i) => (
-                                    <Reveal
-                                        key={u.id}
-                                        delay={Math.min(i * 0.04, 0.24)}
-                                        className="db-brackets db-brackets-hover relative h-full"
-                                    >
+                                    <Reveal key={u.id} delay={Math.min(i * 0.04, 0.24)} className="relative h-full">
                                         <UnitCard unit={u} categoryLabel={c.label} />
                                     </Reveal>
                                 ))}

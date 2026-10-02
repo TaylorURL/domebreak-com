@@ -1,18 +1,18 @@
 /* The landing page's own rules: the live defence scene in the hero, which
    renders the game's missile, interceptor, detonation and fallout sprites
-   through the components it shares with the game, plus the one bracket
-   modifier the sections below need. Everything here is read by the sections
-   down the home page — Nav, Hero, Manifesto, PlayBand, ShowcaseSection,
-   StatBand, FeatureGrid, CtaBand and Footer — and by the auth modal and mobile
-   drawer that open over them.
+   through the components it shares with the game, plus the alternating band
+   the sections below sit on. Everything here is read by the sections down the
+   home page — Nav, Hero, Manifesto, PlayBand, ShowcaseSection, StatBand,
+   FeatureGrid, CtaBand and Footer — and by the auth modal and mobile drawer
+   that open over them.
 
    Imported by web/src/index.css, which owns the tokens, the shared chrome
    utilities and the shared keyframes these rules read. Unlayered, like the
    rules it holds, so it reliably applies over Tailwind's utilities. */
 
 /* The alternating band down the home page. Every other section sits on the
-   raised surface under the same instrument grid the rest of the console wears,
-   so the page reads as one product from the hero to the footer rather than
+   raised surface under the same faint grid the rest of the console wears, so
+   the page reads as one product from the hero to the footer rather than
    flipping between two. The texture is a pseudo-element behind the content
    (`isolation` keeps the negative z-index inside the band), so a section drops
    into a band without a wrapper element or a stacking order of its own. */
@@ -48,7 +48,6 @@
     top: 4px;
     width: 4px;
     height: 15px;
-    border-radius: 2px 2px 1px 1px;
     background: linear-gradient(180deg, var(--missile-hull-hi), var(--missile-hull-mid) 55%, var(--missile-hull-low));
     box-shadow: 0 0 4px var(--missile-hull-glow);
 }
@@ -76,10 +75,8 @@
     clip-path: polygon(0 100%, 28% 0, 72% 0, 100% 100%);
 }
 
-/* Exhaust + glow are tinted per warhead via the --flame custom property that
-       SkyLayer sets on each sprite wrapper (orange STD, cyan CLU, violet HGV,
-       red THR). The white-hot core stays white; the plume and halo take the
-       warhead hue so the four ammo types read apart in flight. */
+/* Exhaust and glow read in the missile's own ink rather than a per-warhead
+       tint: a white-hot core falling through grey. */
 .db-missile-flame {
     position: absolute;
     left: 3px;
@@ -90,12 +87,11 @@
     background: radial-gradient(
         ellipse 60% 100% at 50% 0%,
         var(--ink-white) 0%,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 45%, var(--ink-white)) 24%,
-        var(--flame, var(--flame-default)) 56%,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 60%, var(--ink-black)) 82%,
+        var(--missile-flame) 40%,
+        var(--missile-hull-low) 74%,
         transparent 100%
     );
-    box-shadow: 0 0 12px 4px color-mix(in srgb, var(--flame, var(--flame-default)) 80%, transparent);
+    box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.22);
     animation: dbFlame 0.1s infinite alternate;
 }
 
@@ -106,11 +102,7 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        color-mix(in srgb, var(--flame, var(--flame-default)) 34%, transparent),
-        transparent 70%
-    );
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -154,7 +146,7 @@
        place of a rocket plume. Reads as the fastest, hottest thing in the sky. */
 .db-missile.hgv {
     width: 14px;
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--flame) 70%, transparent));
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
 }
 
 .db-missile.hgv .db-missile-body {
@@ -162,17 +154,16 @@
     top: 2px;
     width: 5px;
     height: 17px;
-    border-radius: 1px;
     /* slim arrowhead waverider — sharp nose, swept shoulders, flat aft */
     clip-path: polygon(50% 0, 88% 58%, 100% 100%, 0 100%, 12% 58%);
     background: linear-gradient(
         180deg,
         var(--ink-white) 0%,
         var(--ink-white) 16%,
-        color-mix(in srgb, var(--flame) 55%, var(--ink-white)) 46%,
-        var(--flame) 100%
+        var(--missile-hull-mid) 46%,
+        var(--missile-hull-low) 100%
     );
-    box-shadow: 0 0 10px 2px color-mix(in srgb, var(--flame) 90%, transparent);
+    box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.3);
 }
 
 /* Plasma bow-shock: a hot crescent of compression heat flaring off the nose. */
@@ -188,8 +179,8 @@
     background: radial-gradient(
         ellipse 100% 72% at 50% 100%,
         var(--ink-white) 0%,
-        color-mix(in srgb, var(--flame) 60%, var(--ink-white)) 30%,
-        color-mix(in srgb, var(--flame) 82%, transparent) 62%,
+        var(--missile-flame) 30%,
+        rgba(255, 255, 255, 0.35) 62%,
         transparent 78%
     );
     clip-path: polygon(50% 100%, 0 34%, 22% 6%, 50% 0, 78% 6%, 100% 34%);
@@ -214,7 +205,7 @@
     top: 4px;
     width: 20px;
     height: 20px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--flame) 44%, transparent), transparent 66%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 66%);
 }
 
 /* Thermonuclear: the heaviest missile — a bigger booster, a blunt reentry-vehicle
@@ -280,7 +271,6 @@
     top: 2px;
     width: 3px;
     height: 9px;
-    border-radius: 2px 2px 1px 1px;
     background: linear-gradient(180deg, var(--int-hull-hi), var(--int-hull-mid) 60%, var(--int-hull-low));
     box-shadow: 0 0 5px var(--int-hull-glow);
 }
@@ -321,9 +311,8 @@
     }
 }
 
-/* THAAD hit-to-kill interceptor: a colder cyan/white exo-atmospheric dart
-       with a pulsing energy core and a bright divert-thruster flare — reads
-       apart from the green area-defense interceptors. */
+/* THAAD hit-to-kill interceptor: a colder exo-atmospheric dart with a pulsing
+       energy core and a bright divert-thruster flare. */
 .db-interceptor.thaad {
     width: 8px;
     height: 18px;
@@ -385,11 +374,12 @@
     }
 }
 
-/* fireball detonation (Explosion.jsx)
-       A layered fire burst: white flash + shock ring + three billowing flame
-       blobs + a white-hot core + a short smoke wisp + flung embers. Every
-       kind is FIRE; kinds only change scale and a small ring accent. Pure
-       transform/opacity so dozens can play at once. */
+/* detonation (Explosion.jsx)
+       A layered burst: white flash + shock ring + three billowing blooms + a
+       white-hot core + a short smoke wisp + flung embers, all of it running
+       white-hot down to grey. Every kind is the same burst; kinds only change
+       scale and a small ring accent. Pure transform/opacity so dozens can play
+       at once. */
 .db-boom {
     position: relative;
     width: 15px;
@@ -440,15 +430,14 @@
     animation: dbBoomRing 0.42s ease-out forwards;
 }
 
-/* billowing flame — hot white center falling to deep red/black edge */
+/* billowing bloom — white-hot center falling to a dark grey edge */
 .db-boom-fire {
     background: radial-gradient(
         circle at 50% 55%,
         var(--ink-white) 0%,
         var(--boom-fire-hi) 13%,
-        var(--boom-fire-mid) 30%,
-        var(--flame-default) 52%,
-        var(--boom-fire-low) 72%,
+        var(--boom-fire-mid) 34%,
+        var(--boom-fire-low) 66%,
         var(--boom-fire-out) 87%
     );
     mix-blend-mode: screen;
@@ -474,7 +463,7 @@
     animation: dbBoomCore 0.3s ease-out forwards;
 }
 
-/* short, faint smoke wisp rising off the burn — fire stays the star */
+/* short, faint smoke wisp rising off the burn */
 .db-boom-smoke {
     opacity: 0;
     background: radial-gradient(
@@ -496,13 +485,13 @@
     margin: calc(var(--sz, 2px) / -2) 0 0 calc(var(--sz, 2px) / -2);
     border-radius: 50%;
     background: var(--boom-spark);
-    box-shadow: 0 0 4px 1px var(--flame-default);
+    box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.35);
     animation: dbBoomSpark 0.5s ease-out var(--delay, 0ms) forwards;
 }
 
-/* interception accent: keep the fire, but tint the shock ring + embers
-       cool so a missile-vs-missile kill still reads apart from a ground
-       impact — no green. */
+/* interception accent: the shock ring and embers take the interceptor's pale
+       blue, so a missile-vs-missile kill still reads apart from a ground
+       impact. */
 .db-boom.intercept .db-boom-ring {
     border-color: var(--intercept-ring);
     box-shadow: 0 0 4px var(--intercept-ring-glow);
@@ -586,23 +575,6 @@
     .db-fallout-ring {
         opacity: 0.4;
     }
-}
-
-/* Overrides .db-brackets in web/src/index.css for the surfaces that should
-   only wear the targeting corners while a pointer or the keyboard is on them.
-   Six feature tiles carrying them at rest is twenty-four marks competing with
-   the copy; a button wears them to say it is the one under the pointer. The
-   arms still grow and brighten on the way in — only the resting colour moves. */
-.db-brackets-hover::before,
-.db-brackets-hover::after {
-    border-color: transparent;
-}
-
-.db-brackets-hover:hover::before,
-.db-brackets-hover:hover::after,
-.db-brackets-hover:focus-visible::before,
-.db-brackets-hover:focus-visible::after {
-    border-color: var(--gold);
 }
 
 @keyframes dbFlame {

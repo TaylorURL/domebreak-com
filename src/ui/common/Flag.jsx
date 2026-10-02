@@ -12,7 +12,7 @@ export default function Flag({iso, className = "", style}) {
         return (
             <span
                 className={cn(
-                    "db-flag db-flag-x inline-grid place-items-center min-w-[22px] px-1 py-px border border-line-soft rounded-[2px] bg-sunk font-mono text-[9px] tracking-[0.08em] text-faint",
+                    "db-flag db-flag-x inline-grid place-items-center min-w-[22px] px-1 py-px border border-line bg-sunk font-mono text-[9px] tracking-[0.08em] text-faint",
                     className,
                 )}
                 style={style}
@@ -20,5 +20,5 @@ export default function Flag({iso, className = "", style}) {
                 {(iso || "—").toUpperCase()}
             </span>
         );
-    return <span className={cn("db-flag fi", `fi-${code}`, "rounded-[2px]", className)} style={style} />;
+    return <span className={cn("db-flag fi", `fi-${code}`, className)} style={style} />;
 }

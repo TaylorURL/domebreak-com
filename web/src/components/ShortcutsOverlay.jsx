@@ -14,7 +14,7 @@ const EXTRA = [
 
 function Kbd({children}) {
     return (
-        <kbd className="db-notch-sm inline-flex min-w-[28px] items-center justify-center border border-line bg-sunk px-2 py-1 font-mono text-[11px] font-semibold uppercase text-text">
+        <kbd className="inline-flex min-w-[28px] items-center justify-center border border-line-2 bg-sunk px-2 py-1 font-mono text-[11px] font-medium text-text">
             {children}
         </kbd>
     );
@@ -48,19 +48,19 @@ export default function ShortcutsOverlay({open, onClose}) {
                         animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(8px) scale(0.98)"}}
                         transition={{duration: 0.2, ease: [0.23, 1, 0.32, 1]}}
-                        className={cn(panel({frame: "glass"}), "db-seam w-[min(520px,94vw)] p-[26px]")}
+                        className={cn(panel({frame: "glass"}), "w-[min(520px,94vw)] p-[26px]")}
                     >
                         <button
                             onClick={onClose}
                             aria-label="Close"
-                            className="db-notch-sm absolute right-[18px] top-[18px] flex h-[34px] w-[34px] items-center justify-center border border-line text-dim transition-[color,border-color,transform] duration-[var(--dur-fast)] ease-out-db hover:border-blue hover:text-text active:scale-95"
+                            className="absolute right-[18px] top-[18px] flex h-[34px] w-[34px] items-center justify-center border border-line text-dim transition-[color,border-color] duration-[var(--dur-fast)] ease-out-db hover:border-line-2 hover:text-text"
                         >
                             <X size={15} />
                         </button>
 
                         <header className="border-b border-hair pb-5">
                             <Eyebrow>Command</Eyebrow>
-                            <h2 className="mt-4 font-display text-[28px] font-semibold uppercase leading-[32px] tracking-[0.04em] text-text">
+                            <h2 className="mt-4 text-[28px] font-semibold leading-[32px] tracking-[-0.015em] text-text">
                                 Keyboard shortcuts
                             </h2>
                         </header>

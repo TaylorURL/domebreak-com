@@ -23,16 +23,16 @@ function GateCard({icon, eyebrow, title, body, action}) {
                     <div
                         className={cn(
                             panel({frame: "glass"}),
-                            "db-seam mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                            "mx-auto w-full max-w-[560px] p-[26px] text-center sm:p-10",
                         )}
                     >
-                        <span className="db-notch-sm mx-auto flex h-14 w-14 items-center justify-center border border-gold-line bg-gold-soft text-gold">
+                        <span className="mx-auto flex h-14 w-14 items-center justify-center border border-line text-text">
                             {icon}
                         </span>
                         <div className="mt-6 flex justify-center">
-                            <Eyebrow framed>{eyebrow}</Eyebrow>
+                            <Eyebrow>{eyebrow}</Eyebrow>
                         </div>
-                        <h1 className="mt-4 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-bold uppercase leading-[1.05] text-text">
+                        <h1 className="mt-4 text-[clamp(1.6rem,4vw,2.3rem)] font-semibold leading-[1.06] tracking-[-0.02em] text-text">
                             {title}
                         </h1>
                         <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">{body}</p>
@@ -134,8 +134,8 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                     <Reveal>
                         <div className="flex flex-wrap items-end justify-between gap-4">
                             <div>
-                                <Eyebrow framed>Admin · Closed beta</Eyebrow>
-                                <h1 className="mt-4 font-display text-[clamp(1.8rem,4vw,2.8rem)] font-bold uppercase leading-[1.02] text-text">
+                                <Eyebrow>Admin · Closed beta</Eyebrow>
+                                <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.8rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-text">
                                     Beta applications
                                 </h1>
                                 <p className="mt-3 text-[14px] text-dim">
@@ -156,13 +156,11 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                     </Reveal>
 
                     <Reveal delay={0.08}>
-                        <div className={cn(panel(), "db-tab-rule mt-8")} style={{"--db-tab": "108px"}}>
+                        <div className={cn(panel(), "mt-8")}>
                             {state === "loading" ? (
                                 <div className="flex items-center justify-center gap-3 py-20 text-dim">
                                     <Loader2 size={18} className="animate-spin" />
-                                    <span className="font-mono text-[12px] uppercase tracking-[0.18em]">
-                                        Loading applications
-                                    </span>
+                                    <span className="text-[13px]">Loading applications</span>
                                 </div>
                             ) : state === "error" ? (
                                 <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
@@ -176,9 +174,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                             ) : rows.length === 0 ? (
                                 <div className="flex flex-col items-center gap-4 px-6 py-20 text-center text-dim">
                                     <Inbox size={28} className="text-faint" />
-                                    <p className="font-mono text-[12px] uppercase tracking-[0.18em]">
-                                        No applications yet
-                                    </p>
+                                    <p className="text-[13px]">No applications yet</p>
                                     <p className="max-w-sm text-[13px]">
                                         They'll appear here as soon as people apply from the landing page.
                                     </p>
@@ -187,7 +183,7 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                 <div className="overflow-x-auto db-scroll">
                                     <table className="w-full min-w-[720px] border-collapse text-left">
                                         <thead>
-                                            <tr className="border-b border-line bg-bg-2 font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
+                                            <tr className="border-b border-line bg-bg-2 text-[12px] font-medium text-faint">
                                                 <th className="w-10 px-4 py-3 text-right">#</th>
                                                 <th className="px-4 py-3">Email</th>
                                                 <th className="px-4 py-3">Platform</th>
@@ -207,18 +203,13 @@ export default function AdminPanel({onSignIn, onShowShortcuts}) {
                                                     <td className="px-4 py-3">
                                                         <a
                                                             href={`mailto:${r.email}`}
-                                                            className="font-mono text-[13px] text-text underline decoration-hair underline-offset-4 transition-colors hover:decoration-gold hover:text-gold"
+                                                            className="font-mono text-[13px] text-text underline decoration-hair underline-offset-4 transition-colors hover:decoration-line-2"
                                                         >
                                                             {r.email}
                                                         </a>
                                                     </td>
                                                     <td className="px-4 py-3">
-                                                        <span
-                                                            className={cn(
-                                                                chip({tone: "subtle", shape: "notch"}),
-                                                                "text-[10px] tracking-[0.14em]",
-                                                            )}
-                                                        >
+                                                        <span className={cn(chip({tone: "subtle"}), "text-[11px]")}>
                                                             {PLATFORM_LABEL[r.platform] || r.platform || "—"}
                                                         </span>
                                                     </td>

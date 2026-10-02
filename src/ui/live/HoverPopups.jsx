@@ -8,9 +8,7 @@ import Icon from "../common/Icon.jsx";
 import Meter from "../common/Meter.jsx";
 import UnitIcon from "../common/UnitIcon.jsx";
 import HoverReadout from "./HoverReadout.jsx";
-import {cn} from "../lib/cn.js";
-import {popoverCard} from "../lib/variants.js";
-import {fmtGdp, fmtKm, fmtPop} from "../lib/format.js";
+import {fmtGdp, fmtKm, fmtPop, standingOf} from "../lib/format.js";
 import {toGid3} from "../../game/data/iso3.js";
 import {
     defenseRange,
@@ -23,6 +21,17 @@ import {
     UNITS,
     vitalityOf,
 } from "../../game/engine.js";
+
+// Where you stand with a power, as the word and tone every other surface gives
+// it (see standingOf): red at war, ally blue allied, dim at peace, and the text
+// colour for your own.
+function standing(slot, mySlot, relation) {
+    const s = standingOf(slot === mySlot ? "self" : relation(slot));
+    return [s.label, s.tone];
+}
+
+// A unit's class reads as a word on the card, not as the engine's lowercase key.
+const classWord = (kind) => kind.charAt(0).toUpperCase() + kind.slice(1);
 
 export default function HoverPopups({
     hover,
@@ -66,12 +75,10 @@ export default function HoverPopups({
                     }
                     const cities = w.cities.filter((c) => c.slot === nation.slot && c.alive);
                     const pop = populationOf(w, nation.slot);
+                    const [word, tone] = standing(nation.slot, mySlot, relation);
                     const rows = [
-                        [
-                            "Status",
-                            nation.slot === mySlot ? "Yours" : relation(nation.slot) === "war" ? "At War" : "At Peace",
-                        ],
-                        ["Standing", cities.length ? "Active" : "Eliminated"],
+                        ["Standing", word, tone],
+                        ["Status", cities.length ? "Active" : "Eliminated"],
                         ["Population", fmtPop(pop)],
                         ["GDP", fmtGdp(gdpOf(w, nation.slot))],
                         ["States", cities.length],
@@ -80,7 +87,6 @@ export default function HoverPopups({
                         <HoverReadout
                             x={pos.x}
                             y={pos.y}
-                            clampBottom={190}
                             rows={rows}
                             header={
                                 <>
@@ -98,9 +104,13 @@ export default function HoverPopups({
                         footer = null;
                     if (hover.kind === "unit") {
                         const def = UNITS[hoverEnt.type];
+                        const [word, tone] = standing(hoverEnt.slot, mySlot, relation);
+                        // The owner takes the whole line: a full nation name does not
+                        // fit half the card.
                         rows = [
-                            ["Owner", nationName(hoverEnt.slot)],
-                            ["Class", def.kind],
+                            ["Owner", nationName(hoverEnt.slot), undefined, true],
+                            ["Standing", word, tone],
+                            ["Class", classWord(def.kind)],
                         ];
                         if (def.kind === "industry") {
                             rows.push(["Output", `+${def.output}/s`]);
@@ -112,7 +122,7 @@ export default function HoverPopups({
                             rows.push(["Armament", armOf(hoverEnt.type, hoverEnt.slot)]);
                         if (def.navalSpeed)
                             rows.push(["Speed", `${def.navalSpeed} kn${hoverEnt.dest ? " · Sailing" : ""}`]);
-                        if (def.airSpeed) rows.push(["Air Spd", `${def.airSpeed} kn`]);
+                        if (def.airSpeed) rows.push(["Air Speed", `${def.airSpeed} kn`]);
                         if (def.radarKm) rows.push(["Radar", `${def.radarKm} km`]);
                         if (def.wing)
                             rows.push([
@@ -131,88 +141,71 @@ export default function HoverPopups({
                             </>
                         );
                     } else {
+                        const [word, tone] = standing(hoverEnt.slot, mySlot, relation);
                         rows = [
-                            ["Nation", nationName(hoverEnt.slot)],
-                            ["State", hoverEnt.state || "—"],
+                            ["Nation", nationName(hoverEnt.slot), undefined, true],
+                            ["State", hoverEnt.state || "—", undefined, true],
                             ["Population", fmtPop(hoverEnt.pop * vitalityOf(hoverEnt))],
                             ["Economy", hoverEnt.econ ? (hoverEnt.econ * 100).toFixed(1) + "%" : "—"],
                             ["HP", `${Math.max(0, Math.round(hoverEnt.hp))}/${hoverEnt.maxHp}`],
-                            [
-                                "Status",
-                                hoverEnt.slot === mySlot
-                                    ? "Yours"
-                                    : relation(hoverEnt.slot) === "war"
-                                      ? "At War"
-                                      : "At Peace",
-                            ],
+                            ["Standing", word, tone],
                         ];
                         // Radioactive contamination: only shown when the city sits under an
                         // active fallout cloud. Reports the live loss rate and roughly how
-                        // long the hazard lingers.
+                        // long the hazard lingers — a live danger, so it reads red.
                         const fo = falloutDoseAt(w, hoverEnt.lng, hoverEnt.lat);
                         if (fo.remain > 0)
                             rows.push([
                                 "Fallout",
                                 `−${(fo.dose * FALLOUT.dmgPerSec).toFixed(1)} hp/s · ~${Math.ceil(fo.remain)}s`,
-                                "text-[#a6ff5c]",
+                                "text-red",
                             ]);
                         header = (
                             <>
                                 <i className="db-led" style={{color: teamColor(hoverEnt.slot)}} aria-hidden="true" />
                                 <span className="inline-flex items-center gap-1">
                                     {hoverEnt.name}
-                                    {!!hoverEnt.cap && <Icon name="star" size={9} className="text-gold" />}
+                                    {!!hoverEnt.cap && <Icon name="star" size={9} className="text-accent" />}
                                 </span>
                             </>
                         );
                         footer = (
                             <Meter
                                 frac={vitalityOf(hoverEnt)}
-                                fillClass={vitalityOf(hoverEnt) <= 0.35 ? "bg-danger" : "bg-good"}
+                                fillClass={vitalityOf(hoverEnt) <= 0.35 ? "bg-danger" : "bg-accent"}
                                 className="mt-2"
                             />
                         );
                     }
-                    return (
-                        <HoverReadout
-                            x={pos.x}
-                            y={pos.y}
-                            clampBottom={200}
-                            header={header}
-                            rows={rows}
-                            footer={footer}
-                        />
-                    );
+                    return <HoverReadout x={pos.x} y={pos.y} header={header} rows={rows} footer={footer} />;
                 })()}
         </>
     );
 }
 
 // The map hover plaque for a neutral (non-participating) country, or a nation wiped
-// out in war (`wiped`). Reuses the shared popover shell and cursor-flip math from
-// HoverReadout but drops the stat grid — a neutral is scenery, so there's nothing to
-// report beyond the name and its status.
+// out in war (`wiped`). The shared HoverReadout shell and placement with the stat
+// grid left out — a neutral is scenery, so there's nothing to report beyond the
+// name and its status.
 function NeutralReadout({x, y, header, wiped}) {
-    const left = x + 18 > window.innerWidth - 250 ? Math.max(12, x - 248) : x + 18;
-    const top = Math.min(Math.max(60, y - 14), window.innerHeight - 170);
     return (
-        <div
-            className={cn(popoverCard(), "fixed z-6 min-w-[206px] max-w-[244px] pt-0 px-[13px] pb-3")}
-            style={{left, top, "--db-tab": "86px"}}
-            aria-hidden="true"
-        >
-            <div className="flex items-center gap-2 -mx-[13px] px-[13px] py-[9px] border-b border-hair font-display font-bold text-[13.5px] tracking-[0.02em]">
-                {header}
-            </div>
-            <div className="db-notch-sm mt-[11px] inline-flex items-center gap-[7px] px-[8px] py-[3px] rounded-none border border-line-soft font-mono text-[9px] tracking-[0.18em] uppercase text-dim">
-                <i className="db-led text-faint shadow-none" aria-hidden="true" />
-                <span>{wiped ? "Wiped Out" : "Neutral Territory"}</span>
-            </div>
-            <p className="mt-[9px] text-[11.5px] leading-[1.45] text-dim">
-                {wiped
-                    ? "Beaten below the surrender line and knocked out of the war. Its remnant land now lies open."
-                    : "Sitting the war out, neutral from first shot to last."}
-            </p>
-        </div>
+        <HoverReadout
+            x={x}
+            y={y}
+            header={header}
+            footer={
+                <>
+                    <div className="mt-[11px] inline-flex items-center gap-[7px] px-[8px] py-[3px] border border-line text-[11px] text-dim">
+                        <i className="db-led text-faint" aria-hidden="true" />
+                        <span>{wiped ? "Wiped Out" : "Neutral Territory"}</span>
+                    </div>
+                    <p className="mt-[9px] mb-0 text-[11.5px] leading-[1.45] text-dim">
+                        {wiped
+                            ? "Beaten below the surrender line and knocked out of the war. Its remnant land now lies open."
+                            : "Sitting the war out, neutral from first shot to last."}
+                    </p>
+                </>
+            }
+        />
     );
 }

@@ -569,7 +569,7 @@ export default function App() {
                 <TitleBarDrag />
                 {splash}
                 <div className="absolute inset-0 grid place-items-center bg-bg">
-                    <span className="font-display tracking-[6px] uppercase text-[13px] text-dim animate-[dbRowIn_400ms_var(--ease-out)_both]">
+                    <span className="text-[13px] text-dim animate-[dbRowIn_400ms_var(--ease-out)_both]">
                         Connecting…
                     </span>
                 </div>
@@ -589,7 +589,10 @@ export default function App() {
 
     return (
         <div className="relative z-[1] flex flex-col h-full">
-            <TitleBarDrag />
+            {/* In a match the status strip is the title bar: it carries its own
+                drag region around its controls, so the full-width strip would
+                only sit over the speed buttons and swallow their clicks. */}
+            {screen !== "playing" && <TitleBarDrag />}
             {attract}
             {splash}
             {screen !== "playing" && (
@@ -741,6 +744,7 @@ export default function App() {
             {overlay === "pause" && (
                 <PauseMenu
                     over={world?.over}
+                    keys={keys}
                     onResume={resume}
                     onSave={() => {
                         setSaveMode("save");

@@ -3,8 +3,9 @@
 // staggered wars so missiles, intercepts and strikes keep the sky busy; when a
 // war ends, a fresh cast is drafted and the next one begins. The camera slowly
 // spins the globe on its axis and breathes in and out over the action, and the
-// map carries the same political tints, unit sprites and dying cities the live
-// game shows — so the backdrop reads as an actual match in progress. Pointer
+// map carries the same political tint, unit sprites and dying cities the live
+// game shows — the same black and white, with pale blue and red only where they
+// mean something — so the backdrop reads as an actual match in progress. Pointer
 // events are disabled — this layer is scenery, never a control surface.
 //
 // Runs a real engine world mutated in place and re-rendered on its own tick, so
@@ -23,11 +24,9 @@ import {buildSetup} from "../../game/sim/newGame.js";
 import {circle, geoCircle, GEODESIC_MAX_KM} from "../../game/geo/geo.js";
 import {norm01} from "../../lib/math.js";
 import {MAX_SLOTS} from "../../game/data/constants.js";
-import {toGid3} from "../../game/data/iso3.js";
-import {loadJsonAsset} from "../../lib/fetchJson.js";
 import {useEngine} from "../hooks/useEngine.js";
 import {vitPaint} from "../lib/status.js";
-import {buildPoliticalTint, flagColor} from "../lib/politicalTint.js";
+import {buildPoliticalTint, SOLID, standingInk} from "../lib/politicalTint.js";
 
 const CAST_SIZE = MAX_SLOTS; // fill every belligerent slot the engine supports (16)
 const SIM_SPEED = 4; // wall-clock drama without the 10× blur
@@ -51,30 +50,6 @@ const LAT_PERIOD_S = 74;
 // out as it pulls back, so the wide end of the breath stays clean.
 const UNIT_FADE = [2.05, 2.75];
 
-// Fallback faction palette, used only for a belligerent whose flag color is
-// missing from colors.json. The live map colors every nation by its real flag
-// hue (see politicalTint) and so does the attract cast, so a nation's land,
-// cities and units all read in one national color — this just backstops a gap.
-const FACTION_COLORS = [
-    "#e0574f",
-    "#4f9be0",
-    "#57c98a",
-    "#e0b24f",
-    "#b06fe0",
-    "#e0894f",
-    "#4fd3e0",
-    "#e04f97",
-    "#88e04f",
-    "#dfe04f",
-    "#5560e0",
-    "#e05f5f",
-    "#4fe0b0",
-    "#c3ccd8",
-    "#a07a4f",
-    "#6f8aa0",
-];
-const fallbackColor = (slot) =>
-    FACTION_COLORS[(((slot | 0) % FACTION_COLORS.length) + FACTION_COLORS.length) % FACTION_COLORS.length];
 const ROT_STATIC = {airstrip: 42}; // static sprites read at a fixed cant
 const ORBIT_LIFT_PX = 34; // screen lift per unit of orbitLift, matching the live map
 
@@ -147,44 +122,21 @@ function AttractWorld({data, onOver, framed, onReady}) {
     const [explosions, setExplosions] = useState([]);
     const seen = useRef(new Set());
 
-    // Flag colors (GID_0 -> [r,g,b]), the same table the live map paints from.
-    // Loaded once; until it lands the fallback palette stands in so the globe is
-    // never colorless.
-    const [cols, setCols] = useState(null);
-    useEffect(() => {
-        let live = true;
-        loadJsonAsset("/assets/colors.json", {cache: true}).then((c) => {
-            if (live) setCols(c);
-        });
-        return () => {
-            live = false;
-        };
-    }, []);
-    // One national color per slot — the nation's real flag hue — shared by its
-    // land tint, its city dots and its unit sprites, so each faction reads in a
-    // single color exactly like a live match. Falls back to the palette on a gap.
+    // One ink per slot, exactly as a live match reads it: the seat the world
+    // belongs to is white, a power at war with it red, an ally pale blue and
+    // everyone else grey. Shared by each nation's land tint, its city dots and
+    // its unit sprites, so a faction reads in one colour across the whole globe.
+    const relSig = w.nations.reduce((acc, n) => {
+        const me = w.nations.find((x) => x.slot === w.mySlot);
+        return `${acc}${me?.relations?.[n.slot] ?? ""}${n.active === false ? 0 : 1}${n.wipedOut ? 1 : 0}`;
+    }, "");
     const slotColors = useMemo(() => {
+        const me = w.nations.find((n) => n.slot === w.mySlot);
         const out = [];
-        for (const n of w.nations) out[n.slot] = flagColor(cols, toGid3(n.iso)) || fallbackColor(n.slot);
+        for (const n of w.nations) out[n.slot] = standingInk(n, w.mySlot, me);
         return out;
-    }, [cols, w.nations]);
-    const slotColor = (slot) => slotColors[slot] || fallbackColor(slot);
-
-    // Active vs wiped-out belligerents for the political tint. Recomputed whenever
-    // a nation's active/wiped state flips — a routed power is neutralized mid-war,
-    // so the sets aren't fixed for the match.
-    const nationSig = w.nations.reduce((s, n) => `${s}${n.active === false ? 0 : 1}${n.wipedOut ? 1 : 0}`, "");
-    const {activeGids, wipedGids} = useMemo(() => {
-        const active = new Set(),
-            wiped = new Set();
-        for (const n of w.nations) {
-            const gid = toGid3(n.iso);
-            if (!gid) continue;
-            if (n.wipedOut) wiped.add(gid);
-            else if (n.active !== false) active.add(gid);
-        }
-        return {activeGids: active, wipedGids: wiped};
-    }, [nationSig]);
+    }, [relSig, w.nations]);
+    const slotColor = (slot) => slotColors[slot] || SOLID.neutral;
 
     // War director: open with several fronts, then keep escalating.
     useEffect(() => {
@@ -222,37 +174,33 @@ function AttractWorld({data, onOver, framed, onReady}) {
         }
     }, [w.time]);
 
-    // Political tint, the exact model the live map uses (see politicalTint): only
-    // the belligerent cast wears its flag color, nations wiped out in war fade to
-    // the scorched wash, and every other country on the globe is neutral scenery
-    // grey — so the attract world reads as a real bounded match, not a rainbow of
-    // all 200-odd countries. Re-applied when the active/wiped sets shift or the
-    // style reloads.
+    // Political tint, the exact model the live map uses (see politicalTint): a
+    // country's fill says where the seat this world belongs to stands with it,
+    // nations wiped out in war fall darker still, and every country outside the
+    // cast is neutral scenery — so the attract world reads as a real bounded
+    // match. Re-applied when a standing shifts or the style reloads.
     useEffect(() => {
-        if (!cols) return;
         const m = mapRef.current;
         if (!m) return;
-        const {tint, line} = buildPoliticalTint(cols, {activeGids, wipedGids});
+        const {tint, line} = buildPoliticalTint({nations: w.nations, mySlot: w.mySlot});
         try {
             m.setPaintProperty("country-tint", "fill-color", tint);
-            // Lift the tint above the gameplay default so factions read as scenery
-            // across the whole-earth breath.
             m.setPaintProperty("country-tint", "fill-opacity", [
                 "interpolate",
                 ["linear"],
                 ["zoom"],
                 1.6,
-                0.28,
+                1,
                 3.2,
-                0.2,
+                0.8,
                 5,
-                0.08,
+                0.3,
             ]);
             m.setPaintProperty("country-line", "line-color", line);
         } catch {
             /* style not ready yet — retry keyed on mapReady below */
         }
-    }, [cols, activeGids, wipedGids, mapReady]);
+    }, [relSig, mapReady]);
 
     // Recenter the globe beside the menu rail: left projection padding shifts the
     // sphere clear of the console. The camera loop below never touches padding.
@@ -341,7 +289,7 @@ function AttractWorld({data, onOver, framed, onReady}) {
         return deg;
     };
 
-    // Cities as faction-colored dots that scar into craters as they die — the
+    // Cities as standing-colored dots that scar into craters as they die — the
     // same three-layer treatment (ruin / damage halo / live dot) LiveGame uses.
     const cityFC = useMemo(
         () => ({
@@ -360,7 +308,7 @@ function AttractWorld({data, onOver, framed, onReady}) {
         [w.cities, w.time, slotColors],
     );
 
-    // Radioactive fallout footprints — the glowing contamination haze the live map
+    // Radioactive fallout footprints — the grey contamination haze the live map
     // draws over a nuclear strike. One polygon per active cloud, its opacity
     // tracking the cloud's live intensity; rebuilt each tick as clouds grow,
     // drift and decay. A stable empty FC when there are none costs nothing.
@@ -425,38 +373,38 @@ function AttractWorld({data, onOver, framed, onReady}) {
                         id="attract-fallout-haze"
                         type="fill"
                         paint={{
-                            "fill-color": "#8cff3a",
-                            "fill-opacity": ["*", ["get", "intensity"], 0.17],
+                            "fill-color": "#8a8a8a",
+                            "fill-opacity": ["*", ["get", "intensity"], 0.16],
                         }}
                     />
                     <Layer
                         id="attract-fallout-edge"
                         type="line"
                         paint={{
-                            "line-color": "#b6ff5c",
+                            "line-color": "#a3a3a3",
                             "line-width": 1,
                             "line-dasharray": [2, 2],
-                            "line-opacity": ["*", ["get", "intensity"], 0.55],
+                            "line-opacity": ["*", ["get", "intensity"], 0.5],
                         }}
                     />
                 </Source>
 
                 <Source id="attract-src" type="geojson" data={cityFC}>
-                    {/* Destroyed city: a scorched crater with a burnt scar ring. */}
+                    {/* Destroyed city: a black crater inside a red scar ring. */}
                     <Layer
                         id="attract-city-ruin"
                         type="circle"
                         filter={["==", ["get", "dead"], 1]}
                         paint={{
                             "circle-radius": ["case", ["==", ["get", "cap"], 1], 9, 7],
-                            "circle-color": "#160c0a",
+                            "circle-color": "#0a0a0a",
                             "circle-opacity": 0.88,
-                            "circle-stroke-color": "#c2410c",
-                            "circle-stroke-width": 1.8,
-                            "circle-stroke-opacity": 0.9,
+                            "circle-stroke-color": "#e0574f",
+                            "circle-stroke-width": 1.6,
+                            "circle-stroke-opacity": 0.85,
                         }}
                     />
-                    {/* Damage halo: green→amber→red ring that thickens as a city is hit. */}
+                    {/* Damage halo: green→white→red ring that thickens as a city is hit. */}
                     <Layer
                         id="attract-city-health"
                         type="circle"
@@ -485,7 +433,7 @@ function AttractWorld({data, onOver, framed, onReady}) {
                         paint={{
                             "circle-radius": ["case", ["==", ["get", "cap"], 1], 5, 3],
                             "circle-color": ["get", "color"],
-                            "circle-stroke-color": "#05070c",
+                            "circle-stroke-color": "#000000",
                             "circle-stroke-width": 0.6,
                         }}
                     />
@@ -524,7 +472,7 @@ function AttractWorld({data, onOver, framed, onReady}) {
                                 opacityWhenCovered="0"
                                 offset={offset}
                             >
-                                <div className="grid place-items-center cursor-pointer [filter:drop-shadow(0_0_4px_currentColor)_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)">
+                                <div className="grid place-items-center [filter:drop-shadow(0_0_3px_rgba(0,0,0,0.9))_drop-shadow(0_1px_2px_#000)] opacity-(--db-unit-opacity,1)">
                                     <span
                                         className={`inline-flex transition-transform duration-[170ms] ease-linear${orbital ? " db-orbital" : ""}`}
                                         style={Object.keys(iconStyle).length ? iconStyle : undefined}
@@ -565,6 +513,7 @@ function AttractWorld({data, onOver, framed, onReady}) {
             </WorldMap>
             <SkyLayer
                 map={mapRef.current}
+                mySlot={w.mySlot}
                 projectiles={w.projectiles}
                 interceptors={w.interceptors}
                 aircraft={w.units.filter((u) => u.baseId && u.hp > 0 && (u.alt || 0) > 0.02)}
@@ -587,7 +536,7 @@ export default function AttractSim({data, framed, onReady}) {
                 onReady={gen === 0 ? onReady : undefined}
                 onOver={() => setTimeout(() => setGen((g) => g + 1), 4000)}
             />
-            <div className="absolute inset-0 bg-[rgba(4,6,9,0.22)]" />
+            <div className="absolute inset-0 bg-[rgba(0,0,0,0.26)]" />
         </div>
     );
 }
