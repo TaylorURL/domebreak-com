@@ -59,7 +59,7 @@ export default function Dock({panel, keys, onPanel, onPause}) {
                 aria-label="Open the pause menu"
             >
                 <Icon name="gear" size={22} />
-                Settings
+                Menu
             </button>
         </nav>
     );

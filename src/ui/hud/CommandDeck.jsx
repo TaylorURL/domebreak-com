@@ -5,6 +5,7 @@ import HudTooltip from "./HudTooltip.jsx";
 import {prodLabel, prodTime} from "../lib/prod.js";
 import {cn} from "../lib/cn.js";
 import {HOTBAR} from "../lib/hotbar.js";
+import {unitPhrase} from "../lib/newsHeadline.js";
 
 // One stockpile cell: the round, how many are held, and what it is called. A
 // stockpile of none drops to the faint ink so a glance skips it. The cell's
@@ -85,7 +86,9 @@ export default function CommandDeck({world, mySlot, myNation, placing, onPlace})
                                 )}
                                 onClick={() => onPlace?.(s.type)}
                                 aria-pressed={on}
-                                aria-label={lock ? `${label}, locked: ${lock}` : `Place a ${label}, key ${i + 1}`}
+                                aria-label={
+                                    lock ? `${label}, locked: ${lock}` : `Place ${unitPhrase(label)}, key ${i + 1}`
+                                }
                             >
                                 <span
                                     className="absolute left-[5px] top-[5px] inline-grid place-items-center min-w-[14px] h-[14px] px-[3px] border border-line-2 font-mono text-[9px] leading-none text-faint"

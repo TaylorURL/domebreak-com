@@ -163,7 +163,7 @@ function MeBadgePopover({
                     {stats ? <b>{total}</b> : "—"} Matches
                 </span>
                 <span title="Win rate" aria-label={stats ? `${winRate} percent win rate` : "Win rate unavailable"}>
-                    {stats ? <b>{winRate}%</b> : "—"} Win rate
+                    {stats ? <b>{winRate}%</b> : "—"} Win Rate
                 </span>
                 <span
                     title="Total time in command"

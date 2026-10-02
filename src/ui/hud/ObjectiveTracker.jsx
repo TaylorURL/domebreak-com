@@ -99,7 +99,7 @@ export default function ObjectiveTracker({world, mySlot, onOpenGoals}) {
                 title="Open the Goals drawer"
             >
                 <span className="truncate">
-                    {next ? `Next: ${next.title}` : "Every objective is under way"}
+                    {next ? `Next: ${next.title}` : "No next objective"}
                     {queued > 0 && ` · ${queued} queued`}
                 </span>
                 <Icon name="chevron-down" size={15} className="flex-none -rotate-90" />

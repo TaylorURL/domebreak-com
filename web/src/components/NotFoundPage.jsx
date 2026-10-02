@@ -31,7 +31,7 @@ export default function NotFoundPage({onSignIn, onShowShortcuts}) {
 
                     <div className="relative mx-auto max-w-[820px] px-5 sm:px-8">
                         <Reveal>
-                            <Eyebrow>No such route</Eyebrow>
+                            <Eyebrow>No such page</Eyebrow>
                             <h1 className="mt-5 text-[clamp(2rem,5vw,3.2rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-text">
                                 Off the map
                             </h1>

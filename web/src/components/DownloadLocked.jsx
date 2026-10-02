@@ -31,7 +31,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                             <div
                                 className={cn(
                                     panel({frame: "glass"}),
-                                    "mx-auto w-[min(560px,94vw)] p-[26px] text-center sm:p-10",
+                                    "mx-auto w-full max-w-[560px] p-[26px] text-center sm:p-10",
                                 )}
                             >
                                 <span className="mx-auto flex h-14 w-14 items-center justify-center border border-line text-text">
@@ -43,7 +43,7 @@ export default function DownloadLocked({onSignIn, onShowShortcuts, checking = fa
                                 </div>
 
                                 <h1 className="mt-4 text-[clamp(1.6rem,4vw,2.3rem)] font-semibold leading-[1.06] tracking-[-0.02em] text-text">
-                                    {checking ? "One moment" : "Create a free account"}
+                                    {checking ? "One moment" : "Download DomeBreak with a free account"}
                                 </h1>
                                 <p className="mx-auto mt-4 max-w-md text-[14px] leading-relaxed text-dim">
                                     {checking

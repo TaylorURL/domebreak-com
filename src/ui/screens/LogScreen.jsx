@@ -2,6 +2,7 @@ import {useState} from "react";
 import {DrawerScreen} from "./ScreenFrame.jsx";
 import {EVENT_KINDS, feedRows} from "../lib/newsHeadline.js";
 import {cn} from "../lib/cn.js";
+import {plural} from "../lib/format.js";
 
 // Log — the whole event feed in the dock's drawer, newest first: a mono stamp,
 // a square marker (red for a war event, faint otherwise) and the headline.
@@ -21,7 +22,7 @@ export default function LogScreen({world, mySlot, onFocus, onClose}) {
             labelledBy="db-drawer-log"
             caption={
                 <>
-                    <b>{shown.length}</b> events
+                    <b>{shown.length}</b> {plural(shown.length, "event")}
                 </>
             }
             onClose={onClose}

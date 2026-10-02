@@ -7,7 +7,7 @@ import {cn} from "../lib/cn.js";
 // In-game command reference. Reads the live key bindings so rebinds show through,
 // and lays out every control the map surface responds to — including the ones
 // nothing else advertises, like camera pan and shift-click to bulk-order or
-// place several. Toggle with the ? key or the dock's Settings item; Esc or ? closes it.
+// place several. Toggle with the ? key; Esc or ? closes it.
 
 // A single keycap. `mouse` renders a wider pill for pointer actions (L-Click,
 // Scroll) so they read apart from keyboard keys.
@@ -67,7 +67,7 @@ export default function ControlsOverlay({keys, onClose}) {
             rows: [
                 {label: "Pause / resume", combo: [cap(keyLabel(K.pause))]},
                 {label: "Slow down · speed up", combo: [cap(keyLabel(K.speedDown)), cap(keyLabel(K.speedUp))]},
-                {label: "Set a speed directly", combo: [mouse("Strip control")]},
+                {label: "Set a speed directly", combo: [mouse("Status Strip")]},
             ],
         },
         {
@@ -85,7 +85,7 @@ export default function ControlsOverlay({keys, onClose}) {
                 {label: "Pan (drag)", combo: [mouse("L-Drag")]},
                 {label: "Zoom in · out", combo: [cap(keyLabel(K.zoomIn)), cap(keyLabel(K.zoomOut))]},
                 {label: "Zoom (scroll)", combo: [mouse("Scroll")]},
-                {label: "Globe / flat view", combo: [mouse("Layer row")]},
+                {label: "Globe / flat view", combo: [mouse("Layer Toggles")]},
             ],
         },
         {
