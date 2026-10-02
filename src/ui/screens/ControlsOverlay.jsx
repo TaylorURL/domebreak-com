@@ -7,7 +7,7 @@ import {cn} from "../lib/cn.js";
 // In-game command reference. Reads the live key bindings so rebinds show through,
 // and lays out every control the map surface responds to — including the ones
 // nothing else advertises, like camera pan and shift-click to bulk-order or
-// place several. Toggle with the ? key or the dock's Settings item; Esc or ? closes it.
+// place several. Toggle with the ? key; Esc or ? closes it.
 
 // A single keycap. `mouse` renders a wider pill for pointer actions (L-Click,
 // Scroll) so they read apart from keyboard keys.

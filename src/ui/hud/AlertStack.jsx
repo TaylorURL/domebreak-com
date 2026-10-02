@@ -5,6 +5,7 @@ import Flag from "../common/Flag.jsx";
 import Icon from "../common/Icon.jsx";
 import {cn} from "../lib/cn.js";
 import {button} from "../lib/variants.js";
+import {plural} from "../lib/format.js";
 
 // How long the end-of-grace card stays up before it retires itself.
 const GRACE_END_MS = 6000;
@@ -162,7 +163,9 @@ export default function AlertStack({world, api, mySlot, onOpenPanel, onOpenCount
         const homeable = !lead.atWar && lead.sheltered > 0 && !releasing;
         const where = lead.sites.length
             ? lead.sites.slice(0, 3).join(", ") +
-              (lead.sites.length > 3 ? ` and ${lead.sites.length - 3} more cities` : "")
+              (lead.sites.length > 3
+                  ? ` and ${lead.sites.length - 3} more ${plural(lead.sites.length - 3, "city", "cities")}`
+                  : "")
             : "the field";
         const infra = !lead.hasBunker
             ? "Build a Leadership Bunker to shelter your leaders."
