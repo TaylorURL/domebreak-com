@@ -41,7 +41,7 @@ export default function NavDropdown({label, items}) {
     };
     const scheduleClose = () => {
         clearClose();
-        closeTimer.current = setTimeout(() => setOpen(false), 120);
+        closeTimer.current = setTimeout(() => setOpen(false), 200);
     };
 
     useEffect(() => {
@@ -109,20 +109,23 @@ export default function NavDropdown({label, items}) {
 
             <AnimatePresence>
                 {open && (
+                    // The space between the trigger and the panel is padding
+                    // on this wrapper rather than an offset on the panel, so
+                    // the pointer crossing it is still inside the element that
+                    // holds the menu open.
                     <motion.div
-                        id={id}
-                        role="menu"
-                        aria-label={label}
                         initial={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         animate={reduce ? {opacity: 1} : {opacity: 1, transform: "translateY(0px) scale(1)"}}
                         exit={reduce ? {opacity: 0} : {opacity: 0, transform: "translateY(-6px) scale(0.98)"}}
                         transition={{duration: 0.16, ease: [0.23, 1, 0.32, 1]}}
                         style={{transformOrigin: "top left"}}
-                        className={cn(panel({frame: "glass"}), "absolute left-0 top-[calc(100%+12px)] w-[300px] p-2")}
+                        className="absolute left-0 top-full w-[300px] pt-3"
                     >
-                        {items.map((it) => (
-                            <NavMenuItem key={it.label} item={it} onDone={() => setOpen(false)} />
-                        ))}
+                        <div id={id} role="menu" aria-label={label} className={cn(panel({frame: "glass"}), "p-2")}>
+                            {items.map((it) => (
+                                <NavMenuItem key={it.label} item={it} onDone={() => setOpen(false)} />
+                            ))}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
