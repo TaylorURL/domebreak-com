@@ -32,8 +32,14 @@ export default function PrivacyPage(props) {
                     body: [
                         "To run your account, to put you in matches with other players, and to answer beta " +
                             "applications. Nothing is used to build a profile of you, and nothing is sold.",
-                        "There is no advertising on this site, no analytics product, and no tracking cookie. " +
-                            "The only browser storage the site sets is the session that keeps you signed in.",
+                        "There is no advertising on this site and no tracking cookie. Visits are counted by " +
+                            "TaylorURL, which builds and runs the site, on its own collector. It records " +
+                            "the page, the site you came from, how long the page was open, your browser, device " +
+                            "and screen size, an approximate location worked out from your connection, and a " +
+                            "random visitor number kept in browser storage. It never records a name, an email " +
+                            "address or anything typed into a form.",
+                        "Besides that visitor number, the only browser storage the site sets is the session " +
+                            "that keeps you signed in.",
                     ],
                 },
                 {
