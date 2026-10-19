@@ -13,3 +13,8 @@ createRoot(document.getElementById("root")).render(
         <App />
     </React.StrictMode>,
 );
+
+// Tells the boot guard in index.html that this bundle arrived and ran, so it
+// stands down. Reaching this line is the whole of what it needs to know: every
+// failure the guard exists for is one where nothing in this file runs at all.
+window.__domebreakBooted = true;
