@@ -387,6 +387,109 @@
                 if (painted) painted.remove();
             })();
         </script>
+        <script>
+            // The bundle below is the only thing that makes this document respond to
+            // anything: every control in the markup above is drawn by React and is
+            // dead until it has run. When it does not arrive the page still looks
+            // finished — it is already painted — so a visitor presses Play Free, gets
+            // silence, and has nothing on screen telling them the page is not working
+            // or that reloading would help. This recovers that visitor: one reload,
+            // then a notice if the second attempt fails as well.
+            (function () {
+                var MARK = "domebreak:boot-retry";
+                var root = document.getElementById("root");
+                var settled = false;
+
+                function booted() {
+                    if (window.__domebreakBooted) return true;
+                    if (!root) return false;
+                    for (var k in root) if (k.indexOf("__reactContainer") === 0) return true;
+                    return false;
+                }
+
+                function notice() {
+                    if (document.getElementById("boot-incomplete")) return;
+                    var bar = document.createElement("div");
+                    bar.id = "boot-incomplete";
+                    bar.setAttribute("role", "alert");
+                    bar.style.cssText =
+                        "position:fixed;top:0;left:0;right:0;z-index:2147483647;display:flex;" +
+                        "flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;" +
+                        "padding:14px 20px;background:#1c1917;color:#fafaf9;text-align:center;" +
+                        "font:500 15px/1.4 Inter,system-ui,-apple-system,sans-serif";
+                    var text = document.createElement("span");
+                    text.textContent = "This page did not finish loading, so parts of it will not respond.";
+                    var again = document.createElement("button");
+                    again.type = "button";
+                    again.textContent = "Reload";
+                    again.style.cssText =
+                        "cursor:pointer;padding:9px 18px;border:1px solid #fafaf9;border-radius:6px;" +
+                        "background:transparent;color:#fafaf9;" +
+                        "font:600 15px/1 Inter,system-ui,-apple-system,sans-serif";
+                    again.onclick = function () {
+                        try {
+                            sessionStorage.removeItem(MARK);
+                        } catch (e) {}
+                        location.reload();
+                    };
+                    bar.appendChild(text);
+                    bar.appendChild(again);
+                    document.body.appendChild(bar);
+                }
+
+                function recover() {
+                    if (settled || booted()) return;
+                    settled = true;
+                    var spent;
+                    try {
+                        spent = sessionStorage.getItem(MARK);
+                    } catch (e) {
+                        // No session storage means no way to remember a reload has
+                        // been spent, and a reload we cannot count is a reload loop.
+                        return notice();
+                    }
+                    if (spent) return notice();
+                    try {
+                        sessionStorage.setItem(MARK, "1");
+                    } catch (e) {
+                        return notice();
+                    }
+                    // The reload has to be able to miss whatever handed over a
+                    // document naming a file the browser could not then get, so it
+                    // carries a parameter nothing has cached against.
+                    var base = location.href.split("#")[0];
+                    base += (base.indexOf("?") < 0 ? "?" : "&") + "retry=" + Date.now().toString(36);
+                    location.replace(base + location.hash);
+                }
+
+                // A module script that cannot be fetched, or that fails anywhere in
+                // its import graph, fires error on the element instead of throwing
+                // somewhere a handler could catch it. Capture, since it does not
+                // bubble. A failed modulepreload is deliberately not listened for:
+                // it is a hint, and the real import after it usually succeeds.
+                document.addEventListener(
+                    "error",
+                    function (e) {
+                        var node = e.target;
+                        if (node && node.tagName === "SCRIPT" && node.type === "module") recover();
+                    },
+                    true,
+                );
+
+                // A fetch that neither finishes nor fails raises no event at all, so
+                // a timeout is the backstop behind the one above.
+                setTimeout(recover, 9000);
+
+                // Hand the reload back once the page is working, so a failure later
+                // in this tab is recovered too rather than going straight to notice.
+                setTimeout(function () {
+                    if (!booted()) return;
+                    try {
+                        sessionStorage.removeItem(MARK);
+                    } catch (e) {}
+                }, 1500);
+            })();
+        </script>
         <script src="/src/main.jsx" type="module"></script>
     </body>
 </html>
