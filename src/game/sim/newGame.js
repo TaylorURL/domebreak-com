@@ -13,7 +13,7 @@ let _data = null;
 
 // Fetches (once) and caches the bundled city/country datasets from /data, plus the
 // city -> GID_1 province map. `cityRegion` is what stamps each city's `region` (its
-// GADM admin-1 id) below: the SAME partition the map recolors by (useOwnershipLayer),
+// admin-1 id) below: the SAME partition the map recolors by (useOwnershipLayer),
 // so capture flips a whole renderable province and the map can't disagree with who
 // actually owns the land. A failed region fetch degrades to state-string grouping.
 export async function loadGameData() {
@@ -257,7 +257,7 @@ export function buildSetup(data, playerIso, aiIsos, seed, opts = {}) {
                 slot,
                 name: c.n,
                 state: c.s,
-                // GADM admin-1 province (GID_1) this city sits in — the unit capture
+                // Admin-1 province (GID_1) this city sits in — the unit capture
                 // flips as one and the map recolors as one, so ownership can't split
                 // between the sim and the map. Null when unmapped (grouping falls back
                 // to the state string for those cities).

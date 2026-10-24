@@ -140,7 +140,7 @@ export function conquestOverlay({cities, nations, cityRegion, flags = {}}) {
         let m = prov.get(gid1);
         if (!m) prov.set(gid1, (m = new Map()));
         m.set(c.slot, (m.get(c.slot) || 0) + (c.pop || 1));
-        const nativeGid = gid1.split(".")[0]; // GADM: "USA.5_1" -> "USA"
+        const nativeGid = gid1.split(".")[0]; // "USA.5_1" -> "USA"
         let owners = country.get(nativeGid);
         if (!owners) country.set(nativeGid, (owners = new Set()));
         owners.add(c.slot);

@@ -12,7 +12,7 @@
 //
 // A city's province comes from public/assets/city-region.json (precomputed
 // point-in-polygon, see scripts/gen-city-region.mjs) — keyed by the engine's city
-// ids — so the join to GADM geometry needs no province-name matching. The heavy
+// ids — so the join to the province geometry needs no province-name matching. The heavy
 // recompute runs only when an ownership checksum changes; every other tick is a
 // cheap O(cities) scan.
 import {useEffect, useRef, useState} from "react";

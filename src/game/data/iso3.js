@@ -1,5 +1,5 @@
 // ISO 3166-1 alpha-2 -> alpha-3 bridge between the sim and the map. Nations are
-// keyed by alpha-2 ("US", "RU"); the map's GADM `countries` layer keys its
+// keyed by alpha-2 ("US", "RU"); the map's `countries` layer keys its
 // polygons by GID_0 (alpha-3, "USA", "RUS"). Every crossing between the two —
 // placement gating, ownership and diplomacy tinting, flag colors, the lobby's
 // nation picker — goes through toGid3/fromGid3 rather than assuming either code
