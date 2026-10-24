@@ -1,8 +1,8 @@
-// Precompute which GADM level-1 region (province) each seed city falls inside, by
+// Precompute which level-1 region (province) each seed city falls inside, by
 // point-in-polygon against regions-seed.geojson. Output keys match the engine's
 // runtime city ids (`${iso}-${index}`, see src/game/sim/newGame.js) so the map's
 // ownership overlay can look up a city's province with zero name-matching (province
-// names in cities.json only agree with GADM NAME_1 ~80% of the time, and 0% for
+// names in cities.json only agree with the regions' NAME_1 ~80% of the time, and 0% for
 // some countries — geometry is exact where names are not).
 //
 //   node scripts/gen-city-region.mjs

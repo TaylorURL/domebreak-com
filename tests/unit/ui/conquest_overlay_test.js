@@ -8,7 +8,7 @@ import {describe, expect, it} from "vitest";
 import {conquestOverlay} from "../../../src/ui/lib/politicalTint.js";
 
 // Two provinces of FRA plus one of USA. Slot 0 is the USA, slot 1 is France
-// (nations carry ISO-2 codes; toGid3 maps them to the GADM GID_0);
+// (nations carry ISO-2 codes; toGid3 maps them to the map's GID_0);
 // `fraSlot` is who holds the French cities, so the same theatre covers peacetime,
 // conquest, and the conqueror's fall.
 function theatre({fraSlot = 1, nations} = {}) {

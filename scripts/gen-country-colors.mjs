@@ -22,7 +22,7 @@ const gids = [...new Set(geo.features.map((f) => f.properties.gid0).filter(Boole
 
 // GID_0 (alpha-3) -> flag-icons code (alpha-2)
 // Base map inverted from the project's ISO 3166 bridge, plus territory and
-// disputed-region codes GADM carries that the ISO bridge doesn't.
+// disputed-region codes the map data carries that the ISO bridge doesn't.
 const iso3src = readFileSync(join(root, "src/game/data/iso3.js"), "utf8");
 const a3to2 = {};
 for (const m of iso3src.matchAll(/"([A-Z]{2})":\s*"([A-Z]{2,3})"/g)) a3to2[m[2]] = m[1].toLowerCase();
@@ -46,7 +46,7 @@ Object.assign(a3to2, {
     WLF: "wf",
     NA: "na",
     NAM: "na",
-    // GADM disputed / non-ISO codes with a recognised flag
+    // Disputed / non-ISO codes with a recognised flag
     XKO: "xk",
     TWN: "tw",
     PSE: "ps",
