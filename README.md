@@ -9,7 +9,7 @@
 <p align="center"><a href="https://domebreak.com">domebreak.com</a> · <a href="https://domebreak.com/#/download">Download</a> · <a href="https://domebreak.com/#/wiki">Unit wiki</a></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2026.44.0-e0574f?style=for-the-badge" alt="Version 2026.44.0" />
+  <img src="https://img.shields.io/badge/version-2026.44.1-e0574f?style=for-the-badge" alt="Version 2026.44.1" />
 </p>
 
 You pick one of 222 nations and run it in real time: build radar and interceptors over your cities, put silos, warships and jets where they can reach your rivals, and keep the economy going while missiles are in the air. Play against up to eleven AI nations, or online against other players. It's free, and it runs as a desktop app on macOS and Windows.
