@@ -4,7 +4,7 @@
   "license": "UNLICENSED",
   "version": "0.1.0",
   "type": "module",
-  "description": "Authoritative DomeBreak match server — runs the same engine the client ships.",
+  "description": "DomeBreak multiplayer match server, running the same game engine as the client",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
