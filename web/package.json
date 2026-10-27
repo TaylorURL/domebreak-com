@@ -4,7 +4,7 @@
   "license": "UNLICENSED",
   "version": "0.1.2",
   "type": "module",
-  "description": "DomeBreak marketing landing page \u2014 email waitlist capture.",
+  "description": "The domebreak.com website: landing page, downloads and unit wiki",
   "scripts": {
     "dev": "vite",
     "build": "vite build && vite build --ssr src/entry-server.jsx --outDir .prerender && node scripts/prerender.mjs",
