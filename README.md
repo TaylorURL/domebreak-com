@@ -6,7 +6,7 @@ A real-time missile strategy game played on the real world map.
 
 [domebreak.com](https://domebreak.com) · [Download](https://domebreak.com/#/download) · [Unit wiki](https://domebreak.com/#/wiki)
 
-<img src="https://img.shields.io/badge/version-2026.44.2-e0574f?style=for-the-badge" alt="Version 2026.44.2" />
+<img src="https://img.shields.io/badge/version-2026.44.3-e0574f?style=for-the-badge" alt="Version 2026.44.3" />
 
 Pick a nation and run it in real time. Cover your cities with radar and interceptors, put silos, warships and jets in reach of your rivals, and keep the economy going while missiles are in the air. Play against up to eleven AI nations or online. Free, as a desktop app for macOS and Windows.
 
