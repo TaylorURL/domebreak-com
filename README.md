@@ -1,46 +1,57 @@
-<p align="center">
-  <img src="build/icon.png" width="160" alt="DomeBreak" />
-</p>
+<img src="build/icon.png" width="160" alt="DomeBreak" />
 
-<h1 align="center">DomeBreak</h1>
+# DomeBreak
 
-<p align="center">A real-time missile strategy game played on the real world map.</p>
+A real-time missile strategy game played on the real world map.
 
-<p align="center"><a href="https://domebreak.com">domebreak.com</a> · <a href="https://domebreak.com/#/download">Download</a> · <a href="https://domebreak.com/#/wiki">Unit wiki</a></p>
+[domebreak.com](https://domebreak.com) · [Download](https://domebreak.com/#/download) · [Unit wiki](https://domebreak.com/#/wiki)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/version-2026.44.1-e0574f?style=for-the-badge" alt="Version 2026.44.1" />
-</p>
+<img src="https://img.shields.io/badge/version-2026.44.2-e0574f?style=for-the-badge" alt="Version 2026.44.2" />
 
-You pick one of 222 nations and run it in real time: build radar and interceptors over your cities, put silos, warships and jets where they can reach your rivals, and keep the economy going while missiles are in the air. Play against up to eleven AI nations, or online against other players. It's free, and it runs as a desktop app on macOS and Windows.
+Pick a nation and run it in real time. Cover your cities with radar and interceptors, put silos, warships and jets in reach of your rivals, and keep the economy going while missiles are in the air. Play against up to eleven AI nations or online. Free, as a desktop app for macOS and Windows.
 
-It's my own game, published under TaylorURL. The game, the multiplayer server and the website all live in this repo.
+It's my own game, published under TaylorURL. The game, the match server and the website are all in this repo.
 
-<p align="center">
-  <img src="web/public/shots/command-map-1600w.webp" width="49%" alt="The command map at the start of a game" />
-  <img src="web/public/shots/battle-plan-1600w.webp" width="49%" alt="Planning a strike" />
-</p>
+<img src="web/public/shots/command-map-1600w.webp" width="49%" alt="The command map at the start of a game" />
+<img src="web/public/shots/battle-plan-1600w.webp" width="49%" alt="Planning a strike" />
 
-## How to play
+## How it's built
+
+- **The sim is pure and seeded.** `src/game/engine.js` builds a world from a match setup and the tick mutates it in place. The whole game state is plain JSON. Randomness comes from the world's seeded stream, so the same seed plays out the same way.
+- **One engine, client and server.** `server/match` imports the same engine the client runs. The server is authoritative online: it ticks the world and streams snapshots, and the client overwrites its one world object in place so every ref into it stays valid.
+- **Exact version match online.** Any skew between client and server risks the two sims diverging, so the server refuses a hello from a different build and the client shows "update required" (`src/net/version.js`).
+- **Commands carry the sender's slot.** `server/match/commands.js` is a whitelist. Each command runs as the authenticated socket's nation, so a client can't act for another one.
+- **Matchmaking is rows in Postgres.** The matchmaker groups waiting `matchmaking_queue` rows into a lobby, real players only, and flips it to `starting`. A server claims it with an update guarded on that status, so two servers racing for the same lobby can't both win.
+- **Borders are a grid.** `scripts/gen-country-grid.mjs` rasterizes country polygons into a quarter-degree ownership grid. The sim and the AI read that, the same border the player is held to.
+- **The map.** MapLibre over PMTiles, globe or flat. Black and white base, ownership painted on top.
+
+<details>
+<summary>Decisions and tradeoffs</summary>
+
+- A full snapshot is hundreds of KB. A socket that can't drain it gets skipped until its buffer clears. Snapshots replace each other anyway, and queueing them would run the server out of memory.
+- Online matches hold paused for a countdown so everyone loads in, then run locked at 1x (`server/match/openingFreeze.js`).
+- A player who drops gets a reconnect window, then the AI takes their nation. A permanent drop is recorded as a quit.
+- Chat is relayed, not simulated. Capped length, per-slot burst limit, no history on the server.
+- The macOS build is ad-hoc signed, which rules out Squirrel.Mac. `electron/updater.cjs` mounts the new dmg, checks the bundle's seal and version, swaps it in with `ditto` and relaunches. Windows runs the NSIS installer silently.
+- `scripts/ai-soak.mjs` plays full AI-only matches at fixed seeds and reports wars, alliances, survivors and step cost. It's how AI tuning gets checked.
+
+</details>
+
+<details>
+<summary>How to play</summary>
 
 1. Start a **New Game**, pick your nation and how many AI rivals you face. You can choose which nations they are.
-2. The game opens with a short grace period when nobody can declare war. Use it to build.
-3. The Goals panel walks you through six objectives, from setting up command to fielding a strike force.
-4. Cover your cities with radar and air defense. Your income comes from your cities, so losing them hurts.
+2. A short grace period opens the game. Nobody can declare war. Use it to build.
+3. The Goals panel walks you through the opening objectives, from setting up command to fielding a strike force.
+4. Cover your cities with radar and air defense. Income comes from your cities, so losing them hurts.
 5. Open **Plan**, pick your attackers and target nations, and launch.
 
-The clock can be paused or run from 0.5x to 10x, and single-player games save automatically. **Continue** picks up where you left off. The [unit wiki](https://domebreak.com/#/wiki) lists every unit and building with its cost, range and build time.
+The clock runs from 0.5x to 10x or paused. Single-player games save automatically and **Continue** picks up where you left off. The [unit wiki](https://domebreak.com/#/wiki) lists every unit and building with its cost, range and build time.
 
-## What's in it
+</details>
 
-- Real countries, cities, coastlines and borders, on a globe or a flat map
-- Land, sea, air and space units: SAMs, Patriot, THAAD, laser defense, silos, hypersonic missiles, carriers, submarines, bombers and satellites
-- Warheads from conventional to thermonuclear MIRVs, each with its own cost and build time
-- An economy tied to city health, so hitting a rival's cities shrinks what they can build
-- Diplomacy with the other nations
-- Online matches with lobbies, parties and friends, with cross-play between Mac and Windows
-
-## Running it locally
+<details>
+<summary>Running it locally</summary>
 
 ```bash
 npm install
@@ -51,7 +62,10 @@ The game opens at http://localhost:5173 in the browser. Single-player needs no s
 
 `npm test` runs the test suite, and `npm run build` makes the production build in `dist/`.
 
-## Desktop builds
+</details>
+
+<details>
+<summary>Desktop builds</summary>
 
 ```bash
 npm run build && npm run electron   # run the desktop app against the build
@@ -61,7 +75,10 @@ npm run electron:build:win          # Windows installer
 
 Installers land in `release/`. A Linux AppImage target is set up too if you want to build one yourself.
 
-## Project layout
+</details>
+
+<details>
+<summary>Project layout</summary>
 
 | Folder      | What's there                                                                             |
 | :---------- | :--------------------------------------------------------------------------------------- |
@@ -72,14 +89,17 @@ Installers land in `release/`. A Linux AppImage target is set up too if you want
 | `web/`      | The domebreak.com site: landing page, downloads and wiki                                 |
 | `tests/`    | Vitest suites                                                                            |
 
+</details>
+
 ## Built with
 
 React 19, Vite, Tailwind CSS, MapLibre GL, Electron, Supabase, and a Node WebSocket server for multiplayer.
 
-## Credits
-
 Unit icons are from [game-icons.net](https://game-icons.net) (Lorc, Delapouite) under CC BY 3.0.
 
-## License
+<details>
+<summary>License</summary>
 
 Proprietary. See [LICENSE.md](LICENSE.md). The game-icons.net icons keep their own license.
+
+</details>
