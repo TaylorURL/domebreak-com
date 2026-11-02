@@ -29,7 +29,7 @@
   "rewrites": [
     {
       "source": "/version.json",
-      "destination": "https://download.domebreak.com/latest.json"
+      "destination": "/api/published-version"
     }
   ],
   "headers": [
