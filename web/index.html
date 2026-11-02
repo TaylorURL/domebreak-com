@@ -322,13 +322,24 @@
                 };
                 if (window.fetch) {
                     var originalFetch = window.fetch;
-                    window.fetch = function (input) {
+                    window.fetch = function (input, init) {
                         var target = typeof input === "string" ? input : (input && input.url) || "";
                         // Reports about the reporter's own request would loop, so the endpoint passes through unwrapped.
                         if (target.indexOf(endpoint) === 0) return originalFetch.apply(window, arguments);
+                        // A caller that handles its own failure completely, and whose
+                        // failure changes nothing a visitor can see, says so with this
+                        // option. fetch ignores an option it does not know, so it reaches
+                        // no further than here. The background check for the published
+                        // version is the one that sets it (web/src/hooks/useReleaseVersion.js):
+                        // a phone drops that request routinely, the pages render without a
+                        // version either way, and reporting it files the same transient
+                        // blip over and again while spending a ten-report page budget that
+                        // a fault a visitor can see needs. Everything else stays reported,
+                        // because an error nobody is handling is exactly what this is for.
+                        var quiet = !!(init && init.reportFailures === false);
                         return originalFetch.apply(window, arguments).then(
                             function (response) {
-                                if (response.status >= 500)
+                                if (!quiet && response.status >= 500)
                                     report("http", "HTTP " + response.status + " from " + target.split("?")[0]);
                                 return response;
                             },
@@ -338,7 +349,7 @@
                                 // moved past, and the hero map's drift does that several times a
                                 // visit — enough to spend the ten-report budget before a real
                                 // error has anywhere to go.
-                                if (!error || error.name !== "AbortError") {
+                                if (!quiet && (!error || error.name !== "AbortError")) {
                                     report(
                                         "network",
                                         (error && error.message ? error.message : String(error)) +
