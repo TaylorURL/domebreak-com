@@ -6,7 +6,7 @@ A real-time missile strategy game played on the real world map.
 
 [domebreak.com](https://domebreak.com) · [Download](https://domebreak.com/#/download) · [Unit wiki](https://domebreak.com/#/wiki)
 
-<img src="https://img.shields.io/badge/version-2026.45.2-e0574f?style=for-the-badge" alt="Version 2026.45.2" />
+<img src="https://img.shields.io/badge/version-2026.45.3-e0574f?style=for-the-badge" alt="Version 2026.45.3" />
 
 Pick a nation and run it in real time. Cover your cities with radar and interceptors, put silos, warships and jets in reach of your rivals, and keep the economy going while missiles are in the air. Play against up to eleven AI nations or online. Free, as a desktop app for macOS and Windows.
 
@@ -67,7 +67,7 @@ npm run electron:build:mac          # macOS .dmg, Apple Silicon and Intel
 npm run electron:build:win          # Windows installer
 ```
 
-Needs Node 22. Single-player needs no setup. For accounts and multiplayer, copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The match server runs with `npm start` and reads the `GD_*` variables. Installers land in `release/`, and there's a Linux AppImage target if you want to build one yourself.
+Needs Node 22. Single-player needs no setup. For accounts and multiplayer, copy `.env.example` to `.env` and set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The match server is its own package. `cd server`, `npm install`, `npm start`. It needs `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and the `GD_*` settings override the defaults in `server/config.js`. Installers land in `release/`, and there's a Linux AppImage target if you want to build one yourself.
 
 `src/` is the game, `electron/` the desktop app and updater, `server/` the match server, `supabase/` the migrations and edge functions for accounts and lobbies, `web/` the domebreak.com site, and `tests/` the Vitest suites.
 
