@@ -3,7 +3,7 @@
   "productName": "DomeBreak",
   "private": true,
   "license": "UNLICENSED",
-  "version": "2026.45.1",
+  "version": "2026.45.2",
   "type": "module",
   "description": "DomeBreak, a real-time missile strategy game on the real world map for Mac and Windows",
   "main": "electron/main.cjs",
